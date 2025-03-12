@@ -1,9 +1,9 @@
-import Checkbox from '@/Components/Checkbox';
-import InputError from '@/Components/InputError';
-import InputLabel from '@/Components/InputLabel';
-import PrimaryButton from '@/Components/PrimaryButton';
-import TextInput from '@/Components/TextInput';
-import GuestLayout from '@/Layouts/GuestLayout';
+import Checkbox from '@/Components/Form/Checkbox';
+import InputError from '@/Components/Form/InputError';
+import InputLabel from '@/Components/Form/InputLabel';
+import PrimaryButton from '@/Components/Buttons/PrimaryButton';
+import TextInput from '@/Components/Form/TextInput';
+import Layout from '@/Layouts/Layout';
 import { Head, Link, useForm } from '@inertiajs/react';
 
 export default function Login({ status, canResetPassword }) {
@@ -22,7 +22,7 @@ export default function Login({ status, canResetPassword }) {
     };
 
     return (
-        <GuestLayout>
+        <Layout>
             <Head title="Log in" />
             <div className="flex min-h-screen flex-col items-center bg-gray-100 pt-6 sm:justify-center sm:pt-0">
                 <div className="mt-6 w-full overflow-hidden bg-white px-6 py-4 shadow-md sm:max-w-md sm:rounded-lg">
@@ -44,7 +44,6 @@ export default function Login({ status, canResetPassword }) {
                                 value={data.email}
                                 className="mt-1 block w-full"
                                 autoComplete="username"
-                                isFocused={true}
                                 onChange={(e) => setData('email', e.target.value)}
                             />
 
@@ -72,9 +71,7 @@ export default function Login({ status, canResetPassword }) {
                                 <Checkbox
                                     name="remember"
                                     checked={data.remember}
-                                    onChange={(e) =>
-                                        setData('remember', e.target.checked)
-                                    }
+                                    onChange={(e) => setData('remember', e.target.checked)}
                                 />
                                 <span className="ms-2 text-sm text-gray-600">
                                     Remember me
@@ -110,6 +107,6 @@ export default function Login({ status, canResetPassword }) {
                     </form>
                 </div>
             </div>
-        </GuestLayout>
+        </Layout>
     );
 }

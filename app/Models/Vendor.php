@@ -11,14 +11,14 @@ class Vendor extends Model
 
     protected $guard_name = 'web';
 
-
-    protected $fillable=[
-    'name',
-    'email',
-    'contact',
-    'address',
-    'registration_number',
-    'pan_number',
-    'registration_date',
-    'password'];
+    protected $fillable = [
+        'name',
+        'email',
+        'contact',
+        'address',
+        'registration_number',
+        'pan_number',
+        'registration_date',
+        'password'
+    ];
 }

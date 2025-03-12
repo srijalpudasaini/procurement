@@ -1,5 +1,5 @@
 import { Link, usePage } from "@inertiajs/react";
-import Dropdown from "./Dropdown";
+import Dropdown from "../Dropdown";
 
 export default function Header() {
     const { auth } = usePage().props;
@@ -11,7 +11,9 @@ export default function Header() {
                         <h1 className="text-white text-xl letter tracking-wider font-bold">Procurement</h1>
                     </div>
                     <nav>
-                        <ul className="flex gap-3 items-center">
+                        <ul className="flex gap-12 items-center">
+                            <li><Link href="/eoi" className="text-white">Home</Link></li>
+                            <li><Link href="/eoi" className="text-white">About</Link></li>
                             <li><Link href="/eoi" className="text-white">EOI</Link></li>
                             {
                                 auth.user ?
@@ -42,6 +44,11 @@ export default function Header() {
                                             </Dropdown.Trigger>
 
                                             <Dropdown.Content>
+                                                <Dropdown.Link
+                                                    href={route('dashboard')}
+                                                >
+                                                    Dashboard
+                                                </Dropdown.Link>
                                                 <Dropdown.Link
                                                     href={route('profile.edit')}
                                                 >

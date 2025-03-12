@@ -1,4 +1,4 @@
-import PrimaryButton from "./PrimaryButton";
+import PrimaryButton from "./Buttons/PrimaryButton";
 
 export default function EOICard() {
     return (

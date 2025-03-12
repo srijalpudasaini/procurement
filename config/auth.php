@@ -40,7 +40,8 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
-        'vendor' => [
+
+        'vendor' => [ // Custom guard for vendors
             'driver' => 'session',
             'provider' => 'vendors',
         ],
@@ -66,17 +67,13 @@ return [
     'providers' => [
         'users' => [
             'driver' => 'eloquent',
-            'model' => env('AUTH_MODEL', App\Models\User::class),
+            'model' => App\Models\User::class,
         ],
-        'vendors' => [
+
+        'vendors' => [ // Vendor provider
             'driver' => 'eloquent',
             'model' => App\Models\Vendor::class,
         ],
-
-        // 'users' => [
-        //     'driver' => 'database',
-        //     'table' => 'users',
-        // ],
     ],
 
     /*

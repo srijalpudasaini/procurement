@@ -37,6 +37,7 @@ Route::middleware('guest')->group(function () {
 
     Route::get('vendor/register', [VendorAuthController::class, 'index'])->name('vendor.register');
     Route::post('vendor/register', [VendorAuthController::class, 'register'])->name('vendor.store');
+    // Route::get('vendor/login', [VendorAuthController::class, 'index'])->name('vendor.register');
 });
 
 Route::middleware('auth')->group(function () {

@@ -32,14 +32,27 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $permissions = [
-            'create_requests',
-            'approve_requests',
-            'manage_users',
-            'manage_eoi',
-            'manage_products',
-            'manage_categories',
-            'manage_approvals',
+            'view_request',
+            'create_request',
+            'approve_request',
+            'create_user',
+            'view_user',
+            'edit_user',
+            'delete_user',
+            'view_eoi',
+            'create_eoi',
+            'edit_eoi',
+            'delete_eoi',
+            'view_product',
+            'edit_product',
+            'delete_product',
+            'create_product',
+            'view_category',
+            'edit_category',
+            'create_category',
+            'delete_category',
             'apply_eoi',
+            'view_aoi',
         ];
 
         foreach ($permissions as $permission) {
@@ -56,7 +69,10 @@ class DatabaseSeeder extends Seeder
         $employee->assignRole($employeeRole);
 
         $employeeRole->givePermissionTo([
-            'create_requests',
+            'create_request',
+            'view_request',
+            'view_product',
+            'view_category',
         ]);
 
         $vendorRole->givePermissionTo([

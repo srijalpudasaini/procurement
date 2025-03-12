@@ -1,10 +1,10 @@
-import GuestLayout from "@/Layouts/GuestLayout"
+import Layout from "@/Layouts/Layout"
 
 const Welcome = () => {
   return (
-    <GuestLayout>
-        <div>Welcome</div>
-    </GuestLayout>
+    <Layout>
+        <div>Home</div>
+    </Layout>
   )
 }
 

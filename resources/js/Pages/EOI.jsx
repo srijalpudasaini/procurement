@@ -1,13 +1,13 @@
 import EOICard from "@/Components/EOICard"
-import InputLabel from "@/Components/InputLabel"
-import PrimaryButton from "@/Components/PrimaryButton"
-import TextInput from "@/Components/TextInput"
-import GuestLayout from "@/Layouts/GuestLayout"
+import InputLabel from "@/Components/Form/InputLabel"
+import PrimaryButton from "@/Components/Buttons/PrimaryButton"
+import TextInput from "@/Components/Form/TextInput"
+import Layout from "@/Layouts/Layout"
 
 const Home = () => {
   return (
     <>
-      <GuestLayout>
+      <Layout>
         <div className="container">
           <h2 className="text-center text-3xl font-bold my-4">Expression Of Interest</h2>
           <div className="flex justify-between items-center">
@@ -33,7 +33,7 @@ const Home = () => {
             <EOICard />
           </div>
         </div>
-      </GuestLayout>
+      </Layout>
     </>
   )
 }
