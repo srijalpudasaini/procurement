@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Inerfaces;
+namespace App\Interfaces;
 
 interface CategoryInterface
 {

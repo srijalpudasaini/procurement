@@ -12,9 +12,11 @@ export default function Sidebar() {
             <ul>
                 <li className="border-b border-b-gray-300"><Link className="p-2 px-4 block" href="/dashboard">Dashboard</Link></li>
                 <li className="border-b border-b-gray-300"><Link className="p-2 px-4 block" href="/">Requests</Link></li>
-                {hasPermission('manage_users') &&
-                    <li className="border-b border-b-gray-300"><Link className="p-2 px-4 block" href="/">Users</Link></li>
-                }
+                <li className="border-b border-b-gray-300"><Link className="p-2 px-4 block" href="/roles">Roles</Link></li>
+                <li className="border-b border-b-gray-300"><Link className="p-2 px-4 block" href="/permissions">Permissions</Link></li>
+                {/* {hasPermission('manage_users') && */}
+                    <li className="border-b border-b-gray-300"><Link className="p-2 px-4 block" href="/users">Users</Link></li>
+                {/*  } */}
                 {hasPermission('manage_eoi') &&
                     <li className="border-b border-b-gray-300"><Link className="p-2 px-4 block" href="/">EOI</Link></li>
                 }

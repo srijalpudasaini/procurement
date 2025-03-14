@@ -52,7 +52,7 @@ class DatabaseSeeder extends Seeder
             'create_category',
             'delete_category',
             'apply_eoi',
-            'view_aoi',
+            'view_eoi',
         ];
 
         foreach ($permissions as $permission) {

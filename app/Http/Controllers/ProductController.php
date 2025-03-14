@@ -2,13 +2,11 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProductRequest;
-use App\Inerfaces\ProductInterface;
+use App\Interfaces\ProductInterface;
 use App\Models\Category;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Inertia\Inertia;
-use Illuminate\Support\Facades\Auth;
-use Spatie\Permission\Middleware\PermissionMiddleware;
 
 
 class ProductController extends Controller implements HasMiddleware

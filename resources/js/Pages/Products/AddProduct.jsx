@@ -4,6 +4,7 @@ import PrimaryButton from "@/Components/Buttons/PrimaryButton";
 import TextInput from "@/Components/Form/TextInput";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout"
 import { useForm } from "@inertiajs/react";
+import Breadcrumb from "@/Components/ui/Breadcrumb";
 
 const AddProduct = ({ categories }) => {
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -17,9 +18,25 @@ const AddProduct = ({ categories }) => {
         e.preventDefault();
         post(route('products.store'));
     };
+
+    const breadCrumbItems = [
+        {
+            title:'Dashboard',
+            href:'/dashboard'
+        },
+        {
+            title:'Products',
+            href:'/products'
+        },
+        {
+            title:'Add Product',
+        },
+    ]
+
     return (
         <AuthenticatedLayout>
-            <div className="bg-white p-4 shadow sm:rounded-lg sm:p-8">
+            <Breadcrumb items={breadCrumbItems} />
+<div className="bg-white p-4 shadow sm:rounded-lg sm:p-8">
                 <h2 className="text-center text-2xl font-bold">Add Product</h2>
                 <form onSubmit={submit} className="mx-auto w-1/3">
                     <div className="mt-4">

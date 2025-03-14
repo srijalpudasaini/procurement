@@ -4,12 +4,14 @@ import PrimaryButton from "@/Components/Buttons/PrimaryButton";
 import TextInput from "@/Components/Form/TextInput";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout"
 import { useForm } from "@inertiajs/react";
+import Breadcrumb from "@/Components/ui/Breadcrumb";
 
 const EditCategory = ({ category, categories }) => {
     const { data, setData, put, processing, errors, reset } = useForm({
         name: category.name || '',
         description: category.description || '',
-        category_id: category.category_id || ''
+        category_id: category.category_id || '',
+        id:category.id
     });
 
     const submit = (e) => {
@@ -17,9 +19,24 @@ const EditCategory = ({ category, categories }) => {
 
         put(route('categories.update', category.id));
     };
+
+    const breadCrumbItems = [
+        {
+            title:'Dashboard',
+            href:'/dashboard'
+        },
+        {
+            title:'Categories',
+            href:'/categories'
+        },
+        {
+            title:'Edit Category',
+        },
+    ]
     return (
         <AuthenticatedLayout>
-            <div className="bg-white p-4 shadow sm:rounded-lg sm:p-8">
+            <Breadcrumb items={breadCrumbItems} />
+<div className="bg-white p-4 shadow sm:rounded-lg sm:p-8">
                 <h2 className="text-center text-2xl font-bold">Edit Category</h2>
                 <form onSubmit={submit} className="mx-auto w-1/3">
                     <div className="mt-4">

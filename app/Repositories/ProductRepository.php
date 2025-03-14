@@ -2,7 +2,7 @@
 
 namespace App\Repositories;
 
-use App\Inerfaces\ProductInterface;
+use App\Interfaces\ProductInterface;
 use App\Models\Product;
 
 class ProductRepository implements ProductInterface
@@ -31,14 +31,14 @@ class ProductRepository implements ProductInterface
 
     public function update($id, array $data)
     {
-        $category = Product::findOrFail($id);
-        $category->update($data);
-        return $category;
+        $product = $this->find($id);
+        $product->update($data);
+        return $product;
     }
 
     public function delete($id)
     {
-        $category = Product::findOrFail($id);
-        return $category->delete();
+        $product = $this->find($id);
+        return $product->delete();
     }
 }

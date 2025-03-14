@@ -3,7 +3,8 @@
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
-use App\Models\Category;
+use App\Http\Controllers\RoleController;
+use App\Http\Controllers\UserController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -38,5 +39,10 @@ require __DIR__.'/auth.php';
     Route::resources([
         'categories'=>CategoryController::class,
         'products'=>ProductController::class,
+        'roles'=>RoleController::class,
+        'users'=>UserController::class,
     ]);
+    // Route::get('/roles', function(){
+    //     return 'abc';
+    // });
 // });

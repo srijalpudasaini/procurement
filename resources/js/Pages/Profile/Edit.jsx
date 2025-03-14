@@ -3,8 +3,18 @@ import { Head } from '@inertiajs/react';
 import DeleteUserForm from './Partials/DeleteUserForm';
 import UpdatePasswordForm from './Partials/UpdatePasswordForm';
 import UpdateProfileInformationForm from './Partials/UpdateProfileInformationForm';
+import Breadcrumb from '@/Components/ui/Breadcrumb';
 
 export default function Edit({ mustVerifyEmail, status }) {
+    const breadCrumbItems = [
+        {
+            title: 'Dashboard',
+            href: '/dashboard'
+        },
+        {
+            title: 'Profile',
+        }
+    ]
     return (
         <AuthenticatedLayout
             header={
@@ -14,6 +24,7 @@ export default function Edit({ mustVerifyEmail, status }) {
             }
         >
             <Head title="Profile" />
+            <Breadcrumb items={breadCrumbItems}/>
 
             <div className="py-12">
                 <div className="mx-auto max-w-7xl space-y-6 sm:px-6 lg:px-8">

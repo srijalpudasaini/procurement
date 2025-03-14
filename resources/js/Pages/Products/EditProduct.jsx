@@ -4,6 +4,7 @@ import PrimaryButton from "@/Components/Buttons/PrimaryButton";
 import TextInput from "@/Components/Form/TextInput";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout"
 import { useForm } from "@inertiajs/react";
+import Breadcrumb from "@/Components/ui/Breadcrumb";
 
 const EditProduct = ({ product, categories }) => {
     const { data, setData, put, processing, errors, reset } = useForm({
@@ -19,9 +20,24 @@ const EditProduct = ({ product, categories }) => {
 
         put(route('products.update', product.id));
     };
+
+    const breadCrumbItems = [
+        {
+            title:'Dashboard',
+            href:'/dashboard'
+        },
+        {
+            title:'Products',
+            href:'/products'
+        },
+        {
+            title:'Edit Product',
+        },
+    ]
     return (
         <AuthenticatedLayout>
-            <div className="bg-white p-4 shadow sm:rounded-lg sm:p-8">
+            <Breadcrumb items={breadCrumbItems} />
+<div className="bg-white p-4 shadow sm:rounded-lg sm:p-8">
                 <h2 className="text-center text-2xl font-bold">Edit Product</h2>
                 <form onSubmit={submit} className="mx-auto w-1/3">
                     <div className="mt-4">

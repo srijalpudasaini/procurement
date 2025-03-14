@@ -5,7 +5,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout'
 import { Link, usePage, router } from '@inertiajs/react'
 import React, { useState } from 'react'
 
-const Products = ({ products }) => {
+const Users = ({ users }) => {
     const { flash, auth } = usePage().props;
     const [showModal, setShowModal] = useState(false);
     const [deleteId, setDeleteId] = useState(null);
@@ -19,7 +19,7 @@ const Products = ({ products }) => {
     };
 
     const handleDelete = () => {
-        router.delete(`/products/${deleteId}`, {
+        router.delete(`/users/${deleteId}`, {
             onSuccess: () => setShowModal(false),
         });
     };
@@ -30,17 +30,17 @@ const Products = ({ products }) => {
             href: '/dashboard'
         },
         {
-            title: 'Products',
+            title: 'Users',
         }
     ]
 
     return (
         <AuthenticatedLayout>
-            {hasPermission('delete_product') &&
+            {hasPermission('delete_user') &&
                 <Modal show={showModal} onClose={() => setShowModal(false)}>
                     <div className="p-6">
                         <h2 className="text-lg font-semibold text-gray-800">
-                            Are you sure you want to delete this product?
+                            Are you sure you want to delete this user?
                         </h2>
                         <div className="mt-4 flex justify-end">
                             <button
@@ -62,10 +62,10 @@ const Products = ({ products }) => {
 
             <Breadcrumb items={breadCrumbItems} />
             <div className="bg-white p-4 shadow sm:rounded-lg sm:p-8">
-                <h2 className="text-center text-2xl font-bold">Products</h2>
+                <h2 className="text-center text-2xl font-bold">Users</h2>
                 {hasPermission('create_product') &&
                     <div className="text-end">
-                        <Link className='rounded-md border border-transparent bg-gray-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-gray-700' href='/products/create'>+ Add Product</Link>
+                        <Link className='rounded-md border border-transparent bg-gray-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-gray-700' href='/users/create'>+ Add User</Link>
                     </div>
                 }
 
@@ -81,33 +81,35 @@ const Products = ({ products }) => {
                         <tr className='bg-gray-600 text-white'>
                             <th className='p-2'>S.N.</th>
                             <th className='p-2'>Name</th>
-                            <th className='p-2'>Description</th>
-                            <th className='p-2'>Category</th>
-                            <th className='p-2'>Action</th>
+                            <th className='p-2'>Phone</th>
+                            <th className='p-2'>Email</th>
+                            {/* <th className='p-2'>Role</th> */}
+                            <th>Action</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {products.length === 0 ?
-                            <tr><td colSpan={5} className='p-2'>No Products Found</td></tr>
+                        {users.length === 0 ?
+                            <tr><td colSpan={4}>No Users found</td></tr>
                             :
-                            products?.map((product, index) => (
-                                <tr key={product.id} className={index % 2 === 1 ? 'bg-gray-100' : ''}>
+                            users?.map((user, index) => (
+                                <tr key={user.id} className={index % 2 === 1 ? 'bg-gray-100' : ''}>
                                     <td className='p-2'>{index + 1}</td>
-                                    <td className='p-2'>{product.name}</td>
-                                    <td className='p-2'>{product.description || '-'}</td>
-                                    <td className='p-2'>{product.category.name}</td>
+                                    <td className='p-2'>{user.name}</td>
+                                    <td className='p-2'>{user.contact}</td>
+                                    <td className='p-2'>{user.email}</td>
+                                    {/* <td className='p-2'>{user.role}</td> */}
                                     <td className='p-2'>
-                                        {hasPermission('edit_product') &&
+                                        {hasPermission('edit_user') &&
                                             <Link
-                                                href={`/products/${product.id}/edit`}
+                                                href={`/users/${user.id}/edit`}
                                                 className='rounded-md border border-transparent bg-blue-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-blue-700 me-2'
                                             >
                                                 Edit
                                             </Link>
                                         }
-                                        {hasPermission('delete_product') &&
+                                        {hasPermission('delete_user') &&
                                             <button
-                                                onClick={() => confirmDelete(product.id)}
+                                                onClick={() => confirmDelete(user.id)}
                                                 className='rounded-md border border-transparent bg-red-600 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-red-700'
                                             >
                                                 Delete
@@ -124,4 +126,4 @@ const Products = ({ products }) => {
     );
 }
 
-export default Products;
+export default Users;

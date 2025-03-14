@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Inerfaces;
+namespace App\Interfaces;
 
-interface ProductInterface
+interface UserInterface
 {
     public function all();
     public function find($id);
