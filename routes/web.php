@@ -3,6 +3,7 @@
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\PurchaseRequestController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
 use Illuminate\Foundation\Application;
@@ -41,6 +42,7 @@ require __DIR__.'/auth.php';
         'products'=>ProductController::class,
         'roles'=>RoleController::class,
         'users'=>UserController::class,
+        'requests'=>PurchaseRequestController::class,
     ]);
     // Route::get('/roles', function(){
     //     return 'abc';

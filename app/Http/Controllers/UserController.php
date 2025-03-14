@@ -50,7 +50,7 @@ class UserController extends Controller implements HasMiddleware
     }
     public function update($id, UserRequest $userRequest){
         $user = $this->userInterface->update($id,$userRequest->validated());
-        $user->assignRole($userRequest->validated('role'));
+        $user->syncRoles($userRequest->validated('role'));
 
         return redirect()->route('users.index')->with('success','User updated successfully');
     }

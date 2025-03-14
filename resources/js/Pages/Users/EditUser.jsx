@@ -17,7 +17,7 @@ const EditUser = ({ user, roles, userRole }) => {
     });
     const submit = (e) => {
         e.preventDefault();
-        put(route('users.update',user.id));
+        put(route('users.update', user.id));
     };
     const breadCrumbItems = [
         {
@@ -36,8 +36,8 @@ const EditUser = ({ user, roles, userRole }) => {
     return (
         <AuthenticatedLayout>
             <Breadcrumb items={breadCrumbItems} />
-<div className="bg-white p-4 shadow sm:rounded-lg sm:p-8">
-                <h2 className="text-center text-2xl font-bold">Add User</h2>
+            <div className="bg-white p-4 shadow sm:rounded-lg sm:p-8">
+                <h2 className="text-center text-2xl font-bold">Edit User</h2>
                 <form onSubmit={submit} className="mx-auto w-1/3">
                     <div>
                         <InputLabel htmlFor="name" value="Name" />
@@ -137,16 +137,15 @@ const EditUser = ({ user, roles, userRole }) => {
                         <select
                             id="role"
                             name="role"
-                            value={userRole}
+                            value={data.role}
                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                             onChange={(e) =>
                                 setData('role', e.target.value)
                             }
-
                         >
                             <option value="">Select a role</option>
-                            {roles.map((role) => (
-                                <option value={role.name}>{role.name}</option>
+                            {roles.map((role,index) => (
+                                <option value={role.name} key={index}>{role.name}</option>
                             ))}
                         </select>
 

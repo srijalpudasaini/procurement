@@ -11,7 +11,7 @@ const AddProduct = ({ categories }) => {
         name: '',
         description: '',
         category_id: '',
-        unit:''
+        unit: ''
     });
 
     const submit = (e) => {
@@ -21,22 +21,22 @@ const AddProduct = ({ categories }) => {
 
     const breadCrumbItems = [
         {
-            title:'Dashboard',
-            href:'/dashboard'
+            title: 'Dashboard',
+            href: '/dashboard'
         },
         {
-            title:'Products',
-            href:'/products'
+            title: 'Products',
+            href: '/products'
         },
         {
-            title:'Add Product',
+            title: 'Add Product',
         },
     ]
 
     return (
         <AuthenticatedLayout>
             <Breadcrumb items={breadCrumbItems} />
-<div className="bg-white p-4 shadow sm:rounded-lg sm:p-8">
+            <div className="bg-white p-4 shadow sm:rounded-lg sm:p-8">
                 <h2 className="text-center text-2xl font-bold">Add Product</h2>
                 <form onSubmit={submit} className="mx-auto w-1/3">
                     <div className="mt-4">
@@ -75,7 +75,7 @@ const AddProduct = ({ categories }) => {
                             onChange={(e) => setData('category_id', e.target.value)}
                         >
                             <option value="">Select a category</option>
-                            {categories?.map((category,index)=>(
+                            {categories?.map((category, index) => (
                                 <option value={category.id} key={index}>{category.name}</option>
                             ))}
 

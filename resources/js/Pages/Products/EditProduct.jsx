@@ -12,7 +12,7 @@ const EditProduct = ({ product, categories }) => {
         description: product.description || '',
         category_id: product.category_id || '',
         unit: product.unit || '',
-        id:product.id
+        id: product.id
     });
 
     const submit = (e) => {
@@ -23,21 +23,21 @@ const EditProduct = ({ product, categories }) => {
 
     const breadCrumbItems = [
         {
-            title:'Dashboard',
-            href:'/dashboard'
+            title: 'Dashboard',
+            href: '/dashboard'
         },
         {
-            title:'Products',
-            href:'/products'
+            title: 'Products',
+            href: '/products'
         },
         {
-            title:'Edit Product',
+            title: 'Edit Product',
         },
     ]
     return (
         <AuthenticatedLayout>
             <Breadcrumb items={breadCrumbItems} />
-<div className="bg-white p-4 shadow sm:rounded-lg sm:p-8">
+            <div className="bg-white p-4 shadow sm:rounded-lg sm:p-8">
                 <h2 className="text-center text-2xl font-bold">Edit Product</h2>
                 <form onSubmit={submit} className="mx-auto w-1/3">
                     <div className="mt-4">
