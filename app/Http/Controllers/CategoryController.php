@@ -3,6 +3,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\CategoryRequest;
 use App\Interfaces\CategoryInterface;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Inertia\Inertia;
@@ -26,14 +27,14 @@ class CategoryController extends Controller implements HasMiddleware
             new Middleware('permission:delete_category', only: ['destroy']),
         ];
     }
-    public function index()
+    public function index(Request $request)
     {
-        $categories = $this->categoryInterface->all();
+        $categories = $this->categoryInterface->all($request->input('per_page',10));
         return Inertia::render('Categories/Categories', compact('categories'));
     }
     public function create()
     {
-        $categories = $this->categoryInterface->all();
+        $categories = $this->categoryInterface->list();
         return Inertia::render('Categories/AddCategory', compact('categories'));
     }
 
@@ -46,7 +47,7 @@ class CategoryController extends Controller implements HasMiddleware
     public function edit($id)
     {
         $category = $this->categoryInterface->find($id);
-        $categories = $this->categoryInterface->all();
+        $categories = $this->categoryInterface->list();
         return Inertia::render('Categories/EditCategory', compact('category', 'categories'));
     }
     public function update(CategoryRequest $request, $id)

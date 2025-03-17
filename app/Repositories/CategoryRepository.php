@@ -6,9 +6,13 @@ use App\Models\Category;
 
 class CategoryRepository implements CategoryInterface
 {
-    public function all()
+    public function all($per_page)
     {
-        return Category::with('parent')->get();
+        return Category::with('parent')->paginate($per_page);
+    }
+
+    public function list(){
+        return Category::all();
     }
 
     public function find($id)

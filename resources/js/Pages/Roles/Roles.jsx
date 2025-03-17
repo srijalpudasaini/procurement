@@ -1,6 +1,7 @@
 import Alert from '@/Components/ui/Alert'
 import Breadcrumb from '@/Components/ui/Breadcrumb'
 import Modal from '@/Components/ui/Modal'
+import Pagination from '@/Components/ui/Pagination'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout'
 import { Link, usePage, router } from '@inertiajs/react'
 import React, { useState } from 'react'
@@ -62,11 +63,28 @@ const Roles = ({ roles }) => {
             <Breadcrumb items={breadCrumbItems} />
             <div className="bg-white p-4 shadow sm:rounded-lg sm:p-8">
                 <h2 className="text-center text-2xl font-bold">Roles</h2>
-                {hasPermission('create_product') &&
-                    <div className="text-end">
-                        <Link className='rounded-md border border-transparent bg-gray-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-gray-700' href='/roles/create'>+ Add Role</Link>
+                <div className="flex justify-between items-center">
+                    <div>
+                        Show
+                        <select
+                            name=""
+                            id=""
+                            className='py-1 mx-1'
+                            value={roles.per_page}
+                            onChange={(e) => router.get('/roles', { per_page: e.target.value })}
+                        >
+                            <option value="5">5</option>
+                            <option value="10">10</option>
+                            <option value="20">20</option>
+                        </select>
+                        entries
                     </div>
-                }
+                    {hasPermission('create_role') &&
+                        <div className="text-end">
+                            <Link className='rounded-md border border-transparent bg-gray-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-gray-700' href='/roles/create'>+ Add Role</Link>
+                        </div>
+                    }
+                </div>
 
                 {flash?.success && (
                     <Alert type='success' message={flash.success} />
@@ -84,10 +102,10 @@ const Roles = ({ roles }) => {
                         </tr>
                     </thead>
                     <tbody>
-                        {roles.length == 0 ?
+                        {roles.data.length == 0 ?
                             <tr><td colSpan={3}>No Roles Found</td></tr>
                             :
-                            roles?.map((role, index) => (
+                            roles?.data.map((role, index) => (
                                 <tr key={role.id} className={index % 2 === 1 ? 'bg-gray-100' : ''}>
                                     <td className='p-2'>{index + 1}</td>
                                     <td className='p-2'>{role.name}</td>
@@ -114,6 +132,7 @@ const Roles = ({ roles }) => {
                         }
                     </tbody>
                 </table>
+                <Pagination links={roles.links} per_page={roles.per_page} />
             </div>
         </AuthenticatedLayout>
     );

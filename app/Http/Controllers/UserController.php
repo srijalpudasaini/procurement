@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\UserRequest;
 use App\Interfaces\UserInterface;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Inertia\Inertia;
@@ -26,8 +27,8 @@ class UserController extends Controller implements HasMiddleware
             new Middleware('permission:delete_user',['destroy']),
         ];
     }
-    public function index(){
-        $users = $this->userInterface->all();
+    public function index(Request $request){
+        $users = $this->userInterface->all($request->input('per_page'));
         return Inertia::render('Users/Users',compact('users'));
     }
 

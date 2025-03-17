@@ -1,6 +1,7 @@
 import Alert from '@/Components/ui/Alert'
 import Breadcrumb from '@/Components/ui/Breadcrumb'
 import Modal from '@/Components/ui/Modal'
+import Pagination from '@/Components/ui/Pagination'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout'
 import { Link, usePage, router } from '@inertiajs/react'
 import React, { useState } from 'react'
@@ -63,11 +64,28 @@ const Categories = ({ categories }) => {
             <Breadcrumb items={breadCrumbItems} />
             <div className="bg-white p-4 shadow sm:rounded-lg sm:p-8">
                 <h2 className="text-center text-2xl font-bold">Categories</h2>
-                {hasPermission('create_category') &&
-                    <div className="text-end">
-                        <Link className='rounded-md border border-transparent bg-gray-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-gray-700' href='/categories/create'>+ Add Category</Link>
+                <div className="flex justify-between items-center">
+                    <div>
+                        Show
+                        <select
+                            name=""
+                            id=""
+                            className='py-1 mx-1'
+                            value={categories.per_page}
+                            onChange={(e) => router.get('/categories', { per_page: e.target.value })}
+                        >
+                            <option value="5">5</option>
+                            <option value="10">10</option>
+                            <option value="20">20</option>
+                        </select>
+                        entries
                     </div>
-                }
+                    {hasPermission('create_category') &&
+                        <div className="text-end">
+                            <Link className='rounded-md border border-transparent bg-gray-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-gray-700' href='/categories/create'>+ Add Category</Link>
+                        </div>
+                    }
+                </div>
 
                 {flash?.success && (
                     <Alert type='success' message={flash.success} />
@@ -87,12 +105,11 @@ const Categories = ({ categories }) => {
                         </tr>
                     </thead>
                     <tbody>
-
                         {
-                            categories.length === 0 ?
+                            categories.data.length === 0 ?
                                 <tr><td colSpan={5}>No Categories Found</td></tr>
                                 :
-                                categories?.map((category, index) => (
+                                categories?.data.map((category, index) => (
                                     <tr key={category.id} className={index % 2 === 1 ? 'bg-gray-100' : ''}>
                                         <td className='p-2'>{index + 1}</td>
                                         <td className='p-2'>{category.name}</td>
@@ -120,6 +137,7 @@ const Categories = ({ categories }) => {
                                 ))}
                     </tbody>
                 </table>
+                <Pagination links={categories.links} per_page={categories.per_page} />
             </div>
         </AuthenticatedLayout>
     );

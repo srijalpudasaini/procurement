@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\RoleRequest;
 use App\Interfaces\RoleInterface;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Inertia\Inertia;
@@ -28,8 +29,8 @@ class RoleController extends Controller implements HasMiddleware
         $this->roleInterface = $roleInterface;
     }
 
-    public function index(){
-        $roles = $this->roleInterface->all();
+    public function index(Request $request){
+        $roles = $this->roleInterface->all($request->input('per_page',10));
         return Inertia::render('Roles/Roles',compact('roles'));
     }
 

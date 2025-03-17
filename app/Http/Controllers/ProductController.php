@@ -6,8 +6,8 @@ use App\Interfaces\ProductInterface;
 use App\Models\Category;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
-
 
 class ProductController extends Controller implements HasMiddleware
 {
@@ -29,9 +29,9 @@ class ProductController extends Controller implements HasMiddleware
         ];
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $products = $this->productInterface->all();
+        $products = $this->productInterface->all($request->input('per_page',10));
         return Inertia::render('Products/Products', compact('products'));
     }
 

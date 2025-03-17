@@ -15,8 +15,9 @@ class ProductRepository implements ProductInterface
         //
     }
 
-    public function all(){
-        return Product::with('category')->get();
+    public function all($per_page)
+    {
+        return Product::with('category')->paginate($per_page);
     }
 
     public function find($id)

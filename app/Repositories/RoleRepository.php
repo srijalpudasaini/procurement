@@ -14,9 +14,9 @@ class RoleRepository implements RoleInterface
     {
         //
     }
-    public function all()
+    public function all($per_page)
     {
-        return Role::all();
+        return Role::paginate($per_page);
     }
 
     public function find($id)

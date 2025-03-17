@@ -1,6 +1,7 @@
 import Alert from '@/Components/ui/Alert'
 import Breadcrumb from '@/Components/ui/Breadcrumb'
 import Modal from '@/Components/ui/Modal'
+import Pagination from '@/Components/ui/Pagination'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout'
 import { Link, usePage, router } from '@inertiajs/react'
 import React, { useState } from 'react'
@@ -63,11 +64,28 @@ const Users = ({ users }) => {
             <Breadcrumb items={breadCrumbItems} />
             <div className="bg-white p-4 shadow sm:rounded-lg sm:p-8">
                 <h2 className="text-center text-2xl font-bold">Users</h2>
-                {hasPermission('create_product') &&
-                    <div className="text-end">
-                        <Link className='rounded-md border border-transparent bg-gray-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-gray-700' href='/users/create'>+ Add User</Link>
+                <div className="flex justify-between items-center">
+                    <div>
+                        Show
+                        <select
+                            name=""
+                            id=""
+                            className='py-1 mx-1'
+                            value={users.per_page}
+                            onChange={(e) => router.get('/users', { per_page: e.target.value })}
+                        >
+                            <option value="5">5</option>
+                            <option value="10">10</option>
+                            <option value="20">20</option>
+                        </select>
+                        entries
                     </div>
-                }
+                    {hasPermission('create_product') &&
+                        <div className="text-end">
+                            <Link className='rounded-md border border-transparent bg-gray-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-gray-700' href='/users/create'>+ Add User</Link>
+                        </div>
+                    }
+                </div>
 
                 {flash?.success && (
                     <Alert type='success' message={flash.success} />
@@ -88,10 +106,10 @@ const Users = ({ users }) => {
                         </tr>
                     </thead>
                     <tbody>
-                        {users.length === 0 ?
+                        {users.data.length === 0 ?
                             <tr><td colSpan={4}>No Users found</td></tr>
                             :
-                            users?.map((user, index) => (
+                            users?.data.map((user, index) => (
                                 <tr key={user.id} className={index % 2 === 1 ? 'bg-gray-100' : ''}>
                                     <td className='p-2'>{index + 1}</td>
                                     <td className='p-2'>{user.name}</td>
@@ -121,6 +139,7 @@ const Users = ({ users }) => {
                         }
                     </tbody>
                 </table>
+                <Pagination links={users.links} per_page={users.per_page} />
             </div>
         </AuthenticatedLayout>
     );

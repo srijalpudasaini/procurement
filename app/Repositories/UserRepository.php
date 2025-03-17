@@ -14,9 +14,9 @@ class UserRepository implements UserInterface
     {
         //
     }
-    public function all()
+    public function all($per_page)
     {
-        return User::all();
+        return User::paginate($per_page);
     }
 
     public function find($id)

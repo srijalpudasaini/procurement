@@ -8,7 +8,7 @@ export default function Sidebar() {
     const hasPermission = (permission) => userPermissions.includes(permission);
 
     return (
-        <aside className="bg-white h-screen sticky top-0">
+        <aside className="bg-white h-screen sticky top-0 overflow-y-auto">
             <ul>
                 <li className="border-b border-b-gray-300"><Link className="p-2 px-4 block" href="/dashboard">Dashboard</Link></li>
                 <li className="border-b border-b-gray-300"><Link className="p-2 px-4 block" href="/">Requests</Link></li>

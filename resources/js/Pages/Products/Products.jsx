@@ -1,6 +1,7 @@
 import Alert from '@/Components/ui/Alert'
 import Breadcrumb from '@/Components/ui/Breadcrumb'
 import Modal from '@/Components/ui/Modal'
+import Pagination from '@/Components/ui/Pagination'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout'
 import { Link, usePage, router } from '@inertiajs/react'
 import React, { useState } from 'react'
@@ -63,11 +64,26 @@ const Products = ({ products }) => {
             <Breadcrumb items={breadCrumbItems} />
             <div className="bg-white p-4 shadow sm:rounded-lg sm:p-8">
                 <h2 className="text-center text-2xl font-bold">Products</h2>
-                {hasPermission('create_product') &&
-                    <div className="text-end">
-                        <Link className='rounded-md border border-transparent bg-gray-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-gray-700' href='/products/create'>+ Add Product</Link>
+                <div className="flex justify-between items-center">
+                    <div>
+                        Show
+                        <select
+                            name=""
+                            id=""
+                            className='py-1 mx-1'
+                            value={products.per_page}
+                            onChange={(e) => router.get('/products', { per_page: e.target.value })}
+                        >
+                            <option value="5">5</option>
+                            <option value="10">10</option>
+                            <option value="20">20</option>
+                        </select>
+                        entries
                     </div>
-                }
+                    {hasPermission('create_product') &&
+                        <Link className='rounded-md border border-transparent bg-gray-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-gray-700' href='/products/create'>+ Add Product</Link>
+                    }
+                </div>
 
                 {flash?.success && (
                     <Alert type='success' message={flash.success} />
@@ -87,10 +103,10 @@ const Products = ({ products }) => {
                         </tr>
                     </thead>
                     <tbody>
-                        {products.length === 0 ?
+                        {products.data.length === 0 ?
                             <tr><td colSpan={5} className='p-2'>No Products Found</td></tr>
                             :
-                            products?.map((product, index) => (
+                            products?.data.map((product, index) => (
                                 <tr key={product.id} className={index % 2 === 1 ? 'bg-gray-100' : ''}>
                                     <td className='p-2'>{index + 1}</td>
                                     <td className='p-2'>{product.name}</td>
@@ -119,6 +135,7 @@ const Products = ({ products }) => {
                         }
                     </tbody>
                 </table>
+                <Pagination links={products.links} per_page={products.per_page} />
             </div>
         </AuthenticatedLayout>
     );
