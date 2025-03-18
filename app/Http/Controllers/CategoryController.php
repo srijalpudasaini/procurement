@@ -2,7 +2,8 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\CategoryRequest;
-use App\Interfaces\CategoryInterface;
+use App\Models\Category;
+use App\Repositories\CategoryRepository;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
@@ -10,17 +11,16 @@ use Inertia\Inertia;
 
 class CategoryController extends Controller implements HasMiddleware
 {
-    protected $categoryInterface;
+    protected $categoryRepository;
 
-    public function __construct(CategoryInterface $categoryInterface)
+    public function __construct(CategoryRepository $categoryRepository)
     {
-        $this->categoryInterface = $categoryInterface;
+        $this->categoryRepository = $categoryRepository;
     }
 
     public static function middleware(): array
     {
         return [
-            'auth',
             new Middleware('permission:view_category', only: ['index']),
             new Middleware('permission:create_category', only: ['create','store']),
             new Middleware('permission:edit_category', only: ['edit','update']),
@@ -29,36 +29,40 @@ class CategoryController extends Controller implements HasMiddleware
     }
     public function index(Request $request)
     {
-        $categories = $this->categoryInterface->all($request->input('per_page',10));
+        $categories = $this->categoryRepository->all($request->input('per_page',10),'parent');
         return Inertia::render('Categories/Categories', compact('categories'));
     }
     public function create()
     {
-        $categories = $this->categoryInterface->list();
+        $categories = $this->categoryRepository->all();
         return Inertia::render('Categories/AddCategory', compact('categories'));
     }
 
     public function store(CategoryRequest $request)
     {
-        $this->categoryInterface->store($request->validated());
+        $this->categoryRepository->store($request->validated());
         return redirect()->route('categories.index')->with('success', 'Category created successfully!');
     }
 
     public function edit($id)
     {
-        $category = $this->categoryInterface->find($id);
-        $categories = $this->categoryInterface->list();
+        $category = $this->categoryRepository->find($id,'children');
+    
+        $childrenIds = $category->children->pluck('id')->toArray();
+        $childrenIds[] = $category->id; 
+    
+        $categories = Category::whereNotIn('id', $childrenIds)->get();
         return Inertia::render('Categories/EditCategory', compact('category', 'categories'));
     }
     public function update(CategoryRequest $request, $id)
     {
-        $this->categoryInterface->update($id, $request->validated());
+        $this->categoryRepository->update($id, $request->validated());
         return redirect()->route('categories.index')->with('success', 'Category updated successfully!');
     }
 
     public function destroy($id)
     {
-        $this->categoryInterface->delete($id);
+        $this->categoryRepository->delete($id);
         return redirect()->route('categories.index')->with('success', 'Category deleted successfully!');
     }
 }

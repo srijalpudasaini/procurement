@@ -11,8 +11,9 @@ const EditCategory = ({ category, categories }) => {
         name: category.name || '',
         description: category.description || '',
         category_id: category.category_id || '',
-        id:category.id
+        id: category.id
     });
+    console.log(categories)
 
     const submit = (e) => {
         e.preventDefault();
@@ -22,21 +23,21 @@ const EditCategory = ({ category, categories }) => {
 
     const breadCrumbItems = [
         {
-            title:'Dashboard',
-            href:'/dashboard'
+            title: 'Dashboard',
+            href: '/dashboard'
         },
         {
-            title:'Categories',
-            href:'/categories'
+            title: 'Categories',
+            href: '/categories'
         },
         {
-            title:'Edit Category',
+            title: 'Edit Category',
         },
     ]
     return (
         <AuthenticatedLayout>
             <Breadcrumb items={breadCrumbItems} />
-<div className="bg-white p-4 shadow sm:rounded-lg sm:p-8">
+            <div className="bg-white p-4 shadow sm:rounded-lg sm:p-8">
                 <h2 className="text-center text-2xl font-bold">Edit Category</h2>
                 <form onSubmit={submit} className="mx-auto w-1/3">
                     <div className="mt-4">
@@ -48,7 +49,6 @@ const EditCategory = ({ category, categories }) => {
                             className="mt-1 w-full"
                             autoComplete="name"
                             onChange={(e) => setData('name', e.target.value)}
-
                         />
 
                         <InputError message={errors.name} className="mt-2" />

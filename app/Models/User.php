@@ -47,4 +47,9 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function purchase_requests(){
+        return $this->hasMany(PurchaseRequest::class);
+    }
+    
 }

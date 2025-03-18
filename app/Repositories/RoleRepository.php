@@ -5,40 +5,13 @@ namespace App\Repositories;
 use App\Interfaces\RoleInterface;
 use Spatie\Permission\Models\Role;
 
-class RoleRepository implements RoleInterface
+class RoleRepository extends BaseRepository
 {
     /**
      * Create a new class instance.
      */
-    public function __construct()
-    {
-        //
+    public function __construct(Role $role){
+        parent::__construct($role);
     }
-    public function all($per_page)
-    {
-        return Role::paginate($per_page);
-    }
-
-    public function find($id)
-    {
-        return Role::findOrFail($id);
-    }
-
-    public function store(array $data)
-    {
-        return Role::create($data);
-    }
-
-    public function update($id, array $data)
-    {
-        $role = $this->find($id);
-        $role->update($data);
-        return $role;
-    }
-
-    public function delete($id)
-    {
-        $role = $this->find($id);
-        return $role->delete();
-    }
+    
 }

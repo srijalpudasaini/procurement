@@ -11,6 +11,7 @@ const Users = ({ users }) => {
     const [showModal, setShowModal] = useState(false);
     const [deleteId, setDeleteId] = useState(null);
     const userPermissions = auth?.permissions || [];
+    console.log(users)
 
     const hasPermission = (permission) => (userPermissions.includes(permission))
 

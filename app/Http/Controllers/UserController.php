@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\UserRequest;
-use App\Interfaces\UserInterface;
+use App\Repositories\UserRepository;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
@@ -12,15 +12,14 @@ use Spatie\Permission\Models\Role;
 
 class UserController extends Controller implements HasMiddleware
 {
-    protected $userInterface;
+    protected $userRepository;
 
-    public function __construct(UserInterface $userInterface){
-        $this->userInterface = $userInterface;
+    public function __construct(UserRepository $userRepository){
+        $this->userRepository = $userRepository;
     }
 
     public static function middleware(){
         return [
-            'auth',
             new Middleware('permission:view_user',['index']),
             new Middleware('permission:create_user',['create','store']),
             new Middleware('permission:edit_user',['edit','update']),
@@ -28,7 +27,7 @@ class UserController extends Controller implements HasMiddleware
         ];
     }
     public function index(Request $request){
-        $users = $this->userInterface->all($request->input('per_page'));
+        $users = $this->userRepository->all($request->input('per_page',10));
         return Inertia::render('Users/Users',compact('users'));
     }
 
@@ -38,26 +37,26 @@ class UserController extends Controller implements HasMiddleware
     }
     
     public function store(UserRequest $userRequest){
-        $user = $this->userInterface->store($userRequest->validated());
+        $user = $this->userRepository->store($userRequest->validated());
         $user->assignRole($userRequest->validated('role'));
         return redirect()->route('users.index')->with('success','User registered successfully');
     }
     
     public function edit($id){
-        $user = $this->userInterface->find($id);
+        $user = $this->userRepository->find($id);
         $roles = Role::all();
         $userRole= $user->getRoleNames()->first();
         return Inertia::render('Users/EditUser',compact('user','roles','userRole'));
     }
     public function update($id, UserRequest $userRequest){
-        $user = $this->userInterface->update($id,$userRequest->validated());
+        $user = $this->userRepository->update($id,$userRequest->validated());
         $user->syncRoles($userRequest->validated('role'));
 
         return redirect()->route('users.index')->with('success','User updated successfully');
     }
     
     public function destroy($id){
-        $this->userInterface->delete($id);
+        $this->userRepository->delete($id);
         return redirect()->route('users.index')->with('success','User deleted successfully');
     }
 }

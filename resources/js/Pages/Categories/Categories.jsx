@@ -107,7 +107,7 @@ const Categories = ({ categories }) => {
                     <tbody>
                         {
                             categories.data.length === 0 ?
-                                <tr><td colSpan={5}>No Categories Found</td></tr>
+                                <tr><td colSpan={5} className='p-2'>No Categories Found</td></tr>
                                 :
                                 categories?.data.map((category, index) => (
                                     <tr key={category.id} className={index % 2 === 1 ? 'bg-gray-100' : ''}>

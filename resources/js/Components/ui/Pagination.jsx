@@ -1,6 +1,6 @@
-import { Link, router } from "@inertiajs/react";
+import { router } from "@inertiajs/react";
 
-const Pagination = ({ links,per_page  }) => {
+const Pagination = ({ links,per_page }) => {
     if (!links.length) return null;
 
     const handlePageChange = (url) => {
@@ -18,7 +18,6 @@ const Pagination = ({ links,per_page  }) => {
                                     className="relative inline-flex items-center px-4 py-2 text-gray-400 bg-gray-100 cursor-not-allowed ring-1 ring-gray-300 ring-inset"
                                     dangerouslySetInnerHTML={{ __html: link.label }}
                                 />
-
                             ) : (
                                 <button
                                     key={index}

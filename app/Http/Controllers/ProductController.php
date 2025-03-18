@@ -2,8 +2,8 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProductRequest;
-use App\Interfaces\ProductInterface;
 use App\Models\Category;
+use App\Repositories\ProductRepository;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Http\Request;
@@ -11,17 +11,16 @@ use Inertia\Inertia;
 
 class ProductController extends Controller implements HasMiddleware
 {
-    protected $productInterface;
+    protected $productRepository;
 
-    public function __construct(ProductInterface $productInterface)
+    public function __construct(ProductRepository $productRepository)
     {
-        $this->productInterface = $productInterface;
+        $this->productRepository = $productRepository;
     }
 
     public static function middleware(): array
     {
         return [
-            'auth',
             new Middleware('permission:view_product', only: ['index']),
             new Middleware('permission:create_product', only: ['create','store']),
             new Middleware('permission:edit_product', only: ['edit','update']),
@@ -31,7 +30,7 @@ class ProductController extends Controller implements HasMiddleware
 
     public function index(Request $request)
     {
-        $products = $this->productInterface->all($request->input('per_page',10));
+        $products = $this->productRepository->all($request->input('per_page',10),['category']);
         return Inertia::render('Products/Products', compact('products'));
     }
 
@@ -43,26 +42,26 @@ class ProductController extends Controller implements HasMiddleware
 
     public function store(ProductRequest $request)
     {
-        $this->productInterface->store($request->validated());
+        $this->productRepository->store($request->validated());
         return redirect()->route('products.index')->with('success', 'Product added successfully!');
     }
 
     public function edit($id)
     {
-        $product = $this->productInterface->find($id);
+        $product = $this->productRepository->find($id);
         $categories = Category::all();
         return Inertia::render('Products/EditProduct', compact('product', 'categories'));
     }
 
     public function update(ProductRequest $request, $id)
     {
-        $this->productInterface->update($id, $request->validated());
+        $this->productRepository->update($id, $request->validated());
         return redirect()->route('products.index')->with('success', 'Product updated successfully!');
     }
 
     public function destroy($id)
     {
-        $this->productInterface->delete($id);
+        $this->productRepository->delete($id);
         return redirect()->route('products.index')->with('success', 'Product deleted successfully!');
     }
 }

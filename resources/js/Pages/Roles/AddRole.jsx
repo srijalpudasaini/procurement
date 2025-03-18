@@ -12,13 +12,13 @@ const AddRole = ({ groupPermissionsArray }) => {
         permissions: []
     });
 
-    const handleChange = (e) =>{
-        const {value,checked} = e.target;
-        if(checked){
-            setData('permissions',[...data.permissions,value])
+    const handleChange = (e) => {
+        const { value, checked } = e.target;
+        if (checked) {
+            setData('permissions', [...data.permissions, value])
         }
-        else{
-            setData('permissions',data.permissions.filter((p)=>p!=value));
+        else {
+            setData('permissions', data.permissions.filter((p) => p != value));
         }
     }
     const submit = (e) => {
@@ -28,21 +28,21 @@ const AddRole = ({ groupPermissionsArray }) => {
 
     const breadCrumbItems = [
         {
-            title:'Dashboard',
-            href:'/dashboard'
+            title: 'Dashboard',
+            href: '/dashboard'
         },
         {
-            title:'Roles',
-            href:'/roles'
+            title: 'Roles',
+            href: '/roles'
         },
         {
-            title:'Add Role',
+            title: 'Add Role',
         },
     ]
     return (
         <AuthenticatedLayout>
             <Breadcrumb items={breadCrumbItems} />
-<div className="bg-white p-4 shadow sm:rounded-lg sm:p-8">
+            <div className="bg-white p-4 shadow sm:rounded-lg sm:p-8">
                 <h2 className="text-center text-2xl font-bold">Add Role</h2>
                 <form onSubmit={submit} className="mx-auto w-2/3">
                     <div className="mt-4">
@@ -73,7 +73,7 @@ const AddRole = ({ groupPermissionsArray }) => {
                                         {groupPermission.permissions.map((permisson, index) => (
                                             <td key={index} className="border p-1">
                                                 <input type="checkbox" className="ring-0 focus:ring-0 rounded-sm" value={permisson + '_' + groupPermission.group}
-                                                onChange={handleChange}
+                                                    onChange={handleChange}
                                                 />
                                             </td>
                                         ))}

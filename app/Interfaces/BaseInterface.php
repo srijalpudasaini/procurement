@@ -2,11 +2,9 @@
 
 namespace App\Interfaces;
 
-interface CategoryInterface
+interface BaseInterface
 {
-    public function all($per_page);
-
-    public function list();
+    public function all($paginate);
     public function find($id);
     public function store(array $data);
     public function update($id, array $data);

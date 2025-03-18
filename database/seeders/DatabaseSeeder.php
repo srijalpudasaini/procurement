@@ -35,6 +35,7 @@ class DatabaseSeeder extends Seeder
             'view_request',
             'create_request',
             'approve_request',
+            'delete_request',
             'create_user',
             'view_user',
             'edit_user',
@@ -53,6 +54,10 @@ class DatabaseSeeder extends Seeder
             'delete_category',
             'apply_eoi',
             'view_eoi',
+            'create_role',
+            'delete_role',
+            'edit_role',
+            'view_role'
         ];
 
         foreach ($permissions as $permission) {
@@ -70,7 +75,6 @@ class DatabaseSeeder extends Seeder
 
         $employeeRole->givePermissionTo([
             'create_request',
-            'view_request',
             'view_product',
             'view_category',
         ]);

@@ -24,7 +24,7 @@ class CategoryRequest extends FormRequest
         return [
             'name' => 'required|string|unique:categories,name,' . $this->id,
             'description' => 'nullable|string',
-            'category_id' => 'nullable|exists:categories,id',
+            'category_id' => 'nullable|exists:categories,id|not_in:' . $this->id,
         ];
     }
 }

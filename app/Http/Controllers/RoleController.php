@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\RoleRequest;
-use App\Interfaces\RoleInterface;
+use App\Repositories\RoleRepository;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
@@ -12,25 +12,24 @@ use Spatie\Permission\Models\Permission;
 
 class RoleController extends Controller implements HasMiddleware
 {
-    protected $roleInterface;
+    protected $roleRepository;
 
     public static function middleware()
     {
         return [
-            'auth',
-            //  new Middleware('permission:view_role',['index']),
-            //  new Middleware('permission:create_role',['create','store']),
-            //  new Middleware('permission:edit_role',['edit','update']),
-            //  new Middleware('permission:delete_role',['destroy']),
+             new Middleware('permission:view_role',['index']),
+             new Middleware('permission:create_role',['create','store']),
+             new Middleware('permission:edit_role',['edit','update']),
+             new Middleware('permission:delete_role',['destroy']),
         ];
     }
 
-    public function __construct(RoleInterface $roleInterface){
-        $this->roleInterface = $roleInterface;
+    public function __construct(RoleRepository $roleRepository){
+        $this->roleRepository = $roleRepository;
     }
 
     public function index(Request $request){
-        $roles = $this->roleInterface->all($request->input('per_page',10));
+        $roles = $this->roleRepository->all($request->input('per_page',10));
         return Inertia::render('Roles/Roles',compact('roles'));
     }
 
@@ -55,7 +54,7 @@ class RoleController extends Controller implements HasMiddleware
     }
 
     public function store(RoleRequest $roleRequest){
-        $role = $this->roleInterface->store($roleRequest->validated());
+        $role = $this->roleRepository->store($roleRequest->validated());
         if(!empty($roleRequest->validated('permissions'))){
             $role->syncPermissions($roleRequest->validated('permissions'));
         }
@@ -63,7 +62,7 @@ class RoleController extends Controller implements HasMiddleware
     }
 
     public function edit($id){
-        $role = $this->roleInterface->find($id);
+        $role = $this->roleRepository->find($id);
         $permissions = Permission::get()->pluck('name');
         $rolePermissions = $role->permissions->pluck('name');
         $groupPermissions = array();
@@ -85,7 +84,7 @@ class RoleController extends Controller implements HasMiddleware
     }
 
     public function update(RoleRequest $roleRequest,$id){
-        $role = $this->roleInterface->update($id,$roleRequest->validated());
+        $role = $this->roleRepository->update($id,$roleRequest->validated());
         if(!empty($roleRequest->validated('permissions'))){
             $role->syncPermissions($roleRequest->validated('permissions'));
         }
@@ -93,7 +92,7 @@ class RoleController extends Controller implements HasMiddleware
     }
 
     public function destroy($id){
-        $this->roleInterface->delete($id);
+        $this->roleRepository->delete($id);
         return redirect()->route('roles.index')->with('success','Role deleted successfully!');
     }
 

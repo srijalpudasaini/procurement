@@ -35,7 +35,7 @@ Route::middleware('auth')->group(function () {
 
 require __DIR__.'/auth.php';
  
-// Route::middleware(['auth','role:admin'])->group(function(){
+Route::middleware(['auth'])->group(function(){
 
     Route::resources([
         'categories'=>CategoryController::class,
@@ -44,7 +44,9 @@ require __DIR__.'/auth.php';
         'users'=>UserController::class,
         'requests'=>PurchaseRequestController::class,
     ]);
+
+    Route::put('requests/updateStatus/{id}',[PurchaseRequestController::class,'updateStatus']);
     // Route::get('/roles', function(){
     //     return 'abc';
     // });
-// });
+});
