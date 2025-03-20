@@ -130,7 +130,7 @@ const AddRequest = ({ products }) => {
                     </div>
 
                     <div className="mt-4 text-center">
-                        <PrimaryButton className="ms-4" disabled={processing}>
+                        <PrimaryButton disabled={processing}>
                             Create Request
                         </PrimaryButton>
                     </div>

@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\DocumentController;
+use App\Http\Controllers\EoiController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PurchaseRequestController;
@@ -43,9 +45,12 @@ Route::middleware(['auth'])->group(function(){
         'roles'=>RoleController::class,
         'users'=>UserController::class,
         'requests'=>PurchaseRequestController::class,
+        'eois'=>EoiController::class,
+        'documents'=>DocumentController::class,
     ]);
 
     Route::put('requests/updateStatus/{id}',[PurchaseRequestController::class,'updateStatus']);
+    Route::get('eois/publish/{id}',[EoiController::class,'publish']);
     // Route::get('/roles', function(){
     //     return 'abc';
     // });

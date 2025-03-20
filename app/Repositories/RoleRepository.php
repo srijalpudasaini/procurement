@@ -2,7 +2,6 @@
 
 namespace App\Repositories;
 
-use App\Interfaces\RoleInterface;
 use Spatie\Permission\Models\Role;
 
 class RoleRepository extends BaseRepository

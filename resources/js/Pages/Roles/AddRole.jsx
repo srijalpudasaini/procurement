@@ -5,22 +5,39 @@ import TextInput from "@/Components/Form/TextInput";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout"
 import { useForm } from "@inertiajs/react";
 import Breadcrumb from "@/Components/ui/Breadcrumb";
+import { useState } from "react";
 
 const AddRole = ({ groupPermissionsArray }) => {
     const { data, setData, post, processing, errors, reset } = useForm({
         name: '',
         permissions: []
     });
+    const [viewPermissions, setViewPermissions] = useState({});
 
     const handleChange = (e) => {
         const { value, checked } = e.target;
+
+        const [action, ...groupArr] = value.split("_");
+        const group = groupArr.join("_");
+
+
         if (checked) {
-            setData('permissions', [...data.permissions, value])
+            setData('permissions', [...data.permissions, value]);
+
+            if (action === "view") {
+                setViewPermissions(prev => ({ ...prev, [group]: true }));
+            }
+        } else {
+            let updatedPermissions = data.permissions.filter((p) => p !== value);
+
+            if (action === "view") {
+                setViewPermissions(prev => ({ ...prev, [group]: false }));
+                updatedPermissions = updatedPermissions.filter((p) => !p.endsWith(`_${group}`));
+            }
+
+            setData('permissions', updatedPermissions);
         }
-        else {
-            setData('permissions', data.permissions.filter((p) => p != value));
-        }
-    }
+    };
     const submit = (e) => {
         e.preventDefault();
         post(route('roles.store'));
@@ -55,7 +72,6 @@ const AddRole = ({ groupPermissionsArray }) => {
                             autoComplete="name"
                             onChange={(e) => setData('name', e.target.value)}
                         />
-
                         <InputError message={errors.name} className="mt-2" />
                     </div>
                     <div className="mt-4">
@@ -69,15 +85,24 @@ const AddRole = ({ groupPermissionsArray }) => {
                                             <th key={index} className="border capitalize p-1">{permisson}</th>
                                         ))}
                                     </tr>
-                                    <tr>
-                                        {groupPermission.permissions.map((permisson, index) => (
+                                    {groupPermission.permissions.map((permission, index) => {
+                                        const fullPermission = `${permission}_${groupPermission.group}`;
+                                        const isViewPermission = permission === "view";
+                                        const isDisabled = !isViewPermission && !viewPermissions[groupPermission.group];
+
+                                        return (
                                             <td key={index} className="border p-1">
-                                                <input type="checkbox" className="ring-0 focus:ring-0 rounded-sm" value={permisson + '_' + groupPermission.group}
+                                                <input
+                                                    type="checkbox"
+                                                    className="ring-0 focus:ring-0 rounded-sm border-black disabled:border-gray-400"
+                                                    value={fullPermission}
                                                     onChange={handleChange}
+                                                    disabled={isDisabled}
+                                                    checked={data.permissions.includes(fullPermission)}
                                                 />
                                             </td>
-                                        ))}
-                                    </tr>
+                                        );
+                                    })}
                                 </table>
                             </div>
                         ))}

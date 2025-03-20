@@ -2,7 +2,6 @@
 
 namespace App\Repositories;
 
-use App\Interfaces\ProductInterface;
 use App\Models\Product;
 
 class ProductRepository extends BaseRepository

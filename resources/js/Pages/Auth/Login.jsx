@@ -91,7 +91,7 @@ export default function Login({ status, canResetPassword }) {
 
                         </div>
                         <div className="text-center mt-3">
-                            <PrimaryButton className="ms-4" disabled={processing}>
+                            <PrimaryButton disabled={processing}>
                                 Log in
                             </PrimaryButton>
                             <div className="mt-3">

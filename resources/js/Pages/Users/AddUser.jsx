@@ -156,7 +156,7 @@ const AddUser = ({ roles }) => {
                     </div>
 
                     <div className="mt-4 text-center">
-                        <PrimaryButton className="ms-4" disabled={processing}>
+                        <PrimaryButton disabled={processing}>
                             Add User
                         </PrimaryButton>
                     </div>

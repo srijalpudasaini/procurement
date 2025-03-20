@@ -30,7 +30,20 @@ class PurchaseRequestController extends Controller implements HasMiddleware
     }
     public function index(Request $request)
     {
-        $purchaseRequests = $this->purchaseRequestRepository->all($request->input('per_page', 10),['user','purchase_request_items.product']);
+        $user = $request->user();
+        if ($user->hasRole('admin')) {
+            $purchaseRequests = $this->purchaseRequestRepository->all(
+                $request->input('per_page', 10),
+                ['user', 'purchase_request_items.product']
+            );
+        } else {
+            $purchaseRequests = $this->purchaseRequestRepository->all(
+                $request->input('per_page', 10),
+                ['user', 'purchase_request_items.product'],
+                ['user_id' => $user->id]
+            );
+        }
+
         return Inertia::render('Requests/Requests', compact('purchaseRequests'));
     }
 
@@ -66,14 +79,15 @@ class PurchaseRequestController extends Controller implements HasMiddleware
     public function edit() {}
 
     public function destroy() {}
-    
-    public function updateStatus($id, Request $request) {
+
+    public function updateStatus($id, Request $request)
+    {
         $request->validate([
-            'status'=>'required|in:approved,rejected',
+            'status' => 'required|in:approved,rejected',
         ]);
         $purchaseRequest = $this->purchaseRequestRepository->find($id);
         $purchaseRequest->status = $request->status;
         $purchaseRequest->save();
-        return redirect()->route('requests.index')->with('success', 'Request successfully '.$request->status);
+        return redirect()->route('requests.index')->with('success', 'Request successfully ' . $request->status);
     }
 }

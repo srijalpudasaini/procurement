@@ -14,9 +14,15 @@ class BaseRepository implements BaseInterface
     {
         $this->model = $model;
     }
-    public function all($paginate = null, $relations = [])
+    public function all($paginate = null, $relations = [], $conditions = [])
     {
         $query = $this->model->with($relations);
+
+        if (!empty($conditions)) {
+            foreach ($conditions as $column => $value) {
+                $query->where($column, $value);
+            }
+        }
 
         return $paginate ? $query->paginate($paginate) : $query->get();
     }
@@ -33,14 +39,14 @@ class BaseRepository implements BaseInterface
 
     public function update($id, array $data)
     {
-        $category = $this->model->find($id);
-        $category->update($data);
-        return $category;
+        $model = $this->model->find($id);
+        $model->update($data);
+        return $model;
     }
 
     public function delete($id)
     {
-        $category = $this->model->find($id);
-        $category->delete();
+        $model = $this->model->find($id);
+        $model->delete();
     }
 }

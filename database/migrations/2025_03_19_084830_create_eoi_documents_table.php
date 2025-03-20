@@ -11,12 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('purchase_requests', function (Blueprint $table) {
+        Schema::create('eoi_documents', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('user_id');
-            $table->double('total');
-            $table->enum('status',['pending','approved','rejected'])->default('pending');
-            $table->foreign('user_id')->references('id')->on('users');
+            $table->unsignedBigInteger('eoi_id');
+            $table->unsignedBigInteger('document_id');
+            $table->boolean('required');
+            $table->foreign('document_id')->references('id')->on('documents');
+            $table->foreign('eoi_id')->references('id')->on('eois');
             $table->timestamps();
         });
     }
@@ -26,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('purchase_requests');
+        Schema::dropIfExists('eoi_documents');
     }
 };

@@ -2,7 +2,6 @@
 
 namespace App\Repositories;
 
-use App\Interfaces\PurchaseRequestInterface;
 use App\Models\PurchaseRequest;
 
 class PurchaseRequestRepository extends BaseRepository

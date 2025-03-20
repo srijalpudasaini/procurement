@@ -44,6 +44,7 @@ class DatabaseSeeder extends Seeder
             'create_eoi',
             'edit_eoi',
             'delete_eoi',
+            'apply_eoi',
             'view_product',
             'edit_product',
             'delete_product',
@@ -52,12 +53,14 @@ class DatabaseSeeder extends Seeder
             'edit_category',
             'create_category',
             'delete_category',
-            'apply_eoi',
-            'view_eoi',
             'create_role',
             'delete_role',
             'edit_role',
-            'view_role'
+            'view_role',
+            'view_document',
+            'create_document',
+            'edit_document',
+            'delete_document',
         ];
 
         foreach ($permissions as $permission) {
@@ -66,7 +69,6 @@ class DatabaseSeeder extends Seeder
 
         $adminRole = Role::firstOrCreate(['name' => 'admin']);
         $employeeRole = Role::firstOrCreate(['name' => 'employee']);
-        $vendorRole = Role::firstOrCreate(['name' => 'vendor']);
 
         $adminRole->givePermissionTo($permissions); 
 
@@ -77,10 +79,7 @@ class DatabaseSeeder extends Seeder
             'create_request',
             'view_product',
             'view_category',
-        ]);
-
-        $vendorRole->givePermissionTo([
-            'apply_eoi'
+            'view_request',
         ]);
     }
 }

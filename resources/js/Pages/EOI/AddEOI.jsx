@@ -1,12 +1,13 @@
-import Alert from '@/Components/ui/Alert'
-import Breadcrumb from '@/Components/ui/Breadcrumb'
-import Modal from '@/Components/ui/Modal'
-import Pagination from '@/Components/ui/Pagination'
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout'
-import { Link, usePage, router } from '@inertiajs/react'
-import React, { useState } from 'react'
+import Alert from "@/Components/ui/Alert";
+import Breadcrumb from "@/Components/ui/Breadcrumb";
+import Modal from "@/Components/ui/Modal";
+import Pagination from "@/Components/ui/Pagination";
+import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout"
+import { Link, router, usePage } from "@inertiajs/react";
+import { useState } from "react";
 
-const PurchaseRequests = ({ purchaseRequests }) => {
+
+const AddEOI = ({ purchaseRequests }) => {
   const { flash, auth } = usePage().props;
   const [showModal, setShowModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
@@ -155,7 +156,7 @@ const PurchaseRequests = ({ purchaseRequests }) => {
 
       <Breadcrumb items={breadCrumbItems} />
       <div className="bg-white p-4 shadow sm:rounded-lg sm:p-8">
-        <h2 className="text-center text-2xl font-bold">Purchase Requests</h2>
+        <h2 className="text-center text-2xl font-bold">Add EOI</h2>
         <div className="flex justify-between items-center">
           <div>
             Show
@@ -164,7 +165,7 @@ const PurchaseRequests = ({ purchaseRequests }) => {
               id=""
               className='py-1 mx-1'
               value={purchaseRequests.per_page}
-              onChange={(e) => router.get('/requests', { per_page: e.target.value })}
+              onChange={(e) => router.get('/eois/create', { per_page: e.target.value })}
             >
               <option value="5">5</option>
               <option value="10">10</option>
@@ -172,9 +173,6 @@ const PurchaseRequests = ({ purchaseRequests }) => {
             </select>
             entries
           </div>
-          {hasPermission('create_request') &&
-            <Link className='rounded-md border border-transparent bg-gray-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-gray-700' href='/requests/create'>+ Create Request</Link>
-          }
         </div>
 
         {flash?.success && (
@@ -183,6 +181,7 @@ const PurchaseRequests = ({ purchaseRequests }) => {
         {flash?.error && (
           <Alert type='error' message={flash.error} />
         )}
+        <h2 className="text-center text-xl font-bold">Approved Requests</h2>
 
         <table className='w-full mt-4 text-center'>
           <thead>
@@ -195,10 +194,10 @@ const PurchaseRequests = ({ purchaseRequests }) => {
             </tr>
           </thead>
           <tbody>
-            {purchaseRequests.data.length === 0 ?
+            {purchaseRequests?.data?.length === 0 ?
               <tr><td colSpan={5} className='p-2'>No Purchase Requests Found</td></tr>
               :
-              purchaseRequests?.data.map((request, index) => (
+              purchaseRequests?.data?.map((request, index) => (
                 <tr key={request.id} className={index % 2 === 1 ? 'bg-gray-100' : ''}>
                   <td className='p-2'>{index + 1}</td>
                   <td className='p-2'>{request.user.name}</td>
@@ -211,21 +210,13 @@ const PurchaseRequests = ({ purchaseRequests }) => {
                     >
                       View
                     </button>
-                    {hasPermission('approve_request') && request.status === 'pending' &&
-                      <button
+                    {hasPermission('create_eoi') &&
+                      <Link
                         className='rounded-md border border-transparent bg-blue-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-blue-700 me-2'
-                        onClick={() => confirmDelete(request.id, 'approved')}
+                        href={`/eois/publish/${request.id}`}
                       >
-                        Approve
-                      </button>
-                    }
-                    {hasPermission('delete_request') && request.status === 'pending' &&
-                      <button
-                        onClick={() => confirmDelete(request.id, 'rejected')}
-                        className='rounded-md border border-transparent bg-red-600 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-red-700'
-                      >
-                        Reject
-                      </button>
+                        Publish
+                      </Link>
                     }
                   </td>
                 </tr>
@@ -233,10 +224,10 @@ const PurchaseRequests = ({ purchaseRequests }) => {
             }
           </tbody>
         </table>
-        <Pagination links={purchaseRequests.links} per_page={purchaseRequests.per_page} />
+        <Pagination links={purchaseRequests?.links} per_page={purchaseRequests?.per_page} />
       </div>
     </AuthenticatedLayout>
   );
 }
 
-export default PurchaseRequests;
+export default AddEOI
