@@ -2,7 +2,7 @@ import { Link, usePage } from "@inertiajs/react"
 
 export default function Sidebar() {
     const { auth } = usePage().props;
-    const userPermissions = auth?.permissions || [];
+    const userPermissions = auth?.user?.permissions || [];
 
     const hasPermission = (permission) => userPermissions.includes(permission);
 

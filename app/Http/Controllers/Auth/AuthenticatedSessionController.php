@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Models\User;
+use App\Models\Vendor;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -27,13 +29,21 @@ class AuthenticatedSessionController extends Controller
     /**
      * Handle an incoming authentication request.
      */
-    public function store(LoginRequest $request): RedirectResponse
+    public function store(LoginRequest $request)
     {
-        $request->authenticate();
+        $credentials = $request->validated();
+        $user = User::where('email', $credentials['email'])->first();
+        $vendor = Vendor::where('email', $credentials['email'])->first();
 
-        $request->session()->regenerate();
-
-        return redirect()->intended(route('dashboard', absolute: false));
+        if ($user) {
+            Auth::guard('web')->login($user);
+            $request->session()->regenerate();
+            return redirect()->intended(route('dashboard'));
+        } elseif ($vendor) {
+            Auth::guard('vendor')->login($vendor);
+            $request->session()->regenerate();
+            return redirect()->intended(route('vendor.dashboard'));
+        }
     }
 
     /**
@@ -44,9 +54,8 @@ class AuthenticatedSessionController extends Controller
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();
-
         $request->session()->regenerateToken();
 
-        return redirect('/');
+        return redirect('/')->with('success', 'Logged out successfully.');
     }
 }

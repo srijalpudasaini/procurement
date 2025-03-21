@@ -3,6 +3,7 @@ import Dropdown from "../Dropdown";
 
 export default function Header() {
     const { auth } = usePage().props;
+    const user = auth.user || auth.vendor
     return (
         <header className="py-3 bg-[#00AB66]">
             <div className="container">
@@ -16,7 +17,7 @@ export default function Header() {
                             <li><Link href="/eoi" className="text-white">About</Link></li>
                             <li><Link href="/eoi" className="text-white">EOI</Link></li>
                             {
-                                auth.user ?
+                                auth.user || auth.vendor ?
                                     <li>
                                         <Dropdown>
                                             <Dropdown.Trigger>
@@ -25,7 +26,7 @@ export default function Header() {
                                                         type="button"
                                                         className="inline-flex items-center rounded-md border border-transparent bg-white px-3 py-2 text-sm font-medium leading-4 text-gray-500 transition duration-150 ease-in-out hover:text-gray-700 focus:outline-none"
                                                     >
-                                                        {auth.user?.name}
+                                                        {auth.user?.name || auth.vendor?.name}
 
                                                         <svg
                                                             className="-me-0.5 ms-2 h-4 w-4"
@@ -45,7 +46,7 @@ export default function Header() {
 
                                             <Dropdown.Content>
                                                 <Dropdown.Link
-                                                    href={route('dashboard')}
+                                                    href={auth.vendor ? '/vendor/dashboard' : '/dashboard'}
                                                 >
                                                     Dashboard
                                                 </Dropdown.Link>
@@ -55,7 +56,7 @@ export default function Header() {
                                                     Profile
                                                 </Dropdown.Link>
                                                 <Dropdown.Link
-                                                    href={route('logout')}
+                                                    href={auth.vendor ? '/vendor/logout' : '/logout'}
                                                     method="post"
                                                     as="button"
                                                 >

@@ -16,11 +16,15 @@ class Eoi extends Model
         'status',
     ];
     public function purchase_request(){
-        return $this->hasOne(PurchaseRequest::class);
+        return $this->belongsTo(PurchaseRequest::class);
     }
 
     public function purchase_request_items(){
         return $this->hasManyThrough(PurchaseRequestItem::class,PurchaseRequest::class);
+    }
+
+    public function eoi_documents(){
+        return $this->hasMany(EoiDocument::class);
     }
 
     public function documents(){

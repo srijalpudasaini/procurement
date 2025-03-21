@@ -1,10 +1,9 @@
 import EOICard from "@/Components/EOICard"
-import InputLabel from "@/Components/Form/InputLabel"
 import PrimaryButton from "@/Components/Buttons/PrimaryButton"
 import TextInput from "@/Components/Form/TextInput"
 import Layout from "@/Layouts/Layout"
 
-const Home = () => {
+const Eoi = ({ eois }) => {
   return (
     <>
       <Layout>
@@ -27,10 +26,9 @@ const Home = () => {
             </div>
           </div>
           <div className="eoi m-4">
-            <EOICard />
-            <EOICard />
-            <EOICard />
-            <EOICard />
+            {eois.data.map((eoi)=>(
+              <EOICard key={eoi.id} eoi={eoi}/>
+            ))}
           </div>
         </div>
       </Layout>
@@ -38,4 +36,4 @@ const Home = () => {
   )
 }
 
-export default Home
+export default Eoi

@@ -28,7 +28,7 @@ export default function VendorRegister() {
         <Layout>
             <Head title="Register" />
             <div className="flex min-h-screen flex-col items-center bg-gray-100 pt-6 sm:justify-center sm:pt-0">
-                <div className="mt-6 w-full overflow-hidden bg-white px-6 py-4 shadow-md sm:max-w-md sm:rounded-lg">
+                <div className="mt-6 overflow-hidden bg-white px-6 py-4 shadow-md sm:max-w-md sm:rounded-lg">
                     <h2 className="text-center text-2xl font-bold">Register</h2>
                     <form onSubmit={submit}>
                         <div className="grid grid-cols-2 gap-2">

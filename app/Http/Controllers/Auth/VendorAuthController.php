@@ -25,12 +25,12 @@ class VendorAuthController extends Controller
             'address' => 'required|',
             'email' => 'required|string|lowercase|email|max:255|unique:' . Vendor::class,
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'registration_number' => 'required|numeric',
-            'pan_number' => 'required|numeric|digits:9',
+            'registration_number' => 'required|numeric|unique:vendors,registration_number',
+            'pan_number' => 'required|numeric|digits:9|unique:vendors,pan_number',
             'registration_date' => 'required|date|before:today'
         ]);
 
-        $vendor = Vendor::create([
+        Vendor::create([
             'name' => $request->name,
             'email' => $request->email,
             'contact' => $request->contact,
@@ -40,7 +40,6 @@ class VendorAuthController extends Controller
             'registration_date' => $request->registration_date,
             'password' => Hash::make($request->password),
         ]);
-        $vendor->assignRole('vendor');
 
         return redirect(route('login'));
     }
@@ -54,7 +53,16 @@ class VendorAuthController extends Controller
 
         if (Auth::guard('vendor')->attempt($credentials)) {
             $request->session()->regenerate();
-            return redirect()->intended(route('dashboard', absolute: false));
+            return redirect()->intended(route('vendor.dashboard', absolute: false));
         }
+    }
+    public function destroy(Request $request)
+    {
+        Auth::guard('vendor')->logout();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect('/')->with('success', 'Logged out successfully.');
     }
 }

@@ -1,14 +1,8 @@
 
-import { Link, usePage } from '@inertiajs/react';
-import { useState } from 'react';
 import Layout from './Layout';
 import Sidebar from '@/Components/Layout/Sidebar';
 
 export default function AuthenticatedLayout({ header, children }) {
-
-    const [showingNavigationDropdown, setShowingNavigationDropdown] =
-        useState(false);
-
     return (
         <Layout>
             <div className="min-h-screen bg-gray-200">

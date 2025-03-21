@@ -2,7 +2,10 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\User;
+use App\Models\Vendor;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -27,20 +30,31 @@ class HandleInertiaRequests extends Middleware
      *
      * @return array<string, mixed>
      */
-   public function share(Request $request): array
-    {
-        $user = $request->user(); // Make sure user is retrieved correctly
+    public function share(Request $request): array
+{
+    $user = Auth::guard('web')->id() ? User::find(Auth::guard('web')->id()) : null;
+    $vendor = Auth::guard('vendor')->user();
 
-        return array_merge(parent::share($request), [
-            'auth' => [
-                'user' => $user ? $user->only(['id', 'name', 'email']) : null,
-                'role' => $user ? $user->getRoleNames()->first() : null, // Get user's first role
-                'permissions' => $user ? $user->getAllPermissions()->pluck('name') : [],
-            ],
-            'flash' => [
-                'success' => session('success'),
-                'error' => session('error'),
-            ],
-        ]);
-    }
+    return array_merge(parent::share($request), [
+        'auth' => [
+            'user' => $user ? [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'roles' => $user->roles->pluck('name')->toArray(), // Get user roles
+                'permissions' => $user->getPermissionsViaRoles()->pluck('name')->toArray(), // Get user permissions
+            ] : null,
+
+            'vendor' => $vendor ? [
+                'id' => $vendor->id,
+                'name' => $vendor->name,
+                'email' => $vendor->email,
+            ] : null,
+        ],
+        'flash' => [
+            'success' => session('success'),
+            'error' => session('error'),
+        ],
+    ]);
+}
 }

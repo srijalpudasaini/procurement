@@ -10,7 +10,7 @@ const Users = ({ users }) => {
     const { flash, auth } = usePage().props;
     const [showModal, setShowModal] = useState(false);
     const [deleteId, setDeleteId] = useState(null);
-    const userPermissions = auth?.permissions || [];
+    const userPermissions = auth?.user?.permissions || [];
     console.log(users)
 
     const hasPermission = (permission) => (userPermissions.includes(permission))

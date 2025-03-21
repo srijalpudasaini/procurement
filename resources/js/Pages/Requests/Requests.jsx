@@ -13,7 +13,7 @@ const PurchaseRequests = ({ purchaseRequests }) => {
   const [requestModal, setRequestModal] = useState(null)
   const [deleteId, setDeleteId] = useState(null);
   const [modalType, setModalType] = useState(null);
-  const userPermissions = auth?.permissions || [];
+  const userPermissions = auth?.user?.permissions || [];
 
   const hasPermission = (permission) => (userPermissions.includes(permission))
 
