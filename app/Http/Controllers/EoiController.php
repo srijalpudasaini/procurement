@@ -9,9 +9,11 @@ use App\Models\EoiFile;
 use App\Models\PurchaseRequest;
 use App\Repositories\EoiRepository;
 use App\Repositories\PurchaseRequestRepository;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 use function PHPUnit\Framework\isEmpty;
@@ -54,28 +56,47 @@ class EoiController extends Controller implements HasMiddleware
     public function publish($id){
         $documents = Document::all(); 
         $purchaseRequest = $this->purchaseRequestRepository->find($id,['purchase_request_items.product']);
+        if($purchaseRequest->status != 'approved'){
+            return redirect()->back()->with('error','Could not publish EOI for the given request');
+        }
         return Inertia::render('EOI/PublishEOI',compact('purchaseRequest','documents'));
     }
-
+    
     public function store(EoiRequest $request)
     {
-        $eoi = $this->eoiRepository->store($request->validated());
-        
-        if (isset($request->documents)) {
-            foreach ($request->documents as $doc) {
-                $eoi->documents()->attach($doc['id'], ['required' => $doc['compulsory']]);
+        // dd($request);
+        DB::beginTransaction();
+        try{
+            $purchaseRequest = $this->purchaseRequestRepository->find($request->purchase_request_id);
+            if($purchaseRequest->status !=   'approved'){
+                return redirect()->back()->with('error','Could not publish EOI for the given request');
             }
+            $purchaseRequest->status='published';
+            $purchaseRequest->save();
+            $eoi = $this->eoiRepository->store($request->validated());
+            
+            if (isset($request->documents)) {
+                foreach ($request->documents as $doc) {
+                    $eoi->documents()->attach($doc['id'], ['required' => $doc['compulsory']]);
+                }
+            }
+    
+            foreach($request->files1 as $file){
+                $eoi_file = new EoiFile();
+                $eoi_file->eoi_id = $eoi->id;
+                $path = $file['file']->store('files', 'public');
+                $eoi_file->file_path=$path;
+                $eoi_file->file_name = $file['name'];
+                $eoi_file->save();
+            }
+            DB::commit();
+        }
+        catch(Exception $e){
+            DB::rollBack();
+            return redirect()->route('eois.index')->with('error', $e->getMessage());
         }
     
-        // if ($request->hasFile('files')) {
-        //     foreach ($request->file('files') as $fileData) {
-        //         $path = $fileData['file']->store('uploads/eoi_files', 'public');
-        //         $eoi->files()->create([
-        //             'file_name' => $fileData['name'],
-        //             'file_path' => $path,
-        //         ]);
-        //     }
-        // }
+
         return redirect()->route('eois.index')->with('success', 'Eoi created successfully!');
     }
 

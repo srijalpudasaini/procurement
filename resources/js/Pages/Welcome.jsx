@@ -3,7 +3,9 @@ import Layout from "@/Layouts/Layout"
 const Welcome = () => {
   return (
     <Layout>
-        <div>Home</div>
+        <div>
+          Home
+        </div>
     </Layout>
   )
 }

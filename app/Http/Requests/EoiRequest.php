@@ -31,9 +31,9 @@ class EoiRequest extends FormRequest
             'documents' => 'nullable|array',
             'documents.*.id' => 'exists:documents,id',
             'documents.*.compulsory' => 'boolean',
-            'files'=>'nullable|array',
-            'files.*.name' => 'required|string',
-            'files.*.file' => 'required|file|max:4096'
+            'files1'=>'nullable|array',
+            'files1.*.name' => 'required|string',
+            'files1.*.file' => 'required|file|mimes:jpeg,png,pdf,gif|max:4096'
         ];
     }
 }

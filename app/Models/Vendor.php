@@ -19,4 +19,8 @@ class Vendor extends Authenticatable
         'registration_date',
         'password'
     ];
+
+    public function applications(){
+        return $this->hasMany(EoiVendorApplication::class);
+    }
 }

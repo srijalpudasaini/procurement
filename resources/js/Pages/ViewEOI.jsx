@@ -3,6 +3,7 @@ import { Link, usePage } from "@inertiajs/react"
 
 const ViewEoi = ({ eoi }) => {
     const { auth } = usePage().props;
+    console.log(eoi)
     return (
         <>
             <Layout>
@@ -55,19 +56,23 @@ const ViewEoi = ({ eoi }) => {
                                 <h3 className="text-xl font-semibold mb-1 mt-6 pt-3 border-t border-dotted border-gray-400">For Additional Details</h3>
                                 <ul className="mb-3 ps-3">
                                     {eoi?.files?.map((file, index) => (
-                                        file.file && file.name ?
-                                            <li className="font-semibold underline text-blue-600 mb-1" key={index}>{file.name}</li>
-                                            : null
+                                            <li className="font-semibold underline text-blue-600 mb-1" key={index}>
+                                                <a href={`/storage/${file.file_path}`} target="_blank">
+                                                    {file.file_name}
+                                                </a>
+                                            </li>
                                     ))}
                                 </ul>
                             </>
                         }
-                        {auth.vendor &&
+                        {auth.vendor ?
                             <div className="text-end">
                                 <Link href={`/vendor/eoi/apply/${eoi.id}`} className="rounded-md bg-gray-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-gray-700 focus:bg-gray-700 focus:outline-none active:bg-gray-900">
                                     Apply
                                 </Link>
                             </div>
+                            :
+                            <p className="text-center">Please <Link className="text-blue-600 underline" href="/login">login</Link> to apply</p>
                         }
                     </div>
                 </div>

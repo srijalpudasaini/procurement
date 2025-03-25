@@ -19,28 +19,34 @@ const PublishEOI = ({ purchaseRequest, documents }) => {
         published_date: '',
         deadline_date: '',
         documents: [],
-        files: []
+        files1: []
     });
+    console.log(data.files1)
 
-    const handleFileChange = (index, file) => {
-        const updatedFiles = [...data.files];
-        updatedFiles[index].file = file;
-        setData('files', updatedFiles);
+    const handleFileChange = (e, index) => {
+        const f = e.target.files[0];
+        if (f) {
+            setData("files1",
+                data.files1.map((doc,i) =>
+                     index === i ? { ...doc, file: f } : doc
+                )
+            );
+        }
     };
 
-    const handleFileNameChange = (index, newName) => {
-        const updatedFiles = [...data.files];
-        updatedFiles[index].name = newName;
-        setData('files', updatedFiles);
-    };
+    const handleFileNameChange = (e, index) => {
+        const updatedFiles = [...data.files1];
+        updatedFiles[index].name = e.target.value;
+        setData('files1', updatedFiles);
+    }
 
     const addFileField = () => {
-        setData('files', [...data.files, { name: '', file: null }]);
+        setData('files1', [...data.files1, { name: '', file: null }]);
     };
 
     const removeFileField = (index) => {
-        const updatedFiles = data.files.filter((_, i) => i !== index);
-        setData('files', updatedFiles);
+        const updatedFiles = data.files1.filter((_, i) => i !== index);
+        setData('files1', updatedFiles);
     };
 
     const breadCrumbItems = [
@@ -52,7 +58,7 @@ const PublishEOI = ({ purchaseRequest, documents }) => {
     const submit = (e) => {
         e.preventDefault();
         // console.log(data)
-        post(route('eois.store'));
+        post('/eois');
     };
 
 
@@ -129,7 +135,7 @@ const PublishEOI = ({ purchaseRequest, documents }) => {
                     ))}
                     <h3 className="text-xl font-semibold mb-1 mt-6 pt-3 border-t border-dotted border-gray-400">For Additional Details</h3>
                     <ul className="mb-3 ps-3">
-                        {data.files.map((file, index) => (
+                        {data.files1.map((file, index) => (
                             file.file && file.name ?
                                 <li className="font-semibold underline text-blue-600 mb-1" key={index}>{file.name}</li>
                                 : null
@@ -259,21 +265,21 @@ const PublishEOI = ({ purchaseRequest, documents }) => {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {data.files.map((item, index) => (
+                                        {data.files1.map((item, index) => (
                                             <tr key={index}>
                                                 <td className="p-2 border">
                                                     <TextInput
                                                         type="text"
                                                         placeholder="Enter file name"
                                                         value={item.name}
-                                                        onChange={(e) => handleFileNameChange(index, e.target.value)}
+                                                        onChange={(e) => handleFileNameChange(e, index)}
                                                         className="border p-2 rounded w-full"
                                                     />
                                                 </td>
                                                 <td className="p-2 border">
                                                     <input
                                                         type="file"
-                                                        onChange={(e) => handleFileChange(index, e.target.files[0])}
+                                                        onChange={(e) => handleFileChange(e,index)}
                                                         className="border p-2 rounded w-full"
                                                     />
                                                 </td>
@@ -288,7 +294,7 @@ const PublishEOI = ({ purchaseRequest, documents }) => {
                                 </table>
                                 <div className="text-end">
                                     <Button type="button" className='rounded-md bg-green-600 px-4 py-2 text-xs font-semibold text-white hover:bg-green-700 uppercase' onClick={addFileField}>
-                                        + Add {data.files.length > 0 ? 'Another' : ''} File
+                                        + Add {data.files1.length > 0 ? 'Another' : ''} File
                                     </Button>
                                 </div>
                             </div>

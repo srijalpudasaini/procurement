@@ -104,8 +104,9 @@ const EOI = ({ eois }) => {
           <thead>
             <tr className='bg-gray-600 text-white'>
               <th className='p-2'>S.N.</th>
-              <th className='p-2'>Name</th>
-              <th className='p-2'>Total</th>
+              <th className='p-2'>Title</th>
+              <th className='p-2'>Published Date</th>
+              <th className='p-2'>Deadline</th>
               <th className='p-2'>Status</th>
               <th className='p-2'>Action</th>
             </tr>
@@ -117,8 +118,9 @@ const EOI = ({ eois }) => {
               eois?.data.map((eoi, index) => (
                 <tr key={eoi.id} className={index % 2 === 1 ? 'bg-gray-100' : ''}>
                   <td className='p-2'>{index + 1}</td>
-                  {/* <td className='p-2'>{eoi.user.name}</td> */}
-                  <td className='p-2'>{eoi.total}</td>
+                  <td className='p-2'>{eoi.title}</td>
+                  <td className='p-2'>{eoi.published_date}</td>
+                  <td className='p-2'>{eoi.deadline_date}</td>
                   <td className='p-2'>{eoi.status}</td>
                   <td className='p-2'>
                     <button
@@ -126,22 +128,6 @@ const EOI = ({ eois }) => {
                     >
                       View
                     </button>
-                    {/* {hasPermission('approve_request') && request.status === 'pending' && */}
-                      <button
-                        className='rounded-md border border-transparent bg-blue-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-blue-700 me-2'
-                        onClick={() => confirmDelete(request.id, 'approved')}
-                      >
-                        Approve
-                      </button>
-                    {/* } */}
-                    {/* {hasPermission('delete_request') && request.status === 'pending' && */}
-                      <button
-                        onClick={() => confirmDelete(request.id, 'rejected')}
-                        className='rounded-md border border-transparent bg-red-600 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-red-700'
-                      >
-                        Reject
-                      </button>
-                    {/* } */}
                   </td>
                 </tr>
               ))

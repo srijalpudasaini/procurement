@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('user_id');
             $table->double('total');
-            $table->enum('status',['pending','approved','rejected'])->default('pending');
+            $table->enum('status',['pending','approved','rejected','published'])->default('pending');
             $table->foreign('user_id')->references('id')->on('users');
             $table->timestamps();
         });

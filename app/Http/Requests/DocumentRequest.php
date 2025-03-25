@@ -23,6 +23,7 @@ class DocumentRequest extends FormRequest
     {
         return [
             'title'=>'required|string',
+            'description'=>'required|nullable|string'
         ];
     }
 }
