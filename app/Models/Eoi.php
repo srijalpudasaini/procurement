@@ -34,7 +34,7 @@ class Eoi extends Model
         return $this->hasMany(EoiFile::class);
     }
 
-    public function applications(){
+    public function eoi_vendor_applications(){
         return $this->hasMany(EoiVendorApplication::class);
     }
 }

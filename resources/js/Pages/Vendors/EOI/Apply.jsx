@@ -5,7 +5,7 @@ import Breadcrumb from "@/Components/ui/Breadcrumb"
 import VendorLayout from "@/Layouts/VendorLayout"
 import { useForm } from "@inertiajs/react"
 
-const Apply = ({ eoi }) => {
+const Apply = ({ eoi, hasApplied }) => {
     const breadCrumbItems = [
         {
             title: 'Dashboard',
@@ -164,11 +164,18 @@ const Apply = ({ eoi }) => {
                             </ul>
                         </>
                     }
-                    <div className="text-end">
-                        <PrimaryButton className="rounded-md bg-gray-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-gray-700 focus:bg-gray-700 focus:outline-none active:bg-gray-900">
-                            Apply
-                        </PrimaryButton>
-                    </div>
+                    {/* {hasApplied ?
+
+                        <div className="text-center">
+                            <strong>Applied!</strong>
+                        </div>
+                        : */}
+                        <div className="text-end">
+                            <PrimaryButton className="rounded-md bg-gray-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-gray-700 focus:bg-gray-700 focus:outline-none active:bg-gray-900">
+                                Apply
+                            </PrimaryButton>
+                        </div>
+                    {/* } */}
                 </form>
 
             </div>

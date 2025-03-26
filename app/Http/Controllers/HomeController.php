@@ -15,6 +15,7 @@ class HomeController extends Controller
 
    public function showEoi($id){
       $eoi = Eoi::with('purchase_request.purchase_request_items.product','eoi_documents.document','files')->findOrFail($id);
+      
       return Inertia::render('ViewEOI',compact('eoi'));
    }
 }

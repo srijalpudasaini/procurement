@@ -16,8 +16,6 @@ use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
-use function PHPUnit\Framework\isEmpty;
-
 class EoiController extends Controller implements HasMiddleware
 {
     protected $eoiRepository;
@@ -33,7 +31,7 @@ class EoiController extends Controller implements HasMiddleware
     {
         return [
             new Middleware('permission:view_eoi', only: ['index']),
-            new Middleware('permission:create_eoi', only: ['create','store']),
+            new Middleware('permission:create_eoi', only: ['create','store','publish']),
             new Middleware('permission:edit_eoi', only: ['edit','update']),
             new Middleware('permission:delete_eoi', only: ['destroy']),
         ];
@@ -100,6 +98,10 @@ class EoiController extends Controller implements HasMiddleware
         return redirect()->route('eois.index')->with('success', 'Eoi created successfully!');
     }
 
+    public function submissions($id){
+        $eoi = $this->eoiRepository->find($id,['eoi_vendor_applications.vendor','eoi_vendor_applications.documents','eoi_vendor_applications.proposals.purchase_request_item']);
+        return Inertia::render('EOI/SubmissionsEOI',compact('eoi'));
+    }
     public function edit($id)
     {
         $eoi = $this->eoiRepository->find($id);

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\VendorApplicationRequest;
+use App\Models\Eoi;
 use App\Models\EoiVendorApplication;
 use App\Models\EoiVendorDocument;
 use App\Models\EoiVendorProposal;
@@ -21,7 +22,17 @@ class EoiApplicationController extends Controller
 
     public function submitApplication(VendorApplicationRequest $request)
     {
-        $eoi_application = $this->eoiApplicationRepository->store(array_merge($request->validated(),['user'=>$request->user()->id,'application_date'=>Carbon::now()])); 
+        // if()
+        $eoi = Eoi::findOrFail($request->eoi_id);
+        if($eoi->status != 'published'){
+            return abort(404);
+        }
+        $application = EoiVendorApplication::where('eoi_id',$request->eoi_id)->where('vendor_id',$request->user()->id)->get();
+        
+        if($application){
+            return redirect()->route('vendor.eoi')->with('error','You cannot apply more than once');
+        }
+        $eoi_application = $this->eoiApplicationRepository->store(array_merge($request->validated(),['vendor_id'=>$request->user()->id,'application_date'=>Carbon::now()])); 
 
         foreach ($request->products as $product) {
             $vendor_proposal = new EoiVendorProposal();
@@ -41,7 +52,6 @@ class EoiApplicationController extends Controller
                 $vendor_document->save();
             }
         }
-
-        return redirect()->route('vendor.eoi');
+        return redirect()->route('vendor.eoi')->with('success','Application successfully submitted!');
     }
 }

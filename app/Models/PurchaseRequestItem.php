@@ -20,4 +20,8 @@ class PurchaseRequestItem extends Model
     public function product(){
         return $this->belongsTo(Product::class);
     }
+
+    public function proposals(){
+        return $this->hasMany(EoiVendorProposal::class);
+    }
 }

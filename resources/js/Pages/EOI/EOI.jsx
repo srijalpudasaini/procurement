@@ -43,6 +43,9 @@ const EOI = ({ eois }) => {
   const closeDetail = () => {
     setShowModal(false)
   }
+
+  const [status, setStatus] = useState('all');
+
   return (
     <AuthenticatedLayout>
       {/* {hasPermission('edit_request') && */}
@@ -72,6 +75,14 @@ const EOI = ({ eois }) => {
       <Breadcrumb items={breadCrumbItems} />
       <div className="bg-white p-4 shadow sm:rounded-lg sm:p-8">
         <h2 className="text-center text-2xl font-bold">Published EOI</h2>
+        <div className="my-3">
+          Filter
+          <select value={status} onChange={(e) => setStatus(e.target.value)} className='py-1 ms-2'>
+            <option value="all">Select status</option>
+            <option value="published">Published</option>
+            <option value="closed">Closed</option>
+          </select>
+        </div>
         <div className="flex justify-between items-center">
           <div>
             Show
@@ -116,6 +127,7 @@ const EOI = ({ eois }) => {
               <tr><td colSpan={5} className='p-2'>No EOI Found</td></tr>
               :
               eois?.data.map((eoi, index) => (
+                (eoi.status == status || status == 'all') &&
                 <tr key={eoi.id} className={index % 2 === 1 ? 'bg-gray-100' : ''}>
                   <td className='p-2'>{index + 1}</td>
                   <td className='p-2'>{eoi.title}</td>
@@ -123,11 +135,14 @@ const EOI = ({ eois }) => {
                   <td className='p-2'>{eoi.deadline_date}</td>
                   <td className='p-2'>{eoi.status}</td>
                   <td className='p-2'>
-                    <button
-                      className='rounded-md border border-transparent bg-green-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-green-700 me-2'
-                    >
-                      View
-                    </button>
+                    {eoi.status == 'closed' &&
+                      <Link
+                        className='rounded-md border border-transparent bg-green-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-green-700 me-2'
+                        href={`eois/submissions/${eoi.id}`}
+                      >
+                        View
+                      </Link>
+                    }
                   </td>
                 </tr>
               ))

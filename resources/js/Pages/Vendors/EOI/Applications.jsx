@@ -170,7 +170,7 @@ const Applications = ({ applications }) => {
           <Alert type='error' message={flash.error} />
         )}
 
-        <table className='w-full mt-4 text-center'>
+        <table className='w-full mt-4 text-center overflow-x-auto'>
           <thead>
             <tr className='bg-gray-600 text-white'>
               <th className='p-2'>S.N.</th>
@@ -196,17 +196,17 @@ const Applications = ({ applications }) => {
                   <td className='p-2'>{application.application_date || '-'}</td>
                   <td className='p-2'>
                     {application.proposals?.reduce((total,proposal) => 
-                      total + proposal.price,0
+                      total + proposal.price * proposal.purchase_request_item.quantity,0
                     )}
                   </td>
                   <td className='p-2'>{application.status}</td>
                   <td className='p-2'>
-                    <button
+                    <Link
                       className='rounded-md border border-transparent bg-green-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-green-700 me-2'
                       onClick={() => viewDetail(application)}
                     >
                       View
-                    </button>
+                    </Link>
 
                     {hasPermission('edit_product') &&
                       <Link

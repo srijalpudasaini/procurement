@@ -54,6 +54,7 @@ Route::middleware(['auth'])->group(function(){
 
     Route::put('requests/updateStatus/{id}',[PurchaseRequestController::class,'updateStatus']);
     Route::get('eois/publish/{id}',[EoiController::class,'publish']);
+    Route::get('eois/submissions/{id}',[EoiController::class,'submissions']);
     // Route::get('/roles', function(){
     //     return 'abc';
     // });

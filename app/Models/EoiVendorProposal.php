@@ -9,7 +9,7 @@ class EoiVendorProposal extends Model
     public function application(){
         return $this->belongsTo(EoiVendorApplication::class);
     }
-    public function item(){
+    public function purchase_request_item(){
         return $this->belongsTo(PurchaseRequestItem::class);
     }
 }

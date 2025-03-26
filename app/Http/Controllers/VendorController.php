@@ -20,17 +20,22 @@ class VendorController extends Controller
     }
     public function eoi(Request $request)
     {
-        $applications = EoiVendorApplication::where('vendor_id',$request->user()->id)->with(['eoi','proposals'])->paginate(10);
+        $applications = EoiVendorApplication::where('vendor_id',$request->user()->id)->with(['eoi','proposals.purchase_request_item'])->paginate(10);
         $total = 0;
         return Inertia::render('Vendors/EOI/Applications',compact('applications'));
     }
 
-    public function apply($id)
+    public function apply(Request $request,$id)
     {
+        $application = EoiVendorApplication::where('vendor_id',$request->user()->id)->where('eoi_id',$id)->get();
+        $hasApplied = false;
+        if($application){
+            $hasApplied = true;
+        }
         $eoi = Eoi::with('purchase_request.purchase_request_items.product', 'eoi_documents.document', 'files')->findOrFail($id);
         if($eoi->status != 'published'){
             return abort(404);
         }
-        return Inertia::render('Vendors/EOI/Apply', compact('eoi'));
+        return Inertia::render('Vendors/EOI/Apply', compact('eoi','hasApplied'));
     }
 }
