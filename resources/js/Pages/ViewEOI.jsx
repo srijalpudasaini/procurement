@@ -3,20 +3,30 @@ import { Link, usePage } from "@inertiajs/react"
 
 const ViewEoi = ({ eoi }) => {
     const { auth } = usePage().props;
-    console.log(eoi)
     return (
         <>
             <Layout>
                 <div className="container">
                     <div className="w-2/3 mx-auto border border-gray-200 m-2 p-6">
                         <h2 className="text-2xl text-center font-semibold mb-4">{eoi.title}</h2>
-                        <p className="text-gray-700 mb-2"><strong>EOI Number:</strong> {eoi.eoi_number}</p>
-                        <p className="text-gray-700 mb-2"><strong>Published on:</strong> {eoi.published_date}</p>
-                        <p className="text-gray-700 mb-2"><strong>Deadline:</strong> {eoi.deadline_date}</p>
+                        <table className="mb-3">
+                            <tr>
+                                <th className="p-1 text-gray-700 text-start">EOI Number:</th>
+                                <td className="p-1 text-gray-700">{eoi.eoi_number}</td>
+                            </tr>
+                            <tr>
+                                <th className="p-1 text-gray-700 text-start">Published on:</th>
+                                <td className="p-1 text-gray-700">{eoi.published_date}</td>
+                            </tr>
+                            <tr>
+                                <th className="p-1 text-gray-700 text-start">Deadline:</th>
+                                <td className="p-1 text-gray-700">{eoi.deadline_date}</td>
+                            </tr>
+                        </table>
                         <h3 className="text-xl font-semibold mb-1">Details</h3>
-                        <p className="text-gray-700 ps-2">{eoi.description}</p>
+                        <p className="text-gray-700">{eoi.description}</p>
                         <h3 className="text-xl font-semibold mb-1 mt-6 pt-3 border-t border-dotted border-gray-400">Required Items</h3>
-                        <table className="requisition-form w-full mx-auto mt-6 table border-collapse overflow-x-auto">
+                        <table className="requisition-form w-full mx-auto mt-3 table border-collapse overflow-x-auto">
                             <thead>
                                 <tr className="text-white bg-[#00AB66]">
                                     <th className="p-2 border">Product</th>

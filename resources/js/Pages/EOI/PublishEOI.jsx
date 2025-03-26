@@ -15,7 +15,6 @@ const PublishEOI = ({ purchaseRequest, documents }) => {
         purchase_request_id: purchaseRequest.id,
         title: '',
         description: '',
-        eoi_number: '',
         published_date: '',
         deadline_date: '',
         documents: [],
@@ -149,7 +148,7 @@ const PublishEOI = ({ purchaseRequest, documents }) => {
                 <form onSubmit={submit} className="mx-auto">
                     <div className="mx-auto w-2/3">
                         <div className="border border-gray-400 grid grid-cols-2 gap-x-4 p-4 rounded-md mt-6 mb-10 shadow-md">
-                            <div className="mt-4">
+                            <div className="mt-4 col-span-2">
                                 <InputLabel htmlFor="title" value="Title *" />
                                 <TextInput
                                     id="title"
@@ -159,18 +158,6 @@ const PublishEOI = ({ purchaseRequest, documents }) => {
                                     onChange={(e) => setData('title', e.target.value)}
                                 />
                                 <InputError message={errors.title} className="mt-2" />
-                            </div>
-                            <div className="mt-4">
-                                <InputLabel htmlFor="eoi_number" value="Eoi number *" />
-                                <TextInput
-                                    id="eoi_number"
-                                    name="eoi_number"
-                                    value={data.eoi_number}
-                                    className="mt-1 w-full"
-                                    onChange={(e) => setData('eoi_number', e.target.value)}
-                                />
-
-                                <InputError message={errors.eoi_number} className="mt-2" />
                             </div>
 
                             <div className="mt-4 col-span-2">

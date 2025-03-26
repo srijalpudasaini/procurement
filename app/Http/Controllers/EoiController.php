@@ -9,11 +9,13 @@ use App\Models\EoiFile;
 use App\Models\PurchaseRequest;
 use App\Repositories\EoiRepository;
 use App\Repositories\PurchaseRequestRepository;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 
 class EoiController extends Controller implements HasMiddleware
@@ -71,7 +73,8 @@ class EoiController extends Controller implements HasMiddleware
             }
             $purchaseRequest->status='published';
             $purchaseRequest->save();
-            $eoi = $this->eoiRepository->store($request->validated());
+            $eoi_number = 'EOI-' . Carbon::now()->format('YmdHis') . '-' . Str::random(4);
+            $eoi = $this->eoiRepository->store(array_merge($request->validated(),[$eoi_number]));
             
             if (isset($request->documents)) {
                 foreach ($request->documents as $doc) {
@@ -99,7 +102,7 @@ class EoiController extends Controller implements HasMiddleware
     }
 
     public function submissions($id){
-        $eoi = $this->eoiRepository->find($id,['eoi_vendor_applications.vendor','eoi_vendor_applications.documents','eoi_vendor_applications.proposals.purchase_request_item']);
+        $eoi = $this->eoiRepository->find($id,['eoi_vendor_applications.vendor','eoi_vendor_applications.documents.document','eoi_vendor_applications.proposals.purchase_request_item.product']);
         return Inertia::render('EOI/SubmissionsEOI',compact('eoi'));
     }
     public function edit($id)

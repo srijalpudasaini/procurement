@@ -16,7 +16,7 @@ return new class extends Migration
             $table->unsignedBigInteger('purchase_request_id');
             $table->string('title');
             $table->text('description');
-            $table->integer('eoi_number');
+            $table->string('eoi_number')->unique();
             $table->date('published_date');
             $table->date('deadline_date');
             $table->enum('status',['published','closed'])->default('published');

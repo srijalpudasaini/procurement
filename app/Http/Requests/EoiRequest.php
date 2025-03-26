@@ -23,7 +23,6 @@ class EoiRequest extends FormRequest
     {
         return [
             'title' => 'required',
-            'eoi_number' => 'required|unique:eois,eoi_number,' . $this->id,
             'description' => 'required',
             'published_date' => 'required|date|after_or_equal:today',
             'deadline_date' => 'required|date|after:published_date',

@@ -10,16 +10,22 @@ const SubmissionEOI = ({ eoi }) => {
     const { flash, auth } = usePage().props;
     const [showModal, setShowModal] = useState(false);
     const [deleteId, setDeleteId] = useState(null);
-    const [modalType, setModalType] = useState(null);
+    const [application, setApplication] = useState(null);
     const userPermissions = auth?.user?.permissions || [];
+
+    console.log(eoi)
 
     const hasPermission = (permission) => (userPermissions.includes(permission))
 
     const confirmDelete = (id, type) => {
-        setModalType(type)
         setDeleteId(id);
         setShowModal(true);
     };
+
+    const openApplication = (application) => {
+        setApplication(application);
+        setShowModal(true)
+    }
 
     const handleDelete = () => {
         router.put(`/requests/updateStatus/${deleteId}`, {
@@ -43,7 +49,6 @@ const SubmissionEOI = ({ eoi }) => {
     const closeDetail = () => {
         setShowModal(false)
     }
-    console.log(eoi)
 
     return (
         <AuthenticatedLayout>
@@ -51,20 +56,71 @@ const SubmissionEOI = ({ eoi }) => {
             <Modal show={showModal} onClose={closeDetail}>
                 <div className="p-6">
                     <h2 className="text-lg font-semibold text-gray-800">
-                        Are you sure you want to {modalType == 'approved' ? 'approve' : 'reject'} this request?
+                        Application Details
                     </h2>
+                    <div className="application-details">
+                        <table className='my-3'>
+                            <tr>
+                                <th className='p-1'>Vendor Name: </th>
+                                <td className='p-1'>{application?.vendor.name}</td>
+                            </tr>
+                            <tr>
+                                <th className='p-1'>Submitted on: </th>
+                                <td className='p-1'>{application?.application_date}</td>
+                            </tr>
+                            <tr>
+                                <th className='p-1'>Total Amount: </th>
+                                <td className='p-1'>
+                                    {application?.proposals?.reduce((total, proposal) =>
+                                        total + proposal.price * proposal.purchase_request_item.quantity, 0
+                                    )}
+                                </td>
+                            </tr>
+                        </table>
+                        <h2 className='mb-2 text-lg font-semibold text-gray-800'>Product Quotations</h2>
+                        <table className='mb-3 w-full border border-collapse text-center'>
+                            <thead>
+                                <tr className='bg-gray-600 text-white'>
+                                    <th className='p-2'>S.N.</th>
+                                    <th className='p-2'>Product</th>
+                                    <th className='p-2'>Unit</th>
+                                    <th className='p-2'>Required Quantity</th>
+                                    <th className='p-2'>Unit Price Offered</th>
+                                    <th className='p-2'>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {
+                                    application?.proposals.map((proposal, index) => (
+                                        <tr key={proposal.id} className={index % 2 === 1 ? 'bg-gray-100' : ''}>
+                                            <td className='p-2'>{index + 1}</td>
+                                            <td className='p-2'>{proposal.purchase_request_item.product.name}</td>
+                                            <td className='p-2'>{proposal.purchase_request_item.product.unit}</td>
+                                            <td className='p-2'>{proposal.purchase_request_item.quantity}</td>
+                                            <td className='p-2'>{proposal.price}</td>
+                                            <td className='p-2'>{proposal.price * proposal.purchase_request_item.quantity}</td>
+                                        </tr>
+                                    ))
+                                }
+                            </tbody>
+                        </table>
+                        <h2 className='mb-2 text-lg font-semibold text-gray-800'>Documents uploaded</h2>
+                        <ul className='ms-6 list-disc'>
+                            {application?.documents.map((doc,index)=>(
+                                <li key={index}>
+                                    <a href={`/storage/${doc.name}`} className='text-blue-600 font-bold' target='blank'>
+                                        {doc.document.title}
+                                    </a>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
                     <div className="mt-4 flex justify-end">
                         <button
                             onClick={() => setShowModal(false)}
                             className="px-4 py-2 text-gray-700 bg-gray-200 rounded mr-2 hover:bg-gray-300"
                         >
                             Cancel
-                        </button>
-                        <button
-                            onClick={handleDelete}
-                            className={`px-4 py-2 text-white ${modalType == 'rejected' ? 'bg-red-600 rounded hover:bg-red-700' : 'bg-blue-600 rounded hover:bg-blue-700'} `}
-                        >
-                            {modalType == 'approved' ? 'Approve' : 'Reject'}
                         </button>
                     </div>
                 </div>
@@ -128,6 +184,7 @@ const SubmissionEOI = ({ eoi }) => {
                                     <td className='p-2'>
                                         <button
                                             className='rounded-md border border-transparent bg-green-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-green-700 me-2'
+                                            onClick={() => openApplication(application)}
                                         >
                                             View
                                         </button>

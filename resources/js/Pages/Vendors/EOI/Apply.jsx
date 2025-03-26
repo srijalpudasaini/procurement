@@ -94,7 +94,7 @@ const Apply = ({ eoi, hasApplied }) => {
                                 <th className="p-2 border">Unit</th>
                                 <th className="p-2 border">Required Quantity</th>
                                 <th className="p-2 border">Required  Specification</th>
-                                <th>Price Offered</th>
+                                <th>Unit Price Offered</th>
                             </tr>
                         </thead>
                         <tbody>
