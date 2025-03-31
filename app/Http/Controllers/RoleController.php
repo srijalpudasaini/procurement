@@ -67,11 +67,15 @@ class RoleController extends Controller implements HasMiddleware
 
     public function store(RoleRequest $roleRequest)
     {
-        $role = $this->roleRepository->store($roleRequest->validated());
-        if (!empty($roleRequest->validated('permissions'))) {
-            $role->syncPermissions($roleRequest->validated('permissions'));
+        try {
+            $role = $this->roleRepository->store($roleRequest->validated());
+            if (!empty($roleRequest->validated('permissions'))) {
+                $role->syncPermissions($roleRequest->validated('permissions'));
+            }
+            return redirect()->route('roles.index')->with('success', 'Role added successfully!');
+        } catch (\Exception $e) {
+            return redirect()->route('roles.index')->with('error', $e->getMessage());
         }
-        return redirect()->route('roles.index')->with('success', 'Role added successfully!');
     }
 
     public function edit($id)
@@ -108,16 +112,24 @@ class RoleController extends Controller implements HasMiddleware
 
     public function update(RoleRequest $roleRequest, $id)
     {
-        $role = $this->roleRepository->update($id, $roleRequest->validated());
-        if (!empty($roleRequest->validated('permissions'))) {
-            $role->syncPermissions($roleRequest->validated('permissions'));
+        try {
+            $role = $this->roleRepository->update($id, $roleRequest->validated());
+            if (!empty($roleRequest->validated('permissions'))) {
+                $role->syncPermissions($roleRequest->validated('permissions'));
+            }
+            return redirect()->route('roles.index')->with('success', 'Role updated successfully!');
+        } catch (\Exception $e) {
+            return redirect()->route('roles.index')->with('error', $e->getMessage());
         }
-        return redirect()->route('roles.index')->with('success', 'Role updated successfully!');
     }
 
     public function destroy($id)
     {
-        $this->roleRepository->delete($id);
-        return redirect()->route('roles.index')->with('success', 'Role deleted successfully!');
+        try {
+            $this->roleRepository->delete($id);
+            return redirect()->route('roles.index')->with('success', 'Role deleted successfully!');
+        } catch (\Exception $e) {
+            return redirect()->route('roles.index')->with('success', $e->getMessage());
+        }
     }
 }

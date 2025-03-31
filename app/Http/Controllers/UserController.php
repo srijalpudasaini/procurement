@@ -37,9 +37,13 @@ class UserController extends Controller implements HasMiddleware
     }
     
     public function store(UserRequest $userRequest){
-        $user = $this->userRepository->store($userRequest->validated());
-        $user->assignRole($userRequest->validated('role'));
-        return redirect()->route('users.index')->with('success','User registered successfully');
+        try {
+            $user = $this->userRepository->store($userRequest->validated());
+            $user->assignRole($userRequest->validated('role'));
+            return redirect()->route('users.index')->with('success','User registered successfully');
+        } catch (\Exception $e) {
+            return redirect()->route('users.index')->with('error',$e->getMessage());
+        }
     }
     
     public function edit($id){
@@ -49,14 +53,22 @@ class UserController extends Controller implements HasMiddleware
         return Inertia::render('Users/EditUser',compact('user','roles','userRole'));
     }
     public function update($id, UserRequest $userRequest){
-        $user = $this->userRepository->update($id,$userRequest->validated());
-        $user->syncRoles($userRequest->validated('role'));
-
-        return redirect()->route('users.index')->with('success','User updated successfully');
+        try {
+            $user = $this->userRepository->update($id,$userRequest->validated());
+            $user->syncRoles($userRequest->validated('role'));
+    
+            return redirect()->route('users.index')->with('success','User updated successfully');
+        } catch (\Exception $e) {
+            return redirect()->route('users.index')->with('error',$e->getMessage());
+        }
     }
     
     public function destroy($id){
-        $this->userRepository->delete($id);
-        return redirect()->route('users.index')->with('success','User deleted successfully');
+        try {
+            $this->userRepository->delete($id);
+            return redirect()->route('users.index')->with('success','User deleted successfully');
+        } catch (\Exception $e) {
+            return redirect()->route('users.index')->with('error',$e->getMessage());
+        }
     }
 }

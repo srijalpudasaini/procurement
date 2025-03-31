@@ -40,8 +40,12 @@ class CategoryController extends Controller implements HasMiddleware
 
     public function store(CategoryRequest $request)
     {
-        $this->categoryRepository->store($request->validated());
-        return redirect()->route('categories.index')->with('success', 'Category created successfully!');
+        try {
+            $this->categoryRepository->store($request->validated());
+            return redirect()->route('categories.index')->with('success', 'Category created successfully!');
+        } catch (\Exception $e) {
+            return redirect()->route('categories.index')->with('error', $e->getMessage());
+        }
     }
 
     public function edit($id)
@@ -56,13 +60,21 @@ class CategoryController extends Controller implements HasMiddleware
     }
     public function update(CategoryRequest $request, $id)
     {
-        $this->categoryRepository->update($id, $request->validated());
-        return redirect()->route('categories.index')->with('success', 'Category updated successfully!');
+        try {
+            $this->categoryRepository->update($id, $request->validated());
+            return redirect()->route('categories.index')->with('success', 'Category updated successfully!');
+        } catch (\Exception $e) {
+            return redirect()->route('categories.index')->with('error', $e->getMessage());
+        }
     }
 
     public function destroy($id)
     {
-        $this->categoryRepository->delete($id);
-        return redirect()->route('categories.index')->with('success', 'Category deleted successfully!');
+        try {
+            $this->categoryRepository->delete($id);
+            return redirect()->route('categories.index')->with('success', 'Category deleted successfully!');
+        } catch (\Exception $e) {
+            return redirect()->route('categories.index')->with('error', $e->getMessage());
+        }
     }
 }

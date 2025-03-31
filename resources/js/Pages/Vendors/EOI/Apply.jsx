@@ -165,18 +165,17 @@ const Apply = ({ eoi, hasApplied }) => {
                             </ul>
                         </>
                     }
-                    {/* {hasApplied ?
-
+                    {hasApplied ?
                         <div className="text-center">
-                            <strong>Applied!</strong>
+                            <strong>Already Applied!</strong>
                         </div>
-                        : */}
+                        :
                         <div className="text-end">
                             <PrimaryButton className="rounded-md bg-gray-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-gray-700 focus:bg-gray-700 focus:outline-none active:bg-gray-900">
                                 Apply
                             </PrimaryButton>
                         </div>
-                    {/* } */}
+                    }
                 </form>
 
             </div>

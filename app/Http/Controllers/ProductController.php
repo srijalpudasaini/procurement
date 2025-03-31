@@ -42,8 +42,12 @@ class ProductController extends Controller implements HasMiddleware
 
     public function store(ProductRequest $request)
     {
-        $this->productRepository->store($request->validated());
-        return redirect()->route('products.index')->with('success', 'Product added successfully!');
+        try {
+            $this->productRepository->store($request->validated());
+            return redirect()->route('products.index')->with('success', 'Product added successfully!');
+        } catch (\Exception $e) {
+            return redirect()->route('products.index')->with('error', $e->getMessage());
+        }
     }
 
     public function edit($id)
@@ -55,13 +59,21 @@ class ProductController extends Controller implements HasMiddleware
 
     public function update(ProductRequest $request, $id)
     {
-        $this->productRepository->update($id, $request->validated());
-        return redirect()->route('products.index')->with('success', 'Product updated successfully!');
+        try {
+            $this->productRepository->update($id, $request->validated());
+            return redirect()->route('products.index')->with('success', 'Product updated successfully!');
+        } catch (\Exception $e) {
+            return redirect()->route('products.index')->with('error', $e->getMessage());
+        }
     }
 
     public function destroy($id)
     {
-        $this->productRepository->delete($id);
-        return redirect()->route('products.index')->with('success', 'Product deleted successfully!');
+        try {
+            $this->productRepository->delete($id);
+            return redirect()->route('products.index')->with('success', 'Product deleted successfully!');
+        } catch (\Exception $e) {
+            return redirect()->route('products.index')->with('error', $e->getMessage());
+        }
     }
 }

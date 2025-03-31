@@ -5,31 +5,29 @@ namespace App\Http\Controllers;
 use App\Http\Requests\EoiRequest;
 use App\Models\Document;
 use App\Models\Eoi;
-use App\Models\EoiDocument;
 use App\Models\EoiFile;
 use App\Models\Product;
-use App\Models\PurchaseRequest;
-use App\Models\PurchaseRequestItem;
 use App\Repositories\EoiRepository;
 use App\Repositories\PurchaseRequestRepository;
+use App\Repositories\PurchaseRequestItemRepository;
 use Carbon\Carbon;
-use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 use Inertia\Inertia;
 
 class EoiController extends Controller implements HasMiddleware
 {
     protected $eoiRepository;
     protected $purchaseRequestRepository;
+    protected $purchaseRequestItemRepository;
 
-    public function __construct(EoiRepository $eoiRepository, PurchaseRequestRepository $purchaseRequestRepository)
+    public function __construct(EoiRepository $eoiRepository, PurchaseRequestRepository $purchaseRequestRepository, PurchaseRequestItemRepository $purchaseRequestItemRepository)
     {
         $this->eoiRepository = $eoiRepository;
         $this->purchaseRequestRepository = $purchaseRequestRepository;
+        $this->purchaseRequestItemRepository = $purchaseRequestItemRepository;
     }
 
     public static function middleware(): array
@@ -58,28 +56,20 @@ class EoiController extends Controller implements HasMiddleware
 
     public function publish(Request $request)
     {
-        // dd($request);
         $documents = Document::all();
         $ids = explode(',', $request->input('requests'));
 
         $products = Product::all();
         $purchaseRequests = $this->purchaseRequestRepository->find($ids, ['purchase_request_items.product']);
 
-        // $items = collect();
-
-        // foreach($purchaseRequests as $purchaseRequest){
-        //     $items->push($purchaseRequest->purchase_request_items);
-        // }
-
-        // if($purchaseRequest->status != 'approved'){
-        //     return redirect()->back()->with('error','Could not publish EOI for the given request');
-        // }
+        if(!$purchaseRequests->contains('status','approved')){
+            return redirect()->back()->with('error','Could not publish EOI for the given request');
+        }
         return Inertia::render('EOI/PublishEOI', compact('purchaseRequests', 'documents', 'products'));
     }
 
     public function store(EoiRequest $request)
     {
-        // dd($request);
         DB::beginTransaction();
         try {
             $latestEOI = Eoi::whereDate('created_at', now())->count() + 1;
@@ -101,14 +91,7 @@ class EoiController extends Controller implements HasMiddleware
                 }
             }
             foreach ($request->newProducts as $item) {
-                $purchaseItem = new PurchaseRequestItem();
-                $purchaseItem->selected = true;
-                $purchaseItem->eoi_id = $eoi->id;
-                $purchaseItem->product_id = $item['product_id'];
-                $purchaseItem->price = $item['price'];
-                $purchaseItem->quantity = $item['quantity'];
-                $purchaseItem->specifications = $item['specifications'];
-                $purchaseItem->save();
+                $this->purchaseRequestItemRepository->store(array_merge($item,['selected'=>true,'eoi_id'=>$eoi->id]));
             }
 
             if (isset($request->documents)) {
@@ -127,7 +110,7 @@ class EoiController extends Controller implements HasMiddleware
             }
             DB::commit();
             return redirect()->route('eois.index')->with('success', 'Eoi created successfully!');
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->route('eois.index')->with('error', $e->getMessage());
         }
@@ -150,13 +133,21 @@ class EoiController extends Controller implements HasMiddleware
     }
     public function update(EoiRequest $request, $id)
     {
-        $this->eoiRepository->update($id, $request->validated());
-        return redirect()->route('eois.index')->with('success', 'Eoi updated successfully!');
+        try {
+            $this->eoiRepository->update($id, $request->validated());
+            return redirect()->route('eois.index')->with('success', 'Eoi updated successfully!');
+        } catch (\Exception $e) {
+            return redirect()->route('eois.index')->with('error', $e->getMessage());
+        }
     }
 
     public function destroy($id)
     {
-        $this->eoiRepository->delete($id);
-        return redirect()->route('eois.index')->with('success', 'Eoi deleted successfully!');
+        try {
+            $this->eoiRepository->delete($id);
+            return redirect()->route('eois.index')->with('success', 'Eoi deleted successfully!');
+        } catch (\Exception $e) {
+            return redirect()->route('eois.index')->with('error', $e->getMessage());
+        }
     }
 }

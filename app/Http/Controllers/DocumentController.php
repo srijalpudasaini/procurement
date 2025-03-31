@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\DocumentRequest;
 use App\Repositories\DocumentRepository;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
@@ -38,10 +39,13 @@ class DocumentController extends Controller implements HasMiddleware
         return Inertia::render('Documents/AddDocument');
     }
 
-    public function store(DocumentRequest $request)
-    {
-        $this->documentRepository->store($request->validated());
-        return redirect()->route('documents.index')->with('success','Document added successfully');
+    public function store(DocumentRequest $request){
+        try {
+            $this->documentRepository->store($request->validated());
+            return redirect()->route('documents.index')->with('success','Document added successfully');
+        } catch (\Exception $e) {
+            return redirect()->route('documents.index')->with('error',$e->getMessage());
+        }
     }
     
     public function edit(string $id)
@@ -52,13 +56,22 @@ class DocumentController extends Controller implements HasMiddleware
     
     public function update(DocumentRequest $request, string $id)
     {
-        $this->documentRepository->update($id,$request->validated());
-        return redirect()->route('documents.index')->with('success','Document updated successfully');  
+        try{
+            $this->documentRepository->update($id,$request->validated());
+            return redirect()->route('documents.index')->with('success','Document updated successfully');  
+        }
+        catch(Exception $e){
+            return redirect()->route('documents.index')->with('error',$e->getMessage());  
+        }
     }
     
     public function destroy(string $id)
     {
-        $this->documentRepository->delete($id);
-        return redirect()->route('documents.index')->with('success','Document deleted successfully');  
+        try {
+            $this->documentRepository->delete($id);
+            return redirect()->route('documents.index')->with('success','Document deleted successfully');  
+        } catch (Exception $e) {
+            return redirect()->route('documents.index')->with('error',$e->getMessage());  
+        }
     }
 }

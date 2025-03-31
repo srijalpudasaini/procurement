@@ -9,6 +9,8 @@ class PurchaseRequestItem extends Model
     protected $fillable = [
         'purchase_request_id',
         'product_id',
+        'eoi_id',
+        'selected',
         'price',
         'quantity',
         'specifications'
