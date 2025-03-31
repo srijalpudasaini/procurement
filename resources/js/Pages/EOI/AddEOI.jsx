@@ -38,8 +38,12 @@ const AddEOI = ({ purchaseRequests }) => {
       href: '/dashboard'
     },
     {
-      title: 'Purchase Requests',
-    }
+      title: 'EOIs',
+      href: '/eois',
+    },
+    {
+      title: 'Create EOI',
+    },
   ]
 
   const viewDetail = (req) => {
@@ -102,7 +106,7 @@ const AddEOI = ({ purchaseRequests }) => {
                   <th className="p-2 border">Product</th>
                   <th className="p-2 border">Quantity</th>
                   <th className="p-2 border">Price</th>
-                  <th className="p-2 border">Speification</th>
+                  <th className="p-2 border">Specification</th>
                 </tr>
               </thead>
               <tbody>
@@ -213,7 +217,7 @@ const AddEOI = ({ purchaseRequests }) => {
                     {hasPermission('create_eoi') &&
                       <Link
                         className='rounded-md border border-transparent bg-blue-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-blue-700 me-2'
-                        href={`/eois/publish/${request.id}`}
+                        href={route('eois.publish', { request: request.id })}
                       >
                         Publish
                       </Link>

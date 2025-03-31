@@ -13,6 +13,7 @@ const PurchaseRequests = ({ purchaseRequests }) => {
   const [requestModal, setRequestModal] = useState(null)
   const [deleteId, setDeleteId] = useState(null);
   const [modalType, setModalType] = useState(null);
+  const [selectedRequests, setSelectedRequests] = useState([])
   const userPermissions = auth?.user?.permissions || [];
 
   const hasPermission = (permission) => (userPermissions.includes(permission))
@@ -50,6 +51,19 @@ const PurchaseRequests = ({ purchaseRequests }) => {
     setShowViewModal(false)
     setShowModal(false)
     setRequestModal(null)
+  }
+
+  const handleChange = (e, request) => {
+    const { checked } = e.target;
+    if (request.status != 'approved') {
+      return;
+    }
+    if (checked) {
+      setSelectedRequests([...selectedRequests, request.id])
+    }
+    else {
+      setSelectedRequests(selectedRequests.filter(req => req != request.id))
+    }
   }
   return (
     <AuthenticatedLayout>
@@ -101,7 +115,7 @@ const PurchaseRequests = ({ purchaseRequests }) => {
                   <th className="p-2 border">Product</th>
                   <th className="p-2 border">Quantity</th>
                   <th className="p-2 border">Price</th>
-                  <th className="p-2 border">Speification</th>
+                  <th className="p-2 border">Specification</th>
                 </tr>
               </thead>
               <tbody>
@@ -177,6 +191,26 @@ const PurchaseRequests = ({ purchaseRequests }) => {
           }
         </div>
 
+        {hasPermission('create_eoi') &&
+          <div className="my-3">
+            {selectedRequests.length < 1 ?
+              <Link
+                className='rounded-md border border-transparent px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out me-2 bg-gray-500 cursor-not-allowed'
+                onClick={(e) => e.preventDefault()}
+              >
+                ({selectedRequests.length} selected)
+                Create EOI
+              </Link> :
+              <Link className='rounded-md border border-transparent px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out me-2 bg-blue-800 hover:bg-blue-700 cursor-pointer'
+              href={`/eois/publish?requests=${selectedRequests}`}
+              >
+                ({selectedRequests.length} selected)
+                Create EOI
+              </Link>
+            }
+          </div>
+        }
+
         {flash?.success && (
           <Alert type='success' message={flash.success} />
         )}
@@ -187,6 +221,9 @@ const PurchaseRequests = ({ purchaseRequests }) => {
         <table className='w-full mt-4 text-center'>
           <thead>
             <tr className='bg-gray-600 text-white'>
+              {hasPermission('create_eoi') &&
+                <th className='p-2'></th>
+              }
               <th className='p-2'>S.N.</th>
               <th className='p-2'>Name</th>
               <th className='p-2'>Total</th>
@@ -200,6 +237,16 @@ const PurchaseRequests = ({ purchaseRequests }) => {
               :
               purchaseRequests?.data.map((request, index) => (
                 <tr key={request.id} className={index % 2 === 1 ? 'bg-gray-100' : ''}>
+                  {hasPermission('create_eoi') &&
+                    <td className='p-2'>
+                      <input type="checkbox"
+                        disabled={request.status != 'approved'}
+                        onChange={(e) => handleChange(e, request)}
+                        checked={selectedRequests.includes(request.id)}
+                        className={`${request.status != 'approved' ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                      />
+                    </td>
+                  }
                   <td className='p-2'>{index + 1}</td>
                   <td className='p-2'>{request.user.name}</td>
                   <td className='p-2'>{request.total}</td>

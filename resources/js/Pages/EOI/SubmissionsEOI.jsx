@@ -42,7 +42,11 @@ const SubmissionEOI = ({ eoi }) => {
         },
         {
             title: 'EOIs',
-        }
+            href: '/eois',
+        },
+        {
+            title: 'EOI Submissions',
+        },
     ]
 
 

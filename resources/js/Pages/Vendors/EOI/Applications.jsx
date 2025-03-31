@@ -89,7 +89,7 @@ const Applications = ({ applications }) => {
                   <th className="p-2 border">Product</th>
                   <th className="p-2 border">Quantity</th>
                   <th className="p-2 border">Price</th>
-                  <th className="p-2 border">Speification</th>
+                  <th className="p-2 border">Specification</th>
                 </tr>
               </thead>
               <tbody>

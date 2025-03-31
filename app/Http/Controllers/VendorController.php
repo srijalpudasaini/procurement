@@ -32,7 +32,7 @@ class VendorController extends Controller
         if($application){
             $hasApplied = true;
         }
-        $eoi = Eoi::with('purchase_request.purchase_request_items.product', 'eoi_documents.document', 'files')->findOrFail($id);
+        $eoi = Eoi::with('purchase_request_items.product', 'eoi_documents.document', 'files')->findOrFail($id);
         if($eoi->status != 'published'){
             return abort(404);
         }

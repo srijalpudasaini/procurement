@@ -5,29 +5,38 @@ import TextInput from "@/Components/Form/TextInput";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { useForm } from "@inertiajs/react";
 import Breadcrumb from "@/Components/ui/Breadcrumb";
-import { useState } from "react";
+import React, { useState } from "react";
 import { Button } from "@headlessui/react";
 import Modal from "@/Components/ui/Modal";
 
-const PublishEOI = ({ purchaseRequest, documents }) => {
+const PublishEOI = ({ purchaseRequests, documents, products }) => {
 
     const { data, setData, post, processing, errors, reset } = useForm({
-        purchase_request_id: purchaseRequest.id,
+        purchase_request_ids: purchaseRequests.map(p => p.id),
         title: '',
         description: '',
         published_date: '',
         deadline_date: '',
         documents: [],
-        files1: []
+        files1: [],
+        products: purchaseRequests.flatMap(p =>
+            p.purchase_request_items.map(pro => ({
+                product: pro.product,
+                quantity: pro.quantity ?? 0,
+                price: pro.price ?? 0,
+                specifications: pro.specifications ?? "",
+                id: pro.id ?? null,
+            }))
+        ),
+        newProducts: []
     });
-    console.log(data.files1)
 
     const handleFileChange = (e, index) => {
         const f = e.target.files[0];
         if (f) {
             setData("files1",
-                data.files1.map((doc,i) =>
-                     index === i ? { ...doc, file: f } : doc
+                data.files1.map((doc, i) =>
+                    index === i ? { ...doc, file: f } : doc
                 )
             );
         }
@@ -56,10 +65,24 @@ const PublishEOI = ({ purchaseRequest, documents }) => {
 
     const submit = (e) => {
         e.preventDefault();
-        // console.log(data)
         post('/eois');
     };
 
+    const handleProductChange = (e, request) => {
+        const { checked } = e.target
+        if (checked) {
+            setData('products', [...data.products, {
+                product: request.product,
+                quantity: request.quantity ?? 0,
+                price: request.price ?? 0,
+                specifications: request.specifications ?? "",
+                id: request.id ?? null
+            }])
+        }
+        else {
+            setData('products', data.products.filter((p) => p.id != request.id))
+        }
+    }
 
     const handleCheckboxChange = (e, document) => {
         const { checked } = e.target
@@ -81,6 +104,22 @@ const PublishEOI = ({ purchaseRequest, documents }) => {
 
     const [modalOpen, setModalOpen] = useState(false);
 
+    const handleProductAdd = () => {
+        setData("newProducts", [...data.newProducts, { product_id: "", quantity: "", price: "", specifications: "" }]);
+    };
+
+    const handleProductRemove = (index) => {
+        const list = [...data.newProducts];
+        list.splice(index, 1);
+        setData("newProducts", list);
+    };
+
+    const handleNewProductChange = (e, i) => {
+        let newValues = [...data.newProducts];
+        newValues[i][e.target.name] = e.target.value;
+        setData("newProducts", newValues);
+    };
+
     return (
         <AuthenticatedLayout>
             <Modal show={modalOpen} onClose={() => setModalOpen(false)} maxWidth="w-full" className="rounded-none h-lvh overflow-y-auto mb-0">
@@ -99,24 +138,16 @@ const PublishEOI = ({ purchaseRequest, documents }) => {
                                 <th className="p-2 border">Product</th>
                                 <th className="p-2 border">Quantity</th>
                                 <th className="p-2 border">Price</th>
-                                <th className="p-2 border">Speification</th>
+                                <th className="p-2 border">Specification</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {purchaseRequest.purchase_request_items.map((pro, index) => (
-                                <tr key={index} className="border">
-                                    <td className="p-2 border">
-                                        {pro.product.name}
-                                    </td>
-                                    <td className="p-2 border">
-                                        {pro.quantity}
-                                    </td>
-                                    <td className="p-2 border">
-                                        {pro.price}
-                                    </td>
-                                    <td className="p-2 border">
-                                        {pro.specifications}
-                                    </td>
+                            {data.products?.map(pro => (
+                                <tr key={pro.id} className="border">
+                                    <td className="p-2 border">{pro.product.name}</td>
+                                    <td className="p-2 border">{pro.quantity}</td>
+                                    <td className="p-2 border">{pro.price}</td>
+                                    <td className="p-2 border">{pro.specifications}</td>
                                 </tr>
                             ))}
                         </tbody>
@@ -146,7 +177,7 @@ const PublishEOI = ({ purchaseRequest, documents }) => {
             <div className="bg-white p-4 shadow sm:rounded-lg sm:p-8">
                 <h2 className="text-center text-2xl font-bold">Publish EOI</h2>
                 <form onSubmit={submit} className="mx-auto">
-                    <div className="mx-auto w-2/3">
+                    <div className="mx-auto w-11/12">
                         <div className="border border-gray-400 grid grid-cols-2 gap-x-4 p-4 rounded-md mt-6 mb-10 shadow-md">
                             <div className="mt-4 col-span-2">
                                 <InputLabel htmlFor="title" value="Title *" />
@@ -266,7 +297,7 @@ const PublishEOI = ({ purchaseRequest, documents }) => {
                                                 <td className="p-2 border">
                                                     <input
                                                         type="file"
-                                                        onChange={(e) => handleFileChange(e,index)}
+                                                        onChange={(e) => handleFileChange(e, index)}
                                                         className="border p-2 rounded w-full"
                                                     />
                                                 </td>
@@ -287,35 +318,117 @@ const PublishEOI = ({ purchaseRequest, documents }) => {
                             </div>
                         </div>
 
-                        <table className="requisition-form w-full mt-8 mb-4 table border-collapse overflow-x-auto">
-                            <thead>
-                                <tr>
-                                    <th className="p-2 border">Product</th>
-                                    <th className="p-2 border">Quantity</th>
-                                    <th className="p-2 border">Price</th>
-                                    <th className="p-2 border">Speification</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {purchaseRequest.purchase_request_items.map((pro, index) => (
-                                    <tr key={index} className="border">
-                                        <td className="p-2 border">
-                                            {pro.product.name}
-                                        </td>
-                                        <td className="p-2 border">
-                                            {pro.quantity}
-                                        </td>
-                                        <td className="p-2 border">
-                                            {pro.price}
-                                        </td>
-                                        <td className="p-2 border">
-                                            {pro.specifications}
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
+                        <div className="border border-gray-400 rounded-md p-4 mb-10 shadow-md">
+                            <div className="mt-4">
+                                <InputLabel htmlFor="products" value="Select Products *" />
+                                <table className="requisition-form w-full mt-1 mb-4 table border-collapse overflow-x-auto text-center">
+                                    <thead>
+                                        <tr>
+                                            <th className="p-2 border">Select</th>
+                                            <th className="p-2 border">Product</th>
+                                            <th className="p-2 border">Quantity</th>
+                                            <th className="p-2 border">Price</th>
+                                            <th className="p-2 border">Specification</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {purchaseRequests.map(p => (
+                                            <React.Fragment key={p.id}>
+                                                {p.purchase_request_items.map(pro => (
+                                                    <tr key={pro.id} className="border">
+                                                        <td>
+                                                            <input type="checkbox"
+                                                                checked={data.products.some(p => p.id == pro.id)}
+                                                                onChange={(e) => handleProductChange(e, pro)}
+                                                            />
+                                                        </td>
+                                                        <td className="p-2 border">{pro.product.name}</td>
+                                                        <td className="p-2 border">{pro.quantity}</td>
+                                                        <td className="p-2 border">{pro.price}</td>
+                                                        <td className="p-2 border">{pro.specifications}</td>
+                                                    </tr>
+                                                ))}
+                                            </React.Fragment>
+                                        ))}
+                                    </tbody>
 
-                        </table>
+                                </table>
+                            </div>
+                            <div className="mt-4">
+                                <InputLabel htmlFor="new_products" value="Add New Product *" />
+                                <table className="w-full border-collapse mb-3 mt-1">
+                                    <thead>
+                                        <tr>
+                                            <th className="border p-2">Product</th>
+                                            <th className="border p-2">Price</th>
+                                            <th className="border p-2">Quantity</th>
+                                            <th className="border p-2">Specifications</th>
+                                            <th className="border p-2">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {data.newProducts.map((pro, index) => (
+                                            <tr key={index}>
+                                                <td className="p-2 border">
+                                                    <select
+                                                        name="product_id"
+                                                        className="py-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                                        value={pro.product_id}
+                                                        onChange={(e) => handleNewProductChange(e, index)}
+                                                    >
+                                                        <option value="">Select a product</option>
+                                                        {products.map(product => (
+                                                            <option key={product.id} value={product.id}>
+                                                                {product.name}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                </td>
+                                                <td className="p-2 border">
+                                                    <TextInput
+                                                        type="number"
+                                                        name="quantity"
+                                                        className="py-1 w-full"
+                                                        value={pro.quantity || ""}
+                                                        onChange={(e) => handleNewProductChange(e, index)}
+                                                    />
+                                                    <InputError message={errors[`products.${index}.quantity`]} />
+                                                </td>
+                                                <td className="p-2 border">
+                                                    <TextInput
+                                                        type="number"
+                                                        name="price"
+                                                        className="py-1 w-full"
+                                                        value={pro.price || ""}
+                                                        onChange={(e) => handleNewProductChange(e, index)}
+                                                    />
+                                                    <InputError message={errors[`products.${index}.price`]} />
+                                                </td>
+                                                <td className="p-2 border">
+                                                    <textarea
+                                                        name="specifications"
+                                                        className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 resize-none"
+                                                        value={pro.specifications || ""}
+                                                        onChange={(e) => handleNewProductChange(e, index)}
+                                                    ></textarea>
+                                                    <InputError message={errors[`products.${index}.specifications`]} />
+                                                </td>
+                                                <td className="p-2 border">
+                                                    <Button type="button" className='rounded-md bg-red-600 px-4 py-2 text-xs font-semibold text-white hover:bg-red-700 uppercase' onClick={() => handleProductRemove(index)}>
+                                                        Remove
+                                                    </Button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                                <div className="text-end">
+                                    <Button type="button" className='rounded-md bg-green-600 px-4 py-2 text-xs font-semibold text-white hover:bg-green-700 uppercase' onClick={handleProductAdd}>
+                                        + Add {data.newProducts.length > 0 ? 'Another' : ''} Product
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
                         <div className="mt-4 flex items-center justify-end gap-3">
                             <Button type="button" className='rounded-md bg-green-600 px-4 py-2 text-xs font-semibold text-white hover:bg-green-700 uppercase' onClick={() => setModalOpen(true)}>
                                 View EOI
@@ -326,7 +439,7 @@ const PublishEOI = ({ purchaseRequest, documents }) => {
                         </div>
                     </div>
                 </form>
-            </div>
+            </div >
         </AuthenticatedLayout >
     );
 }

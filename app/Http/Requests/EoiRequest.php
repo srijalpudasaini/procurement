@@ -26,13 +26,23 @@ class EoiRequest extends FormRequest
             'description' => 'required',
             'published_date' => 'required|date|after_or_equal:today',
             'deadline_date' => 'required|date|after:published_date',
-            'purchase_request_id' => 'required|exists:purchase_requests,id',
+            'purchase_request_ids.*' => 'required|exists:purchase_requests,id',
             'documents' => 'nullable|array',
             'documents.*.id' => 'exists:documents,id',
             'documents.*.compulsory' => 'boolean',
             'files1'=>'nullable|array',
             'files1.*.name' => 'required|string',
-            'files1.*.file' => 'required|file|mimes:jpeg,png,pdf,gif|max:4096'
+            'files1.*.file' => 'required|file|mimes:jpeg,png,pdf,gif|max:4096',
+            'products'=>'array|min:1',
+            'products.*.*'=>'required',
+            'products.*.product_id'=>'exists:products,id',
+            'products.*.quantity'=>'integer|gt:0',
+            'products.*.price'=>'integer|gt:0',
+            'newProducts'=>'array|nullable',
+            'newProducts.*.*'=>'required',
+            'newProducts.*.product_id'=>'exists:products,id',
+            'newProducts.*.quantity'=>'integer|gt:0',
+            'newProducts.*.price'=>'integer|gt:0',
         ];
     }
 }

@@ -4,9 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\EoiRequest;
 use App\Models\Document;
+use App\Models\Eoi;
 use App\Models\EoiDocument;
 use App\Models\EoiFile;
+use App\Models\Product;
 use App\Models\PurchaseRequest;
+use App\Models\PurchaseRequestItem;
 use App\Repositories\EoiRepository;
 use App\Repositories\PurchaseRequestRepository;
 use Carbon\Carbon;
@@ -23,7 +26,7 @@ class EoiController extends Controller implements HasMiddleware
     protected $eoiRepository;
     protected $purchaseRequestRepository;
 
-    public function __construct(EoiRepository $eoiRepository,PurchaseRequestRepository $purchaseRequestRepository)
+    public function __construct(EoiRepository $eoiRepository, PurchaseRequestRepository $purchaseRequestRepository)
     {
         $this->eoiRepository = $eoiRepository;
         $this->purchaseRequestRepository = $purchaseRequestRepository;
@@ -32,15 +35,15 @@ class EoiController extends Controller implements HasMiddleware
     public static function middleware(): array
     {
         return [
-            new Middleware('permission:view_eoi', only: ['index']),
-            new Middleware('permission:create_eoi', only: ['create','store','publish']),
-            new Middleware('permission:edit_eoi', only: ['edit','update']),
-            new Middleware('permission:delete_eoi', only: ['destroy']),
+            new Middleware('permission:view_eoi', ['index']),
+            new Middleware('permission:create_eoi', ['create', 'store', 'publish']),
+            new Middleware('permission:edit_eoi', ['edit', 'update']),
+            new Middleware('permission:delete_eoi', ['destroy']),
         ];
     }
     public function index(Request $request)
     {
-        $eois = $this->eoiRepository->all($request->input('per_page',10));
+        $eois = $this->eoiRepository->all($request->input('per_page', 10));
         return Inertia::render('EOI/EOI', compact('eois'));
     }
     public function create(Request $request)
@@ -48,62 +51,97 @@ class EoiController extends Controller implements HasMiddleware
         $purchaseRequests = $this->purchaseRequestRepository->all(
             $request->input('per_page', 10),
             ['user', 'purchase_request_items.product'],
-            ['status'=>'approved']
+            ['status' => 'approved']
         );
         return Inertia::render('EOI/AddEOI', compact('purchaseRequests'));
     }
 
-    public function publish($id){
-        $documents = Document::all(); 
-        $purchaseRequest = $this->purchaseRequestRepository->find($id,['purchase_request_items.product']);
-        if($purchaseRequest->status != 'approved'){
-            return redirect()->back()->with('error','Could not publish EOI for the given request');
-        }
-        return Inertia::render('EOI/PublishEOI',compact('purchaseRequest','documents'));
+    public function publish(Request $request)
+    {
+        // dd($request);
+        $documents = Document::all();
+        $ids = explode(',', $request->input('requests'));
+
+        $products = Product::all();
+        $purchaseRequests = $this->purchaseRequestRepository->find($ids, ['purchase_request_items.product']);
+
+        // $items = collect();
+
+        // foreach($purchaseRequests as $purchaseRequest){
+        //     $items->push($purchaseRequest->purchase_request_items);
+        // }
+
+        // if($purchaseRequest->status != 'approved'){
+        //     return redirect()->back()->with('error','Could not publish EOI for the given request');
+        // }
+        return Inertia::render('EOI/PublishEOI', compact('purchaseRequests', 'documents', 'products'));
     }
-    
+
     public function store(EoiRequest $request)
     {
         // dd($request);
         DB::beginTransaction();
-        try{
-            $purchaseRequest = $this->purchaseRequestRepository->find($request->purchase_request_id);
-            if($purchaseRequest->status !=   'approved'){
-                return redirect()->back()->with('error','Could not publish EOI for the given request');
+        try {
+            $latestEOI = Eoi::whereDate('created_at', now())->count() + 1;
+            $eoi_number = 'EOI-' . Carbon::now()->format('YmdHis') . '-' . str_pad($latestEOI, 5, '0', STR_PAD_LEFT);
+            $eoi = $this->eoiRepository->store(array_merge($request->validated(), ['eoi_number' => $eoi_number]));
+            $purchaseRequests = $this->purchaseRequestRepository->find($request->purchase_request_ids);
+            foreach ($purchaseRequests as $purchaseRequest) {
+                $purchaseRequest->status = 'published';
+                $purchaseRequest->eoi_id = $eoi->id;
+                $purchaseRequest->save();
+
+                foreach ($purchaseRequest->purchase_request_items as $item) {
+                    $matchedProduct = collect($request->products)->firstWhere('id', $item->id);
+                    if ($matchedProduct) {
+                        $item->selected = true;
+                        $item->eoi_id = $eoi->id;
+                        $item->save();
+                    }
+                }
             }
-            $purchaseRequest->status='published';
-            $purchaseRequest->save();
-            $eoi_number = 'EOI-' . Carbon::now()->format('YmdHis') . '-' . Str::random(4);
-            $eoi = $this->eoiRepository->store(array_merge($request->validated(),[$eoi_number]));
-            
+            foreach ($request->newProducts as $item) {
+                $purchaseItem = new PurchaseRequestItem();
+                $purchaseItem->selected = true;
+                $purchaseItem->eoi_id = $eoi->id;
+                $purchaseItem->product_id = $item['product_id'];
+                $purchaseItem->price = $item['price'];
+                $purchaseItem->quantity = $item['quantity'];
+                $purchaseItem->specifications = $item['specifications'];
+                $purchaseItem->save();
+            }
+
             if (isset($request->documents)) {
                 foreach ($request->documents as $doc) {
                     $eoi->documents()->attach($doc['id'], ['required' => $doc['compulsory']]);
                 }
             }
-    
-            foreach($request->files1 as $file){
+
+            foreach ($request->files1 as $file) {
                 $eoi_file = new EoiFile();
                 $eoi_file->eoi_id = $eoi->id;
                 $path = $file['file']->store('files', 'public');
-                $eoi_file->file_path=$path;
+                $eoi_file->file_path = $path;
                 $eoi_file->file_name = $file['name'];
                 $eoi_file->save();
             }
             DB::commit();
-        }
-        catch(Exception $e){
+            return redirect()->route('eois.index')->with('success', 'Eoi created successfully!');
+        } catch (Exception $e) {
             DB::rollBack();
             return redirect()->route('eois.index')->with('error', $e->getMessage());
         }
-    
 
-        return redirect()->route('eois.index')->with('success', 'Eoi created successfully!');
+
     }
 
-    public function submissions($id){
-        $eoi = $this->eoiRepository->find($id,['eoi_vendor_applications.vendor','eoi_vendor_applications.documents.document','eoi_vendor_applications.proposals.purchase_request_item.product']);
-        return Inertia::render('EOI/SubmissionsEOI',compact('eoi'));
+    public function submissions($id)
+    {
+        $eoi = $this->eoiRepository->find($id, ['eoi_vendor_applications.vendor', 'eoi_vendor_applications.documents.document', 'eoi_vendor_applications.proposals.purchase_request_item.product']);
+        if($eoi->status!='closed'){
+            abort(404);
+        }
+        return Inertia::render('EOI/SubmissionsEOI', compact('eoi'));
     }
     public function edit($id)
     {

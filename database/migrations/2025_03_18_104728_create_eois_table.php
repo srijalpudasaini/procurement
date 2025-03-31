@@ -13,14 +13,12 @@ return new class extends Migration
     {
         Schema::create('eois', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('purchase_request_id');
             $table->string('title');
             $table->text('description');
             $table->string('eoi_number')->unique();
             $table->date('published_date');
             $table->date('deadline_date');
             $table->enum('status',['published','closed'])->default('published');
-            $table->foreign('purchase_request_id')->references('id')->on('purchase_requests');
             $table->timestamps();
         });
     }

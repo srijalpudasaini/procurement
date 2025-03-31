@@ -15,12 +15,12 @@ class Eoi extends Model
         'deadline_date',
         'status',
     ];
-    public function purchase_request(){
-        return $this->belongsTo(PurchaseRequest::class);
+    public function purchase_requests(){
+        return $this->hasMany(PurchaseRequest::class);
     }
 
     public function purchase_request_items(){
-        return $this->hasManyThrough(PurchaseRequestItem::class,PurchaseRequest::class);
+        return $this->hasMany(PurchaseRequestItem::class,'eoi_id');
     }
 
     public function eoi_documents(){

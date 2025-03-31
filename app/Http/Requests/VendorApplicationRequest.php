@@ -23,12 +23,18 @@ class VendorApplicationRequest extends FormRequest
     {
         return [
             'eoi_id' => 'required|exists:eois,id',
-            'products' => 'required|array|min:1',
+            'products' => 'array|min:1',
             'products.*.id' => 'required',
             'products.*.price' => 'required|numeric|min:1',
             'documents' => 'array|nullable',
             'documents.*.id' => 'required|exists:documents,id',
             'documents.*.file' => 'nullable|file|mimes:jpeg,png,pdf,gif|max:2048'
+        ];
+    }
+
+    public function messages(){
+        return [
+            'products.min'=>'At least 1 product must be checked'
         ];
     }
 

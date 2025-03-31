@@ -16,6 +16,10 @@ class PurchaseRequestItem extends Model
     public function purchase_request(){
         return $this->belongsTo(PurchaseRequest::class);
     }
+    public function eoi()
+    {
+        return $this->belongsTo(Eoi::class);
+    }
 
     public function product(){
         return $this->belongsTo(Product::class);

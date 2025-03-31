@@ -32,18 +32,17 @@ class AuthenticatedSessionController extends Controller
     public function store(LoginRequest $request)
     {
         $credentials = $request->validated();
-        $user = User::where('email', $credentials['email'])->first();
-        $vendor = Vendor::where('email', $credentials['email'])->first();
-
-        if ($user) {
-            Auth::guard('web')->login($user);
+        if (Auth::guard('web')->attempt($credentials)) {
             $request->session()->regenerate();
             return redirect()->intended(route('dashboard'));
-        } elseif ($vendor) {
-            Auth::guard('vendor')->login($vendor);
+        }
+    
+        if (Auth::guard('vendor')->attempt($credentials)) {
             $request->session()->regenerate();
             return redirect()->intended(route('vendor.dashboard'));
         }
+    
+        return back()->withErrors(['email' => 'Invalid credentials'])->onlyInput('email');
     }
 
     /**

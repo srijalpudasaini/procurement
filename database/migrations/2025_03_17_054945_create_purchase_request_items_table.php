@@ -13,11 +13,12 @@ return new class extends Migration
     {
         Schema::create('purchase_request_items', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('purchase_request_id');
+            $table->unsignedBigInteger('purchase_request_id')->nullable();
             $table->unsignedBigInteger('product_id');
             $table->double('price');
             $table->integer('quantity');
             $table->text('specifications');
+            $table->boolean('selected')->default(false);
             $table->foreign('purchase_request_id')->references('id')->on('purchase_requests');
             $table->foreign('product_id')->references('id')->on('products');
             $table->timestamps();

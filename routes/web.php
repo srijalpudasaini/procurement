@@ -42,6 +42,7 @@ Route::middleware(['auth'])->group(function(){
     Route::get('/dashboard', function () {
         return Inertia::render('Dashboard');
     })->name('dashboard');
+    Route::get('/eois/publish',[EoiController::class,'publish'])->name('eois.publish');
     Route::resources([
         'categories'=>CategoryController::class,
         'products'=>ProductController::class,
@@ -53,8 +54,7 @@ Route::middleware(['auth'])->group(function(){
     ]);
 
     Route::put('requests/updateStatus/{id}',[PurchaseRequestController::class,'updateStatus']);
-    Route::get('eois/publish/{id}',[EoiController::class,'publish']);
-    Route::get('eois/submissions/{id}',[EoiController::class,'submissions']);
+    Route::get('/eois/submissions/{id}',[EoiController::class,'submissions']);
     // Route::get('/roles', function(){
     //     return 'abc';
     // });

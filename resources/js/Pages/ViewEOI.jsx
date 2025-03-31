@@ -3,6 +3,7 @@ import { Link, usePage } from "@inertiajs/react"
 
 const ViewEoi = ({ eoi }) => {
     const { auth } = usePage().props;
+    console.log(eoi)
     return (
         <>
             <Layout>
@@ -30,22 +31,22 @@ const ViewEoi = ({ eoi }) => {
                             <thead>
                                 <tr className="text-white bg-[#00AB66]">
                                     <th className="p-2 border">Product</th>
+                                    <th className="p-2 border">Unit</th>
                                     <th className="p-2 border">Quantity</th>
-                                    <th className="p-2 border">Price</th>
-                                    <th className="p-2 border">Speification</th>
+                                    <th className="p-2 border">Specification</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {eoi.purchase_request.purchase_request_items.map((pro, index) => (
+                                {eoi.purchase_request_items?.map((pro, index) => (
                                     <tr key={index} className="border">
                                         <td className="p-2 border">
                                             {pro.product.name}
                                         </td>
                                         <td className="p-2 border">
-                                            {pro.quantity}
+                                            {pro.product.unit}
                                         </td>
                                         <td className="p-2 border">
-                                            {pro.price}
+                                            {pro.quantity}
                                         </td>
                                         <td className="p-2 border">
                                             {pro.specifications}

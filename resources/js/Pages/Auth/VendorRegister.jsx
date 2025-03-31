@@ -125,7 +125,7 @@ export default function VendorRegister() {
                                 />
 
                                 <InputError
-                                    message={errors.registration_number}
+                                    message={errors.contact}
                                     className="mt-2"
                                 />
                             </div>

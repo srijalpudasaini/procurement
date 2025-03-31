@@ -20,9 +20,10 @@ const Apply = ({ eoi, hasApplied }) => {
     }
     const { data, setData, post, processing, errors, reset } = useForm({
         eoi_id: eoi.id,
-        products: eoi.purchase_request.purchase_request_items.map((p) => ({ id: p.id, price: 0 })),
+        products: eoi.purchase_request_items.map((p) => ({ id: p.id, price: 0 })),
         documents: eoi.eoi_documents.map(doc => ({ id: doc.document.id, file: null, required: doc.required }))
     });
+    console.log(data.products)
 
     const handleChange = (e, id) => {
         const checked = e.target.checked
@@ -32,7 +33,7 @@ const Apply = ({ eoi, hasApplied }) => {
         else {
             if (!data.products.some(p => p.id == id)) {
                 setData('products',
-                    [...data.products, eoi.purchase_request.purchase_request_items.find((p) => p.product.id == id)?.product]
+                    [...data.products, eoi.purchase_request_items.find((p) => p.product.id == id)?.product]
                 )
             }
         }
@@ -98,7 +99,7 @@ const Apply = ({ eoi, hasApplied }) => {
                             </tr>
                         </thead>
                         <tbody>
-                            {eoi.purchase_request.purchase_request_items.map((pro, index) => (
+                            {eoi.purchase_request_items.map((pro, index) => (
                                 <tr key={index} className="border">
                                     <td className="p-2 border">
                                         <input type="checkbox" defaultChecked onChange={(e) => handleChange(e, pro.id)} />
@@ -120,15 +121,15 @@ const Apply = ({ eoi, hasApplied }) => {
                                             type="number"
                                             className="py-1"
                                             onChange={(e) => handlePriceChange(e, pro.id)}
-                                            value={data.products.find((q) => q.id == pro.id)?.price || ''}
-                                            disabled={!data.products.some(p => p.id == pro.id)}
+                                            value={data.products.find((q) => q?.id == pro.id)?.price || ''}
+                                            disabled={!data.products.some(p => p?.id == pro.id)}
                                         />
                                     </td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
-                    <InputError message={errors.generalProducts} />
+                    <InputError message={errors.products} />
                     <h3 className="text-xl font-semibold mb-1 mt-6 pt-3 border-t border-dotted border-gray-400">Required Documents</h3>
                     {eoi.eoi_documents.map((eoi_document) => (
                         <div key={eoi_document.id} className="mb-3">

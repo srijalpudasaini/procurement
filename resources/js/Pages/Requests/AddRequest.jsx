@@ -55,7 +55,7 @@ const AddRequest = ({ products }) => {
                                 <th className="p-2 border">Product</th>
                                 <th className="p-2 border">Quantity</th>
                                 <th className="p-2 border">Price</th>
-                                <th className="p-2 border">Speification</th>
+                                <th className="p-2 border">Specification</th>
                                 <th className="p-2 border">Action</th>
                             </tr>
                         </thead>
