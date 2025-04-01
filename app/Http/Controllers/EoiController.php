@@ -99,7 +99,7 @@ class EoiController extends Controller implements HasMiddleware
                     $eoi->documents()->attach($doc['id'], ['required' => $doc['compulsory']]);
                 }
             }
-
+            
             foreach ($request->files1 as $file) {
                 $eoi_file = new EoiFile();
                 $eoi_file->eoi_id = $eoi->id;
@@ -124,7 +124,7 @@ class EoiController extends Controller implements HasMiddleware
         if($eoi->status!='closed'){
             abort(404);
         }
-        return Inertia::render('EOI/SubmissionsEOI', compact('eoi'));
+        return Inertia::render('EOI/SubmissionsEOI', compact( 'eoi'));
     }
     public function edit($id)
     {

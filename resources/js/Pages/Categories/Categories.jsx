@@ -5,6 +5,7 @@ import Pagination from '@/Components/ui/Pagination'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout'
 import { Link, usePage, router } from '@inertiajs/react'
 import React, { useState } from 'react'
+import DataTable from 'react-data-table-component'
 
 const Categories = ({ categories }) => {
     const { flash, auth } = usePage().props;
@@ -34,6 +35,38 @@ const Categories = ({ categories }) => {
             title: 'Categories',
         }
     ]
+
+    const columns = [
+        { name: "Name", selector: row => row.name, sortable: true },
+        { name: "Description", selector: row => row.description, sortable: true },
+        { name: "Parent", selector: row => row.parent?.name || 'N/A' },
+        {
+            name: "Action",
+            cell: row => (
+                <div className="flex gap-2">
+                    {hasPermission('edit_category') && (
+                        <Link
+                            href={`/categories/${row.id}/edit`}
+                            className="rounded-md border border-transparent bg-blue-800 px-3 py-2 text-xs font-semibold uppercase text-white transition duration-150 ease-in-out hover:bg-blue-700 me-2"
+                        >
+                            Edit
+                        </Link>
+                    )}
+
+                    {hasPermission('delete_category') && (
+                        <button
+                            onClick={() => confirmDelete(row.id)}
+                            className="rounded-md border border-transparent bg-red-600 px-3 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-red-700"
+                        >
+                            Delete
+                        </button>
+                    )}
+                </div>
+            ),
+            ignoreRowClick: true,
+        }
+    ];
+
 
     return (
         <AuthenticatedLayout>
@@ -94,50 +127,29 @@ const Categories = ({ categories }) => {
                     <Alert type='error' message={flash.error} />
                 )}
 
-                <table className='w-full mt-4 text-center'>
-                    <thead>
-                        <tr className='bg-gray-500 text-white'>
-                            <th className='p-2'>S.N.</th>
-                            <th className='p-2'>Name</th>
-                            <th className='p-2'>Description</th>
-                            <th className='p-2'>Parent</th>
-                            <th className='p-2'>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {
-                            categories.data.length === 0 ?
-                                <tr><td colSpan={5} className='p-2'>No Categories Found</td></tr>
-                                :
-                                categories?.data.map((category, index) => (
-                                    <tr key={category.id} className={index % 2 === 1 ? 'bg-gray-100' : ''}>
-                                        <td className='p-2'>{index + 1}</td>
-                                        <td className='p-2'>{category.name}</td>
-                                        <td className='p-2'>{category.description || 'N/A'}</td>
-                                        <td className='p-2'>{category.parent ? category.parent.name : 'N/A'}</td>
-                                        <td className='p-2'>
-                                            {hasPermission('edit_category') &&
-                                                <Link
-                                                    href={`/categories/${category.id}/edit`}
-                                                    className='rounded-md border border-transparent bg-blue-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-blue-700 me-2'
-                                                >
-                                                    Edit
-                                                </Link>
-                                            }
-                                            {hasPermission('delete_category') &&
-                                                <button
-                                                    onClick={() => confirmDelete(category.id)}
-                                                    className='rounded-md border border-transparent bg-red-600 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-red-700'
-                                                >
-                                                    Delete
-                                                </button>
-                                            }
-                                        </td>
-                                    </tr>
-                                ))}
-                    </tbody>
-                </table>
-                <Pagination links={categories.links} per_page={categories.per_page} />
+                <div className="my-4">
+                    <DataTable
+                        columns={columns}
+                        data={categories.data}
+                        pagination
+                        paginationServer
+                        paginationTotalRows={categories.total}
+                        paginationPerPage={categories.per_page}
+                        onChangePage={(page) => {
+                            router.get('/categories', {
+                                page,
+                                per_page: categories.per_page
+                            }, { preserveState: true, replace: true });
+                        }}
+                        onChangeRowsPerPage={(perPage) => {
+                            router.get('/categories', {
+                                per_page: perPage,
+                                page: 1
+                            }, { preserveState: true, replace: true });
+                        }}
+                        paginationComponentOptions={{ noRowsPerPage: true }}
+                    />
+                </div>
             </div>
         </AuthenticatedLayout>
     );

@@ -5,6 +5,7 @@ import Pagination from '@/Components/ui/Pagination'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout'
 import { Link, usePage, router } from '@inertiajs/react'
 import React, { useState } from 'react'
+import DataTable from 'react-data-table-component'
 
 const Roles = ({ roles }) => {
     const { flash, auth } = usePage().props;
@@ -34,6 +35,35 @@ const Roles = ({ roles }) => {
             title: 'Roles',
         }
     ]
+    const columns = [
+        { name: "Name", selector: row => row.name, sortable: true },
+        {
+            name: "Action",
+            cell: row => (
+                <div className="flex gap-2">
+                    {hasPermission('edit_role') && (
+                        <Link
+                            href={`/roles/${row.id}/edit`}
+                            className="rounded-md border border-transparent bg-blue-800 px-3 py-2 text-xs font-semibold uppercase text-white transition duration-150 ease-in-out hover:bg-blue-700 me-2"
+                        >
+                            Edit
+                        </Link>
+                    )}
+
+                    {hasPermission('delete_role') && (
+                        <button
+                            onClick={() => confirmDelete(row.id)}
+                            className="rounded-md border border-transparent bg-red-600 px-3 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-red-700"
+                        >
+                            Delete
+                        </button>
+                    )}
+                </div>
+            ),
+            ignoreRowClick: true,
+        }
+    ];
+
     return (
         <AuthenticatedLayout>
             {/* {hasPermission('delete_role') && */}
@@ -93,46 +123,29 @@ const Roles = ({ roles }) => {
                     <Alert type='error' message={flash.error} />
                 )}
 
-                <table className='w-full mt-4 text-center'>
-                    <thead>
-                        <tr className='bg-gray-600 text-white'>
-                            <th className='p-2'>S.N.</th>
-                            <th className='p-2'>Name</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {roles.data.length == 0 ?
-                            <tr><td colSpan={3}>No Roles Found</td></tr>
-                            :
-                            roles?.data.map((role, index) => (
-                                <tr key={role.id} className={index % 2 === 1 ? 'bg-gray-100' : ''}>
-                                    <td className='p-2'>{index + 1}</td>
-                                    <td className='p-2'>{role.name}</td>
-                                    <td className='p-2'>
-                                        {/* {hasPermission('edit_role') &&  */}
-                                        <Link
-                                            href={`/roles/${role.id}/edit`}
-                                            className='rounded-md border border-transparent bg-blue-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-blue-700 me-2'
-                                        >
-                                            Edit
-                                        </Link>
-                                        {/* } */}
-                                        {/* {hasPermission('delete_role') && */}
-                                        <button
-                                            onClick={() => confirmDelete(role.id)}
-                                            className='rounded-md border border-transparent bg-red-600 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-red-700'
-                                        >
-                                            Delete
-                                        </button>
-                                        {/* } */}
-                                    </td>
-                                </tr>
-                            ))
-                        }
-                    </tbody>
-                </table>
-                <Pagination links={roles.links} per_page={roles.per_page} />
+                <div className="my-4">
+                    <DataTable
+                        columns={columns}
+                        data={roles.data}
+                        pagination
+                        paginationServer
+                        paginationTotalRows={roles.total}
+                        paginationPerPage={roles.per_page}
+                        onChangePage={(page) => {
+                            router.get('/roles', {
+                                page,
+                                per_page: roles.per_page
+                            }, { preserveState: true, replace: true });
+                        }}
+                        onChangeRowsPerPage={(perPage) => {
+                            router.get('/roles', {
+                                per_page: perPage,
+                                page: 1
+                            }, { preserveState: true, replace: true });
+                        }}
+                        paginationComponentOptions={{ noRowsPerPage: true }}
+                    />
+                </div>
             </div>
         </AuthenticatedLayout>
     );

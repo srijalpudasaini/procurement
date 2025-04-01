@@ -5,6 +5,7 @@ import Pagination from '@/Components/ui/Pagination'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout'
 import { Link, usePage, router } from '@inertiajs/react'
 import React, { useState } from 'react'
+import DataTable from 'react-data-table-component'
 
 const PurchaseRequests = ({ purchaseRequests }) => {
   const { flash, auth } = usePage().props;
@@ -48,8 +49,8 @@ const PurchaseRequests = ({ purchaseRequests }) => {
   }
 
   const closeDetail = () => {
-    setShowViewModal(false)
     setShowModal(false)
+    setShowViewModal(false)
     setRequestModal(null)
   }
 
@@ -65,6 +66,55 @@ const PurchaseRequests = ({ purchaseRequests }) => {
       setSelectedRequests(selectedRequests.filter(req => req != request.id))
     }
   }
+
+  const columns = [
+    {
+      name: "", cell: row => (
+        hasPermission('create_eoi') &&
+        <td className='p-2'>
+          <input type="checkbox"
+            disabled={row.status != 'approved'}
+            onChange={(e) => handleChange(e, row)}
+            checked={selectedRequests.includes(row.id)}
+            className={`${row.status != 'approved' ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+          />
+        </td>
+      )
+    },
+    { name: "Requester's Name", selector: row => row.user.name, sortable: true },
+    { name: "Total", selector: row => row.total, sortable: true },
+    { name: "Status", selector: row => row.status },
+    {
+      name: "Action",
+      cell: row => (
+        <div className="flex gap-2">
+          <button
+            className='rounded-md border border-transparent bg-green-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-green-700 me-2'
+            onClick={() => viewDetail(row)}
+          >
+            View
+          </button>
+          {hasPermission('approve_request') && row.status === 'pending' &&
+            <button
+              className='rounded-md border border-transparent bg-blue-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-blue-700 me-2'
+              onClick={() => confirmDelete(row.id, 'approved')}
+            >
+              Approve
+            </button>
+          }
+          {hasPermission('delete_request') && row.status === 'pending' &&
+            <button
+              onClick={() => confirmDelete(row.id, 'rejected')}
+              className='rounded-md border border-transparent bg-red-600 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-red-700'
+            >
+              Reject
+            </button>
+          }
+        </div>
+      ),
+      ignoreRowClick: true,
+    }
+  ];
   return (
     <AuthenticatedLayout>
       {/* {hasPermission('edit_request') && */}
@@ -218,78 +268,29 @@ const PurchaseRequests = ({ purchaseRequests }) => {
           <Alert type='error' message={flash.error} />
         )}
 
-        <table className='w-full mt-4 text-center'>
-          <thead>
-            <tr className='bg-gray-600 text-white'>
-              {hasPermission('create_eoi') &&
-                <th className='p-2'></th>
-              }
-              <th className='p-2'>S.N.</th>
-              <th className='p-2'>Name</th>
-              <th className='p-2'>Total</th>
-              <th className='p-2'>Status</th>
-              <th className='p-2'>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {purchaseRequests.data.length === 0 ?
-              <tr><td colSpan={5} className='p-2'>No Purchase Requests Found</td></tr>
-              :
-              purchaseRequests?.data.map((request, index) => (
-                <tr key={request.id} className={index % 2 === 1 ? 'bg-gray-100' : ''}>
-                  {hasPermission('create_eoi') &&
-                    <td className='p-2'>
-                      <input type="checkbox"
-                        disabled={request.status != 'approved'}
-                        onChange={(e) => handleChange(e, request)}
-                        checked={selectedRequests.includes(request.id)}
-                        className={`${request.status != 'approved' ? 'cursor-not-allowed' : 'cursor-pointer'}`}
-                      />
-                    </td>
-                  }
-                  <td className='p-2'>{index + 1}</td>
-                  <td className='p-2'>{request.user.name}</td>
-                  <td className='p-2'>{request.total}</td>
-                  <td className='p-2'>
-                    <span className={request.status == 'pending' ?
-                      'bg-yellow-200 border border-yellow-800 text-yellow-800 p-1 rounded-sm text-xs capitalize' :
-                      request.status == 'published' ?
-                        'bg-blue-200 border border-blue-800 text-blue-800 p-1 rounded-sm text-xs capitalize' :
-                        request.status == 'approved' ?
-                          'bg-green-200 border border-green-800 text-green-800 p-1 rounded-sm text-xs capitalize' :
-                          'bg-red-200 border border-red-800 text-red-800 p-1 rounded-sm text-xs capitalize'
-                    }>{request.status}</span>
-                  </td>
-                  <td className='p-2'>
-                    <button
-                      className='rounded-md border border-transparent bg-green-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-green-700 me-2'
-                      onClick={() => viewDetail(request)}
-                    >
-                      View
-                    </button>
-                    {hasPermission('approve_request') && request.status === 'pending' &&
-                      <button
-                        className='rounded-md border border-transparent bg-blue-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-blue-700 me-2'
-                        onClick={() => confirmDelete(request.id, 'approved')}
-                      >
-                        Approve
-                      </button>
-                    }
-                    {hasPermission('delete_request') && request.status === 'pending' &&
-                      <button
-                        onClick={() => confirmDelete(request.id, 'rejected')}
-                        className='rounded-md border border-transparent bg-red-600 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-red-700'
-                      >
-                        Reject
-                      </button>
-                    }
-                  </td>
-                </tr>
-              ))
-            }
-          </tbody>
-        </table>
-        <Pagination links={purchaseRequests.links} per_page={purchaseRequests.per_page} />
+        <div className="my-4">
+          <DataTable
+            columns={columns}
+            data={purchaseRequests.data}
+            pagination
+            paginationServer
+            paginationTotalRows={purchaseRequests.total}
+            paginationPerPage={purchaseRequests.per_page}
+            onChangePage={(page) => {
+              router.get('/purchaseRequests', {
+                page,
+                per_page: purchaseRequests.per_page
+              }, { preserveState: true, replace: true });
+            }}
+            onChangeRowsPerPage={(perPage) => {
+              router.get('/purchaseRequests', {
+                per_page: perPage,
+                page: 1
+              }, { preserveState: true, replace: true });
+            }}
+            paginationComponentOptions={{ noRowsPerPage: true }}
+          />
+        </div>
       </div>
     </AuthenticatedLayout>
   );

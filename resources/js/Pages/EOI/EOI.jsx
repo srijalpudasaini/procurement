@@ -5,6 +5,7 @@ import Pagination from '@/Components/ui/Pagination'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout'
 import { Link, usePage, router } from '@inertiajs/react'
 import React, { useState } from 'react'
+import DataTable from 'react-data-table-component'
 
 const EOI = ({ eois }) => {
   const { flash, auth } = usePage().props;
@@ -44,7 +45,69 @@ const EOI = ({ eois }) => {
     setShowModal(false)
   }
 
-  const [status, setStatus] = useState('all');
+  const [status, setStatus] = useState("all")
+
+  const [filteredEOIs, setFilteredEOIs] = useState(eois.data);
+
+  const handleStatusFilter = (selectedStatus) => {
+    setStatus(selectedStatus);
+
+    if (selectedStatus === "all") {
+      setFilteredEOIs(eois.data);
+    } else {
+      const filtered = eois.data.filter(eoi => eoi.status === selectedStatus);
+      setFilteredEOIs(filtered);
+    }
+  };
+  const columns = [
+    { name: "Title", selector: row => row.title, sortable: true },
+    { name: "Published Date", selector: row => row.published_date, sortable: true },
+    { name: "Deadline Date", selector: row => row.deadline_date, sortable: true },
+    {
+      name: "Status", cell: row => (
+        <span
+          className={`rounded-sm text-white font-medium px-2 py-1 capitalize text-xs
+            ${row.status == 'published' ? 'bg-green-800' : 'bg-red-800'}
+            `}
+        >
+          {row.status}
+        </span>
+      )
+    },
+    {
+      name: "Action",
+      cell: row => (
+        <div className="flex gap-2">
+          {/* {hasPermission('edit_document') && (
+            <Link
+              href={`/documents/${row.id}/edit`}
+              className="rounded-md border border-transparent bg-blue-800 px-3 py-2 text-xs font-semibold uppercase text-white transition duration-150 ease-in-out hover:bg-blue-700 me-2"
+            >
+              Edit
+            </Link>
+          )}
+
+          {hasPermission('delete_document') && (
+            <button
+              onClick={() => confirmDelete(row.id)}
+              className="rounded-md border border-transparent bg-red-600 px-3 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-red-700"
+            >
+              Delete
+            </button>
+          )} */}
+          {row.status == 'closed' &&
+            <Link
+              className='rounded-md border border-transparent bg-green-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-green-700 me-2'
+              href={`eois/submissions/${row.id}`}
+            >
+              View
+            </Link>
+          }
+        </div>
+      ),
+      ignoreRowClick: true,
+    }
+  ];
 
   return (
     <AuthenticatedLayout>
@@ -74,10 +137,10 @@ const EOI = ({ eois }) => {
 
       <Breadcrumb items={breadCrumbItems} />
       <div className="bg-white p-4 shadow sm:rounded-lg sm:p-8">
-        <h2 className="text-center text-2xl font-bold">Published EOI</h2>
+        <h2 className="text-center text-2xl font-bold">EOIs</h2>
         <div className="my-3">
           Filter
-          <select value={status} onChange={(e) => setStatus(e.target.value)} className='py-1 ms-2'>
+          <select value={status} onChange={(e) => handleStatusFilter(e.target.value)} className='py-1 ms-2'>
             <option value="all">Select status</option>
             <option value="published">Published</option>
             <option value="closed">Closed</option>
@@ -110,54 +173,29 @@ const EOI = ({ eois }) => {
         {flash?.error && (
           <Alert type='error' message={flash.error} />
         )}
-
-        <table className='w-full mt-4 text-center'>
-          <thead>
-            <tr className='bg-gray-600 text-white'>
-              <th className='p-2'>S.N.</th>
-              <th className='p-2'>Title</th>
-              <th className='p-2'>Published Date</th>
-              <th className='p-2'>Deadline</th>
-              <th className='p-2'>Status</th>
-              <th className='p-2'>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {eois.data.length === 0 ?
-              <tr><td colSpan={5} className='p-2'>No EOI Found</td></tr>
-              :
-              eois?.data.map((eoi, index) => (
-                (eoi.status == status || status == 'all') &&
-                <tr key={eoi.id} className={index % 2 === 1 ? 'bg-gray-100' : ''}>
-                  <td className='p-2'>{index + 1}</td>
-                  <td className='p-2'>{eoi.title}</td>
-                  <td className='p-2'>{eoi.published_date}</td>
-                  <td className='p-2'>{eoi.deadline_date}</td>
-                  <td className='p-2'>
-                    <span className={
-                      eoi.status == 'published' ?
-                        'bg-green-200 border border-green-800 text-green-800 p-1 rounded-sm text-xs capitalize' :
-                        'bg-red-200 border border-red-800 text-red-800 p-1 rounded-sm text-xs capitalize'
-                    }>
-                      {eoi.status}
-                    </span>
-                  </td>
-                  <td className='p-2'>
-                    {eoi.status == 'closed' &&
-                      <Link
-                        className='rounded-md border border-transparent bg-green-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-green-700 me-2'
-                        href={`eois/submissions/${eoi.id}`}
-                      >
-                        View
-                      </Link>
-                    }
-                  </td>
-                </tr>
-              ))
-            }
-          </tbody>
-        </table>
-        <Pagination links={eois.links} per_page={eois.per_page} />
+        <div className="my-4">
+          <DataTable
+            columns={columns}
+            data={filteredEOIs}
+            pagination
+            paginationServer
+            paginationTotalRows={eois.total}
+            paginationPerPage={eois.per_page}
+            onChangePage={(page) => {
+              router.get('/eois', {
+                page,
+                per_page: eois.per_page
+              }, { preserveState: true, replace: true });
+            }}
+            onChangeRowsPerPage={(perPage) => {
+              router.get('/eois', {
+                per_page: perPage,
+                page: 1
+              }, { preserveState: true, replace: true });
+            }}
+            paginationComponentOptions={{ noRowsPerPage: true }}
+          />
+        </div>
       </div>
     </AuthenticatedLayout>
   );

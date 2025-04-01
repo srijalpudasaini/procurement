@@ -5,6 +5,50 @@ import Pagination from '@/Components/ui/Pagination'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout'
 import { Link, usePage, router } from '@inertiajs/react'
 import React, { useState } from 'react'
+import DataTable from 'react-data-table-component'
+
+
+const ExpandedComponent = ({ data }) => (
+    <div className='p-2 px-8 bg-gray-100'>
+        <h2 className='mb-2 text-lg font-semibold text-gray-800'>Product Quotations</h2>
+        <table className='mb-3 w-full border border-collapse text-center'>
+            <thead>
+                <tr className='bg-[#00AB66] text-white'>
+                    <th className='p-2'>S.N.</th>
+                    <th className='p-2'>Product</th>
+                    <th className='p-2'>Unit</th>
+                    <th className='p-2'>Required Quantity</th>
+                    <th className='p-2'>Unit Price Offered</th>
+                    <th className='p-2'>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {
+                    data?.proposals.map((proposal, index) => (
+                        <tr key={proposal.id} className='bg-white border border-b-2'>
+                            <td className='p-2'>{index + 1}</td>
+                            <td className='p-2'>{proposal.purchase_request_item.product.name}</td>
+                            <td className='p-2'>{proposal.purchase_request_item.product.unit}</td>
+                            <td className='p-2'>{proposal.purchase_request_item.quantity}</td>
+                            <td className='p-2'>{proposal.price}</td>
+                            <td className='p-2'>{proposal.price * proposal.purchase_request_item.quantity}</td>
+                        </tr>
+                    ))
+                }
+            </tbody>
+        </table>
+        <h2 className='mb-2 text-lg font-semibold text-gray-800'>Documents uploaded</h2>
+        <ul className='ms-6 list-disc'>
+            {data?.documents.map((doc, index) => (
+                <li key={index}>
+                    <a href={`/storage/${doc.name}`} className='text-blue-600 font-bold' target='blank'>
+                        {doc.document.title}
+                    </a>
+                </li>
+            ))}
+        </ul>
+    </div>
+)
 
 const SubmissionEOI = ({ eoi }) => {
     const { flash, auth } = usePage().props;
@@ -12,8 +56,32 @@ const SubmissionEOI = ({ eoi }) => {
     const [deleteId, setDeleteId] = useState(null);
     const [application, setApplication] = useState(null);
     const userPermissions = auth?.user?.permissions || [];
+    // console.log(eoi)
 
-    console.log(eoi)
+    const columns = [
+        { name: "Vendor", selector: row => row.vendor.name, sortable: true },
+        { name: "Submission Date", selector: row => row.application_date, sortable: true },
+        {
+            name: "Total", selector: row => row.proposals?.reduce((total, proposal) =>
+                total + proposal.price * proposal.purchase_request_item.quantity, 0
+            ), sortable: true
+        },
+        { name: "Status", selector: row => row.status },
+        {
+            name: "Action",
+            cell: row => (
+                <div className="flex gap-2">
+                    <button
+                        className='rounded-md border border-transparent bg-green-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-green-700 me-2'
+                        onClick={() => openApplication(row)}
+                    >
+                        View
+                    </button>
+                </div>
+            ),
+            ignoreRowClick: true,
+        }
+    ];
 
     const hasPermission = (permission) => (userPermissions.includes(permission))
 
@@ -110,7 +178,7 @@ const SubmissionEOI = ({ eoi }) => {
                         </table>
                         <h2 className='mb-2 text-lg font-semibold text-gray-800'>Documents uploaded</h2>
                         <ul className='ms-6 list-disc'>
-                            {application?.documents.map((doc,index)=>(
+                            {application?.documents.map((doc, index) => (
                                 <li key={index}>
                                     <a href={`/storage/${doc.name}`} className='text-blue-600 font-bold' target='blank'>
                                         {doc.document.title}
@@ -159,7 +227,7 @@ const SubmissionEOI = ({ eoi }) => {
                     <Alert type='error' message={flash.error} />
                 )}
 
-                <table className='w-full mt-4 text-center'>
+                {/* <table className='w-full mt-4 text-center'>
                     <thead>
                         <tr className='bg-gray-600 text-white'>
                             <th className='p-2'>S.N.</th>
@@ -197,8 +265,17 @@ const SubmissionEOI = ({ eoi }) => {
                             ))
                         }
                     </tbody>
-                </table>
+                </table> */}
                 {/* <Pagination links={eois.links} per_page={eois.per_page} /> */}
+
+                <div className="my-4">
+                    <DataTable
+                        columns={columns}
+                        data={eoi.eoi_vendor_applications}
+                        expandableRows
+                        expandableRowsComponent={ExpandedComponent}
+                    />
+                </div>
             </div>
         </AuthenticatedLayout>
     );

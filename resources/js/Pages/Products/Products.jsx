@@ -5,6 +5,7 @@ import Pagination from '@/Components/ui/Pagination'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout'
 import { Link, usePage, router } from '@inertiajs/react'
 import React, { useState } from 'react'
+import DataTable from 'react-data-table-component'
 
 const Products = ({ products }) => {
     const { flash, auth } = usePage().props;
@@ -34,6 +35,38 @@ const Products = ({ products }) => {
             title: 'Products',
         }
     ]
+
+    const columns = [
+        { name: "Name", selector: row => row.name, sortable: true },
+        { name: "Description", selector: row => row.description, sortable: true },
+        { name: "Category", selector: row => row.category.name },
+        {
+            name: "Action",
+            cell: row => (
+                <div className="flex gap-2">
+                    {hasPermission('edit_product') && (
+                        <Link
+                            href={`/products/${row.id}/edit`}
+                            className="rounded-md border border-transparent bg-blue-800 px-3 py-2 text-xs font-semibold uppercase text-white transition duration-150 ease-in-out hover:bg-blue-700 me-2"
+                        >
+                            Edit
+                        </Link>
+                    )}
+
+                    {hasPermission('delete_product') && (
+                        <button
+                            onClick={() => confirmDelete(row.id)}
+                            className="rounded-md border border-transparent bg-red-600 px-3 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-red-700"
+                        >
+                            Delete
+                        </button>
+                    )}
+                </div>
+            ),
+            ignoreRowClick: true,
+        }
+    ];
+
 
     return (
         <AuthenticatedLayout>
@@ -92,50 +125,29 @@ const Products = ({ products }) => {
                     <Alert type='error' message={flash.error} />
                 )}
 
-                <table className='w-full mt-4 text-center'>
-                    <thead>
-                        <tr className='bg-gray-600 text-white'>
-                            <th className='p-2'>S.N.</th>
-                            <th className='p-2'>Name</th>
-                            <th className='p-2'>Description</th>
-                            <th className='p-2'>Category</th>
-                            <th className='p-2'>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {products.data.length === 0 ?
-                            <tr><td colSpan={5} className='p-2'>No Products Found</td></tr>
-                            :
-                            products?.data.map((product, index) => (
-                                <tr key={product.id} className={index % 2 === 1 ? 'bg-gray-100' : ''}>
-                                    <td className='p-2'>{index + 1}</td>
-                                    <td className='p-2'>{product.name}</td>
-                                    <td className='p-2'>{product.description || '-'}</td>
-                                    <td className='p-2'>{product.category.name}</td>
-                                    <td className='p-2'>
-                                        {hasPermission('edit_product') &&
-                                            <Link
-                                                href={`/products/${product.id}/edit`}
-                                                className='rounded-md border border-transparent bg-blue-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-blue-700 me-2'
-                                            >
-                                                Edit
-                                            </Link>
-                                        }
-                                        {hasPermission('delete_product') &&
-                                            <button
-                                                onClick={() => confirmDelete(product.id)}
-                                                className='rounded-md border border-transparent bg-red-600 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-red-700'
-                                            >
-                                                Delete
-                                            </button>
-                                        }
-                                    </td>
-                                </tr>
-                            ))
-                        }
-                    </tbody>
-                </table>
-                <Pagination links={products.links} per_page={products.per_page} />
+                <div className="my-4">
+                    <DataTable
+                        columns={columns}
+                        data={products.data}
+                        pagination
+                        paginationServer
+                        paginationTotalRows={products.total}
+                        paginationPerPage={products.per_page}
+                        onChangePage={(page) => {
+                            router.get('/products', {
+                                page,
+                                per_page: products.per_page
+                            }, { preserveState: true, replace: true });
+                        }}
+                        onChangeRowsPerPage={(perPage) => {
+                            router.get('/products', {
+                                per_page: perPage,
+                                page: 1
+                            }, { preserveState: true, replace: true });
+                        }}
+                        paginationComponentOptions={{ noRowsPerPage: true }}
+                    />
+                </div>
             </div>
         </AuthenticatedLayout>
     );
