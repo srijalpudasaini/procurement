@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\DocumentRequest;
+use App\Models\Document;
 use App\Repositories\DocumentRepository;
-use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
@@ -60,7 +60,7 @@ class DocumentController extends Controller implements HasMiddleware
             $this->documentRepository->update($id,$request->validated());
             return redirect()->route('documents.index')->with('success','Document updated successfully');  
         }
-        catch(Exception $e){
+        catch(\Exception $e){
             return redirect()->route('documents.index')->with('error',$e->getMessage());  
         }
     }
@@ -70,7 +70,7 @@ class DocumentController extends Controller implements HasMiddleware
         try {
             $this->documentRepository->delete($id);
             return redirect()->route('documents.index')->with('success','Document deleted successfully');  
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             return redirect()->route('documents.index')->with('error',$e->getMessage());  
         }
     }

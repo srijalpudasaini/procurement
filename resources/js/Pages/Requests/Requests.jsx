@@ -202,7 +202,7 @@ const PurchaseRequests = ({ purchaseRequests }) => {
                 Create EOI
               </Link> :
               <Link className='rounded-md border border-transparent px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out me-2 bg-blue-800 hover:bg-blue-700 cursor-pointer'
-              href={`/eois/publish?requests=${selectedRequests}`}
+                href={`/eois/publish?requests=${selectedRequests}`}
               >
                 ({selectedRequests.length} selected)
                 Create EOI
@@ -250,7 +250,16 @@ const PurchaseRequests = ({ purchaseRequests }) => {
                   <td className='p-2'>{index + 1}</td>
                   <td className='p-2'>{request.user.name}</td>
                   <td className='p-2'>{request.total}</td>
-                  <td className='p-2'>{request.status}</td>
+                  <td className='p-2'>
+                    <span className={request.status == 'pending' ?
+                      'bg-yellow-200 border border-yellow-800 text-yellow-800 p-1 rounded-sm text-xs capitalize' :
+                      request.status == 'published' ?
+                        'bg-blue-200 border border-blue-800 text-blue-800 p-1 rounded-sm text-xs capitalize' :
+                        request.status == 'approved' ?
+                          'bg-green-200 border border-green-800 text-green-800 p-1 rounded-sm text-xs capitalize' :
+                          'bg-red-200 border border-red-800 text-red-800 p-1 rounded-sm text-xs capitalize'
+                    }>{request.status}</span>
+                  </td>
                   <td className='p-2'>
                     <button
                       className='rounded-md border border-transparent bg-green-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-green-700 me-2'

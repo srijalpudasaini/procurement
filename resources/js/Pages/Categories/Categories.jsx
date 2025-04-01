@@ -96,7 +96,7 @@ const Categories = ({ categories }) => {
 
                 <table className='w-full mt-4 text-center'>
                     <thead>
-                        <tr className='bg-gray-600 text-white'>
+                        <tr className='bg-gray-500 text-white'>
                             <th className='p-2'>S.N.</th>
                             <th className='p-2'>Name</th>
                             <th className='p-2'>Description</th>

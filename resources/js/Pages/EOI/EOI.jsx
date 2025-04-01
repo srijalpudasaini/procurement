@@ -133,7 +133,15 @@ const EOI = ({ eois }) => {
                   <td className='p-2'>{eoi.title}</td>
                   <td className='p-2'>{eoi.published_date}</td>
                   <td className='p-2'>{eoi.deadline_date}</td>
-                  <td className='p-2'>{eoi.status}</td>
+                  <td className='p-2'>
+                    <span className={
+                      eoi.status == 'published' ?
+                        'bg-green-200 border border-green-800 text-green-800 p-1 rounded-sm text-xs capitalize' :
+                        'bg-red-200 border border-red-800 text-red-800 p-1 rounded-sm text-xs capitalize'
+                    }>
+                      {eoi.status}
+                    </span>
+                  </td>
                   <td className='p-2'>
                     {eoi.status == 'closed' &&
                       <Link

@@ -6,9 +6,60 @@ input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
   -webkit-appearance: none;
 }
+
 input[type=number] {
-    -moz-appearance: textfield;
-  }
-.text-main{
+  -moz-appearance: textfield;
+}
+
+.text-main {
   color: #00AB66;
 }
+
+.igPjBw {
+  border-radius: 0 !important;
+}
+
+.rdt_TableCell,
+.rdt_TableHeadRow {
+  font-size: 16px !important;
+}
+
+.rdt_TableHeadRow {
+  background-color: rgb(107, 114, 128) !important;
+  color: white !important;
+  padding-block: 10px !important;
+  min-height: fit-content !important;
+}
+
+.rdt_TableCol>div {
+  justify-content: center !important;
+}
+
+.rdt_TableRow {
+  min-height: fit-content !important;
+  padding-block: 7px !important;
+}
+
+.rdt_TableCell {
+  justify-content: center !important;
+}
+
+.sc-jOTjWM {
+  font-size: 10px;
+}
+
+.rdt_TableRow {
+  border: none !important;
+}
+
+.rdt_TableRow:nth-child(even) {
+  background-color: rgb(243, 244, 246);
+}
+
+/* .rdt_TableRow:nth-child(even):hover{
+  background-color: #fff;
+} */
+/* .rdt_TableRow:hover{
+  cursor: pointer;
+  background-color: #eee;
+} */

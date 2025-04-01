@@ -1,13 +1,13 @@
 import Alert from '@/Components/ui/Alert'
 import Breadcrumb from '@/Components/ui/Breadcrumb'
 import Modal from '@/Components/ui/Modal'
-import Pagination from '@/Components/ui/Pagination'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout'
 import { Link, usePage, router } from '@inertiajs/react'
 import React, { useState } from 'react'
+import DataTable from 'react-data-table-component'
 
-const Documents = ({ documents }) => {
-    const { flash, auth } = usePage().props;
+const Documents = () => {
+    const { flash, auth, documents } = usePage().props;
     const [showModal, setShowModal] = useState(false);
     const [deleteId, setDeleteId] = useState(null);
     const userPermissions = auth?.user?.permissions || [];
@@ -34,6 +34,35 @@ const Documents = ({ documents }) => {
             title: 'Documents',
         }
     ]
+    const columns = [
+        { name: "Title", selector: row => row.title, sortable: true },
+        { name: "Description", selector: row => row.description, sortable: true },
+        {
+            name: "Action",
+            cell: row => (
+                <div className="flex gap-2">
+                    {hasPermission('edit_document') && (
+                        <Link
+                            href={`/documents/${row.id}/edit`}
+                            className="rounded-md border border-transparent bg-blue-800 px-3 py-2 text-xs font-semibold uppercase text-white transition duration-150 ease-in-out hover:bg-blue-700 me-2"
+                        >
+                            Edit
+                        </Link>
+                    )}
+
+                    {hasPermission('delete_document') && (
+                        <button
+                            onClick={() => confirmDelete(row.id)}
+                            className="rounded-md border border-transparent bg-red-600 px-3 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-red-700"
+                        >
+                            Delete
+                        </button>
+                    )}
+                </div>
+            ),
+            ignoreRowClick: true,
+        }
+    ];
 
     return (
         <AuthenticatedLayout>
@@ -94,7 +123,7 @@ const Documents = ({ documents }) => {
                     <Alert type='error' message={flash.error} />
                 )}
 
-                <table className='w-full mt-4 text-center'>
+                {/* <table className='w-full mt-4 text-center'>
                     <thead>
                         <tr className='bg-gray-600 text-white'>
                             <th className='p-2'>S.N.</th>
@@ -134,8 +163,31 @@ const Documents = ({ documents }) => {
                                     </tr>
                                 ))}
                     </tbody>
-                </table>
-                <Pagination links={documents.links} per_page={documents.per_page} />
+                </table> */}
+                {/* <Pagination links={documents.links} per_page={documents.per_page} /> */}
+                <div className="my-4">
+                <DataTable
+                    columns={columns}
+                    data={documents.data}
+                    pagination
+                    paginationServer
+                    paginationTotalRows={documents.total}
+                    paginationPerPage={documents.per_page}
+                    onChangePage={(page) => {
+                        router.get('/documents', {
+                            page,
+                            per_page: documents.per_page
+                        }, { preserveState: true, replace: true });
+                    }}
+                    onChangeRowsPerPage={(perPage) => {
+                        router.get('/documents', {
+                            per_page: perPage,
+                            page: 1
+                        }, { preserveState: true, replace: true });
+                    }}
+                    paginationComponentOptions={{ noRowsPerPage: true }}
+                />
+                </div>
             </div>
         </AuthenticatedLayout>
     );

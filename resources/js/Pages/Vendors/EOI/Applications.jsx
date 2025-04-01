@@ -195,11 +195,20 @@ const Applications = ({ applications }) => {
                   </td>
                   <td className='p-2'>{application.application_date || '-'}</td>
                   <td className='p-2'>
-                    {application.proposals?.reduce((total,proposal) => 
-                      total + proposal.price * proposal.purchase_request_item.quantity,0
+                    {application.proposals?.reduce((total, proposal) =>
+                      total + proposal.price * proposal.purchase_request_item.quantity, 0
                     )}
                   </td>
-                  <td className='p-2'>{application.status}</td>
+                  <td className='p-2'>
+                    <span className={application.status == 'pending' ?
+                      'bg-yellow-200 border border-yellow-800 text-yellow-800 p-1 rounded-sm text-xs capitalize' :
+                      application.status == 'approved' ?
+                        'bg-green-200 border border-green-800 text-green-800 p-1 rounded-sm text-xs capitalize' :
+                        'bg-red-200 border border-red-800 text-red-800 p-1 rounded-sm text-xs capitalize'
+                    }>
+                      {application.status}
+                    </span>
+                  </td>
                   <td className='p-2'>
                     <Link
                       className='rounded-md border border-transparent bg-green-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-green-700 me-2'

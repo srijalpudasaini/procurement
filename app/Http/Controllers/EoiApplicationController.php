@@ -10,6 +10,7 @@ use App\Models\EoiVendorProposal;
 use App\Repositories\EoiApplicationRepository;
 use App\Repositories\EoiVendorProposalRepository;
 use Carbon\Carbon;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 
 class EoiApplicationController extends Controller
@@ -40,7 +41,11 @@ class EoiApplicationController extends Controller
             $eoi_application = $this->eoiApplicationRepository->store(array_merge($request->validated(), ['vendor_id' => $request->user()->id, 'application_date' => Carbon::now()]));
     
             foreach ($request->products as $product) {
-                $this->eoiVendorProposalRepository->store(array_merge($product,['eoi_vendor_application_id'=>$eoi_application->id]));
+                $productData = array_merge(
+                    Arr::except($product, ['id']), // Exclude 'id' to prevent it from being treated as primary key
+                    ['eoi_vendor_application_id' => $eoi_application->id, 'purchase_request_item_id' => $product['id']]
+                );
+                $this->eoiVendorProposalRepository->store($productData);
             }
     
             foreach ($request->documents as $document) {

@@ -29,7 +29,7 @@ class VendorController extends Controller
     {
         $application = EoiVendorApplication::where('vendor_id',$request->user()->id)->where('eoi_id',$id)->get();
         $hasApplied = false;
-        if($application){
+        if(count($application)>=1){
             $hasApplied = true;
         }
         $eoi = Eoi::with('purchase_request_items.product', 'eoi_documents.document', 'files')->findOrFail($id);
