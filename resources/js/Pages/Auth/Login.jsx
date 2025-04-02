@@ -81,7 +81,7 @@ export default function Login({ status, canResetPassword }) {
                                     checked={data.vendor}
                                     onChange={(e) => setData('vendor', e.target.checked)}
                                 />
-                                <span className="ms-2 text-sm text-gray-600">
+                                <span className="ms-2 text-sm">
                                     Login as Vendor
                                 </span>
                             </label>

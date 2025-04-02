@@ -4,6 +4,7 @@ import Modal from "@/Components/ui/Modal"
 import VendorLayout from "@/Layouts/VendorLayout"
 import { Link, router, usePage } from "@inertiajs/react"
 import { useState } from "react"
+import DataTable from "react-data-table-component"
 
 const Applications = ({ applications }) => {
   const breadCrumbItems = [
@@ -21,7 +22,6 @@ const Applications = ({ applications }) => {
   const userPermissions = auth?.user?.permissions || [];
 
   const hasPermission = (permission) => (userPermissions.includes(permission))
-  console.log(applications)
 
   const confirmDelete = (id) => {
     setDeleteId(id);
@@ -39,6 +39,50 @@ const Applications = ({ applications }) => {
     setRequestModal(req)
     setShowViewModal(true)
   }
+
+  const columns = [
+    {
+      name: "Eoi", cell: row => (
+        <Link href={`/eoi/${row.eoi.id}`} className="text-blue-600 underline">
+          {row.eoi.title}
+        </Link>
+      ), sortable: true, grow: 3
+    },
+    { name: "Submitted Date", selector: row => row.application_date, sortable: true },
+    {
+      name: "Total Amount", selector: row => row.proposals?.reduce((total, proposal) =>
+        total + proposal.price * proposal.purchase_request_item.quantity, 0
+      ), sortable: true,
+    },
+    {
+      name: "Status", cell: row => (
+        <span
+          className={`rounded-sm text-white font-medium px-2 py-1 capitalize text-xs
+            ${row.status == 'approved' ? 'bg-green-600' :
+              row.status == 'rejected' ? 'bg-red-600' :
+                'bg-yellow-600'
+            }
+            `}
+        >
+          {row.status}
+        </span>
+      ),
+    },
+    {
+      name: "Action",
+      cell: row => (
+        <div className="flex gap-1 flex-1 flex-nowrap justify-center">
+          <button
+            className='min-w-fit rounded-md border border-transparent bg-green-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-green-700'
+            onClick={() => viewDetail(row)}
+          >
+            View
+          </button>
+        </div>
+      ),
+      ignoreRowClick: true,
+    }
+  ];
 
   return (
     <VendorLayout>
@@ -69,20 +113,6 @@ const Applications = ({ applications }) => {
             Request Details
           </h2>
           <div className="modal-content mt-3">
-            <table>
-              <tr className='pb-3'>
-                <th className='pe-5'>Requested By:</th>
-                <td>{requestModal?.user.name}</td>
-              </tr>
-              <tr className='pb-3'>
-                <th className='pe-5'>Total Amount:</th>
-                <td>{requestModal?.total}</td>
-              </tr>
-              <tr className='pb-3'>
-                <th className='pe-5'>Requested On:</th>
-                <td>{new Date(requestModal?.created_at).toLocaleDateString('en-CA')}</td>
-              </tr>
-            </table>
             <table className="requisition-form w-full my-4 table border-collapse overflow-x-auto text-center">
               <thead>
                 <tr>
@@ -93,25 +123,36 @@ const Applications = ({ applications }) => {
                 </tr>
               </thead>
               <tbody>
-                {requestModal?.purchase_request_items?.map((pro, index) => (
+                {requestModal?.proposals?.map((pro, index) => (
                   <tr key={index} className="border">
                     <td className="p-2 border">
-                      {pro.product.name}
+                      {pro.purchase_request_item.product.name}
                     </td>
                     <td className="p-2 border">
-                      {pro.quantity}
+                      {pro.purchase_request_item.quantity}
                     </td>
                     <td className="p-2 border">
                       {pro.price}
                     </td>
                     <td className="p-2 border">
-                      {pro.specifications}
+                      {pro.purchase_request_item.specifications}
                     </td>
                   </tr>
                 ))}
               </tbody>
 
             </table>
+
+            <h2 className='mb-2 text-lg font-semibold text-gray-800'>Documents uploaded</h2>
+            <ul className='ms-6 list-disc'>
+              {requestModal?.documents.map((doc, index) => (
+                <li key={index}>
+                  <a href={`/storage/${doc.name}`} className='text-blue-600 font-bold' target='blank'>
+                    {doc.document.title}
+                  </a>
+                </li>
+              ))}
+            </ul>
           </div>
           <div className="mt-4 flex justify-end">
             <button
@@ -120,22 +161,6 @@ const Applications = ({ applications }) => {
             >
               Close
             </button>
-            {hasPermission('approve_request') && requestModal?.status === 'pending' &&
-              <button
-                className='rounded-md border border-transparent bg-blue-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-blue-700 me-2'
-                onClick={() => confirmDelete(requestModal?.id, 'approved')}
-              >
-                Approve
-              </button>
-            }
-            {hasPermission('delete_request') && requestModal?.status === 'pending' &&
-              <button
-                onClick={() => confirmDelete(requestModal?.id, 'rejected')}
-                className='rounded-md border border-transparent bg-red-600 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-red-700'
-              >
-                Reject
-              </button>
-            }
           </div>
         </div>
       </Modal>
@@ -143,21 +168,21 @@ const Applications = ({ applications }) => {
       <div className="bg-white p-4 shadow sm:rounded-lg sm:p-8">
         <h2 className="text-center text-2xl font-bold">Applications</h2>
         <div className="flex justify-between items-center">
-          {/* <div>
+          <div>
             Show
             <select
               name=""
               id=""
               className='py-1 mx-1'
-              value={products.per_page}
-              onChange={(e) => router.get('/products', { per_page: e.target.value })}
+              value={applications.per_page}
+              onChange={(e) => router.get('/vendor/eois', { per_page: e.target.value })}
             >
               <option value="5">5</option>
               <option value="10">10</option>
               <option value="20">20</option>
             </select>
             entries
-          </div> */}
+          </div>
           {/* {hasPermission('create_product') && */}
           {/* <Link className='rounded-md border border-transparent bg-gray-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-gray-700' href='/products/create'>+ Add Product</Link> */}
           {/* } */}
@@ -170,76 +195,29 @@ const Applications = ({ applications }) => {
           <Alert type='error' message={flash.error} />
         )}
 
-        <table className='w-full mt-4 text-center overflow-x-auto'>
-          <thead>
-            <tr className='bg-gray-600 text-white'>
-              <th className='p-2'>S.N.</th>
-              <th className='p-2'>Eoi</th>
-              <th className='p-2'>Submitted date</th>
-              <th className='p-2'>Total amount</th>
-              <th className='p-2'>Status</th>
-              <th className='p-2'>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {applications.data.length === 0 ?
-              <tr><td colSpan={5} className='p-2'>No applications Found</td></tr>
-              :
-              applications?.data.map((application, index) => (
-                <tr key={application.id} className={index % 2 === 1 ? 'bg-gray-100' : ''}>
-                  <td className='p-2'>{index + 1}</td>
-                  <td className='p-2'>
-                    <Link href={`/eoi/${application.eoi.id}`} className="text-blue-600 underline">
-                      {application.eoi.title}
-                    </Link>
-                  </td>
-                  <td className='p-2'>{application.application_date || '-'}</td>
-                  <td className='p-2'>
-                    {application.proposals?.reduce((total, proposal) =>
-                      total + proposal.price * proposal.purchase_request_item.quantity, 0
-                    )}
-                  </td>
-                  <td className='p-2'>
-                    <span className={application.status == 'pending' ?
-                      'bg-yellow-200 border border-yellow-800 text-yellow-800 p-1 rounded-sm text-xs capitalize' :
-                      application.status == 'approved' ?
-                        'bg-green-200 border border-green-800 text-green-800 p-1 rounded-sm text-xs capitalize' :
-                        'bg-red-200 border border-red-800 text-red-800 p-1 rounded-sm text-xs capitalize'
-                    }>
-                      {application.status}
-                    </span>
-                  </td>
-                  <td className='p-2'>
-                    <Link
-                      className='rounded-md border border-transparent bg-green-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-green-700 me-2'
-                      onClick={() => viewDetail(application)}
-                    >
-                      View
-                    </Link>
-
-                    {hasPermission('edit_product') &&
-                      <Link
-                        href={`/applications/${application.id}/edit`}
-                        className='rounded-md border border-transparent bg-blue-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-blue-700 me-2'
-                      >
-                        Edit
-                      </Link>
-                    }
-                    {hasPermission('delete_application') &&
-                      <button
-                        onClick={() => confirmDelete(application.id)}
-                        className='rounded-md border border-transparent bg-red-600 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-red-700'
-                      >
-                        Delete
-                      </button>
-                    }
-                  </td>
-                </tr>
-              ))
-            }
-          </tbody>
-        </table>
-        {/* <Pagination links={products.links} per_page={products.per_page} /> */}
+        <div className="my-4">
+          <DataTable
+            columns={columns}
+            data={applications.data}
+            pagination
+            paginationServer
+            paginationTotalRows={applications.total}
+            paginationPerPage={applications.per_page}
+            onChangePage={(page) => {
+              router.get('/vendor/eois', {
+                page,
+                per_page: applications.per_page
+              }, { preserveState: true, replace: true });
+            }}
+            onChangeRowsPerPage={(perPage) => {
+              router.get('/vendor/eois', {
+                per_page: perPage,
+                page: 1
+              }, { preserveState: true, replace: true });
+            }}
+            paginationComponentOptions={{ noRowsPerPage: true }}
+          />
+        </div>
       </div>
     </VendorLayout>
   )

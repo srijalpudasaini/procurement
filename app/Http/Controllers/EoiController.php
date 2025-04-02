@@ -62,8 +62,8 @@ class EoiController extends Controller implements HasMiddleware
         $products = Product::all();
         $purchaseRequests = $this->purchaseRequestRepository->find($ids, ['purchase_request_items.product']);
 
-        if(!$purchaseRequests->contains('status','approved')){
-            return redirect()->back()->with('error','Could not publish EOI for the given request');
+        if (!$purchaseRequests->contains('status', 'approved')) {
+            return redirect()->back()->with('error', 'Could not publish EOI for the given request');
         }
         return Inertia::render('EOI/PublishEOI', compact('purchaseRequests', 'documents', 'products'));
     }
@@ -91,7 +91,7 @@ class EoiController extends Controller implements HasMiddleware
                 }
             }
             foreach ($request->newProducts as $item) {
-                $this->purchaseRequestItemRepository->store(array_merge($item,['selected'=>true,'eoi_id'=>$eoi->id]));
+                $this->purchaseRequestItemRepository->store(array_merge($item, ['selected' => true, 'eoi_id' => $eoi->id]));
             }
 
             if (isset($request->documents)) {
@@ -99,7 +99,7 @@ class EoiController extends Controller implements HasMiddleware
                     $eoi->documents()->attach($doc['id'], ['required' => $doc['compulsory']]);
                 }
             }
-            
+
             foreach ($request->files1 as $file) {
                 $eoi_file = new EoiFile();
                 $eoi_file->eoi_id = $eoi->id;
@@ -114,17 +114,27 @@ class EoiController extends Controller implements HasMiddleware
             DB::rollBack();
             return redirect()->route('eois.index')->with('error', $e->getMessage());
         }
-
-
     }
 
-    public function submissions($id)
+    public function submissions(Request $request,$id)
     {
-        $eoi = $this->eoiRepository->find($id, ['eoi_vendor_applications.vendor', 'eoi_vendor_applications.documents.document', 'eoi_vendor_applications.proposals.purchase_request_item.product']);
-        if($eoi->status!='closed'){
+        $eoi = $this->eoiRepository->find($id);
+
+        if ($eoi->status !== 'closed') {
             abort(404);
         }
-        return Inertia::render('EOI/SubmissionsEOI', compact( 'eoi'));
+        $submissions = $eoi->eoi_vendor_applications()
+            ->with([
+                'vendor',
+                'documents.document',
+                'proposals.purchase_request_item.product'
+            ])
+            ->paginate($request->input('per_page',10));
+
+        return Inertia::render('EOI/SubmissionsEOI', [
+            'eoi' => $eoi,
+            'submissions' => $submissions
+        ]);
     }
     public function edit($id)
     {

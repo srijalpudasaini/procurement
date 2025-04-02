@@ -50,13 +50,12 @@ const ExpandedComponent = ({ data }) => (
     </div>
 )
 
-const SubmissionEOI = ({ eoi }) => {
+const SubmissionEOI = ({ eoi, submissions }) => {
     const { flash, auth } = usePage().props;
     const [showModal, setShowModal] = useState(false);
     const [deleteId, setDeleteId] = useState(null);
     const [application, setApplication] = useState(null);
     const userPermissions = auth?.user?.permissions || [];
-    // console.log(eoi)
 
     const columns = [
         { name: "Vendor", selector: row => row.vendor.name, sortable: true },
@@ -214,21 +213,21 @@ const SubmissionEOI = ({ eoi }) => {
             <div className="bg-white p-4 shadow sm:rounded-lg sm:p-8">
                 <h2 className="text-center text-2xl font-bold">EOI Applications</h2>
                 <div className="flex justify-between items-center">
-                    {/* <div>
+                    <div>
                         Show
                         <select
                             name=""
                             id=""
                             className='py-1 mx-1'
-                            value={eois.per_page}
-                            onChange={(e) => router.get('/eois/submissions', { per_page: e.target.value })}
+                            value={submissions.per_page}
+                            onChange={(e) => router.get(`/eois/submissions/${eoi.id}`, { per_page: e.target.value })}
                         >
                             <option value="5">5</option>
                             <option value="10">10</option>
                             <option value="20">20</option>
                         </select>
                         entries
-                    </div> */}
+                    </div>
                 </div>
 
                 {flash?.success && (
@@ -282,9 +281,26 @@ const SubmissionEOI = ({ eoi }) => {
                 <div className="my-4">
                     <DataTable
                         columns={columns}
-                        data={eoi.eoi_vendor_applications}
+                        data={submissions.data}
                         expandableRows
                         expandableRowsComponent={ExpandedComponent}
+                        pagination
+                        paginationServer
+                        paginationTotalRows={submissions.total}
+                        paginationPerPage={submissions.per_page}
+                        onChangePage={(page) => {
+                            router.get(`/eois/submissions/${eoi.id}`, {
+                                page,
+                                per_page: submissions.per_page
+                            }, { preserveState: true, replace: true });
+                        }}
+                        onChangeRowsPerPage={(perPage) => {
+                            router.get(`/eois/submissions/${eoi.id}`, {
+                                per_page: perPage,
+                                page: 1
+                            }, { preserveState: true, replace: true });
+                        }}
+                        paginationComponentOptions={{ noRowsPerPage: true }}
                     />
                 </div>
             </div>

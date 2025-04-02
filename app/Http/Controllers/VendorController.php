@@ -20,7 +20,7 @@ class VendorController extends Controller
     }
     public function eoi(Request $request)
     {
-        $applications = EoiVendorApplication::where('vendor_id',$request->user()->id)->with(['eoi','proposals.purchase_request_item'])->paginate(10);
+        $applications = EoiVendorApplication::where('vendor_id',$request->user()->id)->with(['eoi','proposals.purchase_request_item.product','documents.document'])->paginate($request->input('per_page',10));
         $total = 0;
         return Inertia::render('Vendors/EOI/Applications',compact('applications'));
     }

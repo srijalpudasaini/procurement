@@ -296,13 +296,13 @@ const PurchaseRequests = ({ purchaseRequests }) => {
             paginationTotalRows={purchaseRequests.total}
             paginationPerPage={purchaseRequests.per_page}
             onChangePage={(page) => {
-              router.get('/purchaseRequests', {
+              router.get('/requests', {
                 page,
                 per_page: purchaseRequests.per_page
               }, { preserveState: true, replace: true });
             }}
             onChangeRowsPerPage={(perPage) => {
-              router.get('/purchaseRequests', {
+              router.get('/requests', {
                 per_page: perPage,
                 page: 1
               }, { preserveState: true, replace: true });
