@@ -22,22 +22,22 @@ Route::middleware('guest')->group(function () {
         ->name('login');
 
     Route::post('login', [AuthenticatedSessionController::class, 'store']);
-
+    
     Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])
-        ->name('password.request');
-
+    ->name('password.request');
+    
     Route::post('forgot-password', [PasswordResetLinkController::class, 'store'])
-        ->name('password.email');
-
+    ->name('password.email');
+    
     Route::get('reset-password/{token}', [NewPasswordController::class, 'create'])
-        ->name('password.reset');
-
+    ->name('password.reset');
+    
     Route::post('reset-password', [NewPasswordController::class, 'store'])
-        ->name('password.store');
-
+    ->name('password.store');
+    
     Route::get('vendor/register', [VendorAuthController::class, 'index'])->name('vendor.register');
     Route::post('vendor/register', [VendorAuthController::class, 'register'])->name('vendor.store');
-    // Route::get('vendor/login', [VendorAuthController::class, 'index'])->name('vendor.register');
+    Route::post('vendor/login', [VendorAuthController::class, 'login'])->name('vendor.login');
 });
 
 Route::middleware('auth')->group(function () {

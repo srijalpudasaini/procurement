@@ -37,10 +37,10 @@ class AuthenticatedSessionController extends Controller
             return redirect()->intended(route('dashboard'));
         }
     
-        if (Auth::guard('vendor')->attempt($credentials)) {
-            $request->session()->regenerate();
-            return redirect()->intended(route('vendor.dashboard'));
-        }
+        // if (Auth::guard('vendor')->attempt($credentials)) {
+        //     $request->session()->regenerate();
+        //     return redirect()->intended(route('vendor.dashboard'));
+        // }
     
         return back()->withErrors(['email' => 'Invalid credentials'])->onlyInput('email');
     }

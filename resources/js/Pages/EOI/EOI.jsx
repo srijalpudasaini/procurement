@@ -67,7 +67,7 @@ const EOI = ({ eois }) => {
       name: "Status", cell: row => (
         <span
           className={`rounded-sm text-white font-medium px-2 py-1 capitalize text-xs
-            ${row.status == 'published' ? 'bg-green-800' : 'bg-red-800'}
+            ${row.status == 'published' ? 'bg-green-600' : 'bg-red-600'}
             `}
         >
           {row.status}

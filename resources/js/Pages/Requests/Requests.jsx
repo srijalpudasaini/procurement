@@ -3,6 +3,7 @@ import Breadcrumb from '@/Components/ui/Breadcrumb'
 import Modal from '@/Components/ui/Modal'
 import Pagination from '@/Components/ui/Pagination'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout'
+// import { compact } from '@headlessui/react/dist/utils/render'
 import { Link, usePage, router } from '@inertiajs/react'
 import React, { useState } from 'react'
 import DataTable from 'react-data-table-component'
@@ -68,35 +69,52 @@ const PurchaseRequests = ({ purchaseRequests }) => {
   }
 
   const columns = [
-    {
-      name: "", cell: row => (
-        hasPermission('create_eoi') &&
-        <td className='p-2'>
+    ...hasPermission('create_eoi') ?
+      [{
+        name: "", cell: row => (
           <input type="checkbox"
             disabled={row.status != 'approved'}
             onChange={(e) => handleChange(e, row)}
             checked={selectedRequests.includes(row.id)}
             className={`${row.status != 'approved' ? 'cursor-not-allowed' : 'cursor-pointer'}`}
           />
-        </td>
-      )
+        ),
+        grow: 0,
+        minWidth: 'fit-content',
+        maxWidth: 'fit-content',
+        center: true
+      }] : [],
+    { name: "Requested By", selector: row => row.user.name, sortable: true,center:true },
+    { name: "Total", selector: row => row.total, sortable: true,center:true },
+    {
+      name: "Status", cell: row => (
+        <span
+          className={`rounded-sm text-white font-medium px-2 py-1 capitalize text-xs
+            ${row.status == 'published' ? 'bg-blue-600' :
+              row.status == 'approved' ? 'bg-green-600' :
+                row.status == 'rejected' ? 'bg-red-600' :
+                  'bg-yellow-600'
+            }
+            `}
+        >
+          {row.status}
+        </span>
+      ),
+      center:true
     },
-    { name: "Requester's Name", selector: row => row.user.name, sortable: true },
-    { name: "Total", selector: row => row.total, sortable: true },
-    { name: "Status", selector: row => row.status },
     {
       name: "Action",
       cell: row => (
-        <div className="flex gap-2">
+        <div className="flex gap-1 flex-1 flex-nowrap justify-center">
           <button
-            className='rounded-md border border-transparent bg-green-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-green-700 me-2'
+            className='min-w-fit rounded-md border border-transparent bg-green-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-green-700'
             onClick={() => viewDetail(row)}
           >
             View
           </button>
           {hasPermission('approve_request') && row.status === 'pending' &&
             <button
-              className='rounded-md border border-transparent bg-blue-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-blue-700 me-2'
+              className='min-w-fit rounded-md border border-transparent bg-blue-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-blue-700'
               onClick={() => confirmDelete(row.id, 'approved')}
             >
               Approve
@@ -105,7 +123,7 @@ const PurchaseRequests = ({ purchaseRequests }) => {
           {hasPermission('delete_request') && row.status === 'pending' &&
             <button
               onClick={() => confirmDelete(row.id, 'rejected')}
-              className='rounded-md border border-transparent bg-red-600 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-red-700'
+              className='min-w-fit rounded-md border border-transparent bg-red-600 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-red-700'
             >
               Reject
             </button>
@@ -113,6 +131,7 @@ const PurchaseRequests = ({ purchaseRequests }) => {
         </div>
       ),
       ignoreRowClick: true,
+      center:true
     }
   ];
   return (
@@ -198,7 +217,7 @@ const PurchaseRequests = ({ purchaseRequests }) => {
             </button>
             {hasPermission('approve_request') && requestModal?.status === 'pending' &&
               <button
-                className='rounded-md border border-transparent bg-blue-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-blue-700 me-2'
+                className='rounded-md border border-transparent bg-blue-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-blue-700'
                 onClick={() => confirmDelete(requestModal?.id, 'approved')}
               >
                 Approve

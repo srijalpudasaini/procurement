@@ -66,7 +66,18 @@ const SubmissionEOI = ({ eoi }) => {
                 total + proposal.price * proposal.purchase_request_item.quantity, 0
             ), sortable: true
         },
-        { name: "Status", selector: row => row.status },
+        {
+            name: "Status", cell: row => (
+                <span
+                    className={`rounded-sm text-white font-medium px-2 py-1 capitalize text-xs
+                                ${row.status == 'pending' ? 'bg-yellow-600' :
+                            row.status == 'approved' ? 'bg-green-600' : 'bg-red-600'}
+                            `}
+                >
+                    {row.status}
+                </span>
+            )
+        },
         {
             name: "Action",
             cell: row => (

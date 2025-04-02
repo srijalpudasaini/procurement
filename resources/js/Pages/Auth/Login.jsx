@@ -11,14 +11,22 @@ export default function Login({ status, canResetPassword }) {
         email: '',
         password: '',
         remember: false,
+        vendor:false
     });
 
     const submit = (e) => {
         e.preventDefault();
 
-        post(route('login'), {
-            onFinish: () => reset('password'),
-        });
+        if(!data.vendor){
+            post(route('login'), {
+                onFinish: () => reset('password'),
+            });
+        }
+        else{
+            post(route('vendor.login'), {
+                onFinish: () => reset('password'),
+            });
+        }
     };
 
     return (
@@ -66,6 +74,18 @@ export default function Login({ status, canResetPassword }) {
                             <InputError message={errors.password} className="mt-2" />
                         </div>
 
+                        <div className="mt-4 block">
+                            <label className="flex items-center">
+                                <Checkbox
+                                    name="vendor"
+                                    checked={data.vendor}
+                                    onChange={(e) => setData('vendor', e.target.checked)}
+                                />
+                                <span className="ms-2 text-sm text-gray-600">
+                                    Login as Vendor
+                                </span>
+                            </label>
+                        </div>
                         <div className="mt-4 block">
                             <label className="flex items-center">
                                 <Checkbox
