@@ -12,8 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('purchase_request_items', function (Blueprint $table) {
-            $table->unsignedBigInteger('eoi_id')->nullable()->after('selected');
-            $table->foreign('eoi_id')->references('id')->on('eois');
+            $table->enum('priority',['high','medium','low'])->after('eoi_id');
         });
     }
 

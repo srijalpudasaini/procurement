@@ -42,7 +42,7 @@ class EoiApplicationController extends Controller
     
             foreach ($request->products as $product) {
                 $productData = array_merge(
-                    Arr::except($product, ['id']), // Exclude 'id' to prevent it from being treated as primary key
+                    Arr::except($product, ['id']),
                     ['eoi_vendor_application_id' => $eoi_application->id, 'purchase_request_item_id' => $product['id']]
                 );
                 $this->eoiVendorProposalRepository->store($productData);

@@ -14,7 +14,7 @@ const Users = ({ users }) => {
     const userPermissions = auth?.user?.permissions || [];
     console.log(users)
 
-    const hasPermission = (permission) => (userPermissions.includes(permission))
+    const hasPermission = (permission) => (userPermissions.includes(permission) || auth.user.is_superadmin)
 
     const confirmDelete = (id) => {
         setDeleteId(id);

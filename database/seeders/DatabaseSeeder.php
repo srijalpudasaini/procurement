@@ -19,10 +19,11 @@ class DatabaseSeeder extends Seeder
         // User::factory(10)->create();
 
         $admin = User::create([
-            'name' => 'Admin',
+            'name' => 'Super Admin',
             'email' => 'admin@example.com',
             'contact' => '9810008986',
             'password' => Hash::make('admin123'),
+            'is_superadmin' => true,
         ]);
         $employee = User::create([
             'name' => 'Employee',
@@ -72,7 +73,6 @@ class DatabaseSeeder extends Seeder
 
         $adminRole->givePermissionTo($permissions); 
 
-        $admin->assignRole($adminRole);
         $employee->assignRole($employeeRole);
 
         $employeeRole->givePermissionTo([

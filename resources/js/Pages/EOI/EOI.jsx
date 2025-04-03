@@ -14,7 +14,7 @@ const EOI = ({ eois }) => {
   const [modalType, setModalType] = useState(null);
   const userPermissions = auth?.user?.permissions || [];
 
-  const hasPermission = (permission) => (userPermissions.includes(permission))
+  const hasPermission = (permission) => (userPermissions.includes(permission) || auth.user.is_superadmin)
 
   const confirmDelete = (id, type) => {
     setModalType(type)

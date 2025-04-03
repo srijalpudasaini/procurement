@@ -118,7 +118,7 @@ class EoiController extends Controller implements HasMiddleware
 
     public function submissions(Request $request,$id)
     {
-        $eoi = $this->eoiRepository->find($id);
+        $eoi = $this->eoiRepository->find($id,['purchase_request_items.product','eoi_documents.document']);
 
         if ($eoi->status !== 'closed') {
             abort(404);

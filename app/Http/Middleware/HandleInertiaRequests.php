@@ -41,6 +41,7 @@ class HandleInertiaRequests extends Middleware
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
+                'is_superadmin' => $user->is_superadmin,
                 'roles' => $user->roles->pluck('name')->toArray(), // Get user roles
                 'permissions' => $user->getPermissionsViaRoles()->pluck('name')->toArray(), // Get user permissions
             ] : null,

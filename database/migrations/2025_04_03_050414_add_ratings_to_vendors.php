@@ -11,9 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('purchase_request_items', function (Blueprint $table) {
-            $table->unsignedBigInteger('eoi_id')->nullable()->after('selected');
-            $table->foreign('eoi_id')->references('id')->on('eois');
+        Schema::table('vendors', function (Blueprint $table) {
+            $table->double('rating')->default(5)->after('registration_date');
+            $table->integer('rating_count')->default(0)->after('rating');
         });
     }
 
@@ -22,7 +22,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('purchase_request_items', function (Blueprint $table) {
+        Schema::table('vendors', function (Blueprint $table) {
             //
         });
     }

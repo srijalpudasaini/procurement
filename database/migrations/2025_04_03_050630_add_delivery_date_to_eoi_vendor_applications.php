@@ -11,9 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('purchase_request_items', function (Blueprint $table) {
-            $table->unsignedBigInteger('eoi_id')->nullable()->after('selected');
-            $table->foreign('eoi_id')->references('id')->on('eois');
+        Schema::table('eoi_vendor_applications', function (Blueprint $table) {
+            $table->date('delivery_date')->after('application_date');
         });
     }
 
@@ -22,7 +21,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('purchase_request_items', function (Blueprint $table) {
+        Schema::table('eoi_vendor_applications', function (Blueprint $table) {
             //
         });
     }

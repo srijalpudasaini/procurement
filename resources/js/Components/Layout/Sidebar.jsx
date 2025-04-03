@@ -4,7 +4,7 @@ export default function Sidebar() {
     const { auth } = usePage().props;
     const userPermissions = auth?.user?.permissions || [];
 
-    const hasPermission = (permission) => userPermissions.includes(permission);
+    const hasPermission = (permission) => userPermissions.includes(permission) || auth.user.is_superadmin;
 
     return (
         <aside className="bg-white h-screen sticky top-0 overflow-y-auto">
