@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class EoiVendorApplication extends Model
 {
-    protected $fillable = ['vendor_id','eoi_id','status','application_date'];
+    protected $fillable = ['vendor_id','eoi_id','status','application_date','delivery_date'];
     public function eoi(){
         return $this->belongsTo(Eoi::class);
     }

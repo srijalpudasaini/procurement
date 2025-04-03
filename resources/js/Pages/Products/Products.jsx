@@ -44,7 +44,7 @@ const Products = ({ products }) => {
             name: "Action",
             cell: row => (
                 <div className="flex gap-2">
-                    {hasPermission('edit_product') && (
+                    {!!hasPermission('edit_product') && (
                         <Link
                             href={`/products/${row.id}/edit`}
                             className="rounded-md border border-transparent bg-blue-800 px-3 py-2 text-xs font-semibold uppercase text-white transition duration-150 ease-in-out hover:bg-blue-700 me-2"
@@ -53,7 +53,7 @@ const Products = ({ products }) => {
                         </Link>
                     )}
 
-                    {hasPermission('delete_product') && (
+                    {!!hasPermission('delete_product') && (
                         <button
                             onClick={() => confirmDelete(row.id)}
                             className="rounded-md border border-transparent bg-red-600 px-3 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-red-700"
@@ -70,7 +70,7 @@ const Products = ({ products }) => {
 
     return (
         <AuthenticatedLayout>
-            {hasPermission('delete_product') &&
+            {!!hasPermission('delete_product') &&
                 <Modal show={showModal} onClose={() => setShowModal(false)}>
                     <div className="p-6">
                         <h2 className="text-lg font-semibold text-gray-800">
@@ -113,7 +113,7 @@ const Products = ({ products }) => {
                         </select>
                         entries
                     </div>
-                    {hasPermission('create_product') &&
+                    {!!hasPermission('create_product') &&
                         <Link className='rounded-md border border-transparent bg-gray-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-gray-700' href='/products/create'>+ Add Product</Link>
                     }
                 </div>

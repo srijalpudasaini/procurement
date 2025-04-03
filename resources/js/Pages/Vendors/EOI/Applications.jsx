@@ -19,9 +19,6 @@ const Applications = ({ applications }) => {
   const { flash, auth } = usePage().props;
   const [showModal, setShowModal] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
-  const userPermissions = auth?.user?.permissions || [];
-
-  const hasPermission = (permission) => (userPermissions.includes(permission) || auth.user.is_superadmin)
 
   const confirmDelete = (id) => {
     setDeleteId(id);
@@ -183,9 +180,6 @@ const Applications = ({ applications }) => {
             </select>
             entries
           </div>
-          {/* {hasPermission('create_product') && */}
-          {/* <Link className='rounded-md border border-transparent bg-gray-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-gray-700' href='/products/create'>+ Add Product</Link> */}
-          {/* } */}
         </div>
 
         {flash?.success && (

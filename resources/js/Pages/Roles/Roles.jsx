@@ -109,7 +109,7 @@ const Roles = ({ roles }) => {
                         </select>
                         entries
                     </div>
-                    {hasPermission('create_role') &&
+                    {!!hasPermission('create_role') &&
                         <div className="text-end">
                             <Link className='rounded-md border border-transparent bg-gray-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-gray-700' href='/roles/create'>+ Add Role</Link>
                         </div>

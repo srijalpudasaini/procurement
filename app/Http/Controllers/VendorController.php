@@ -38,4 +38,17 @@ class VendorController extends Controller
         }
         return Inertia::render('Vendors/EOI/Apply', compact('eoi','hasApplied'));
     }
+
+    public function updateRating(Request $request, $id){
+        $request->validate([
+            'rating' => 'required|integer|min:1|max:5',
+        ]);
+        $vendor = $this->vendorRepository->find($id);
+
+        $newRating = $request->rating;
+        $vendor->rating = (($vendor->rating * $vendor->rating_count) + $newRating) / ($vendor->rating_count + 1);
+        $vendor->rating_count += 1;
+    
+        $vendor->save();
+    }
 }

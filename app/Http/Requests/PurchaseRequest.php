@@ -28,6 +28,7 @@ class PurchaseRequest extends FormRequest
             'products.*.product_id'=>'exists:products,id',
             'products.*.quantity'=>'integer|gt:0',
             'products.*.price'=>'integer|gt:0',
+            'products.*.priority'=>'required|in:high,medium,low',
         ];
     }
 
@@ -43,6 +44,7 @@ class PurchaseRequest extends FormRequest
         'products.*.quantity' => 'quantity',
         'products.*.price' => 'price',
         'products.*.specifications' => 'specifications',
+        'products.*.priority' => 'priority',
     ];
 }
 

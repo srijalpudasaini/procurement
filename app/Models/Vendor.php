@@ -17,7 +17,9 @@ class Vendor extends Authenticatable
         'registration_number',
         'pan_number',
         'registration_date',
-        'password'
+        'password',
+        'rating',
+        'rating_count'
     ];
 
     public function applications(){

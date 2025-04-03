@@ -9,7 +9,7 @@ import { Button } from "@headlessui/react";
 import { useEffect, useState } from "react";
 
 const AddRequest = ({ products }) => {
-    const [productList, setProductList] = useState([{ product_id: "", quantity: "", price: "", specifications: "" }]);
+    const [productList, setProductList] = useState([{ product_id: "", quantity: "", price: "", priority: "", specifications: "", }]);
     const { data, setData, post, processing, errors, reset } = useForm({ products: [] });
 
     const breadCrumbItems = [
@@ -28,7 +28,7 @@ const AddRequest = ({ products }) => {
     };
 
     const handleProductAdd = () => {
-        setProductList([...productList, { product_id: "", quantity: "", price: "", specifications: "" }]);
+        setProductList([...productList, { product_id: "", quantity: "", price: "", priority: "", specifications: "" }]);
     };
 
     const handleProductRemove = (index) => {
@@ -55,6 +55,7 @@ const AddRequest = ({ products }) => {
                                 <th className="p-2 border">Product</th>
                                 <th className="p-2 border">Quantity</th>
                                 <th className="p-2 border">Price</th>
+                                <th className="p-2 border">Priority</th>
                                 <th className="p-2 border">Specification</th>
                                 <th className="p-2 border">Action</th>
                             </tr>
@@ -73,7 +74,7 @@ const AddRequest = ({ products }) => {
                                             {products
                                                 .filter(product => {
                                                     const isSelected = productList.some(item => item.product_id == product.id);
-                                                    return !isSelected || pro.product_id == product.id; 
+                                                    return !isSelected || pro.product_id == product.id;
                                                 }).map(product => (
                                                     <option key={product.id} value={product.id}>
                                                         {product.name}
@@ -101,6 +102,19 @@ const AddRequest = ({ products }) => {
                                             onChange={(e) => handleChange(e, index)}
                                         />
                                         <InputError message={errors[`products.${index}.price`]} />
+                                    </td>
+                                    <td className="p-2 border">
+                                        <select name="priority" id=""
+                                            value={pro.priority}
+                                            onChange={(e) => handleChange(e, index)}
+                                            className="py-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                        >
+                                            <option value="">Select priority</option>
+                                            <option value="high">High</option>
+                                            <option value="medium">Medium</option>
+                                            <option value="low">Low</option>
+                                        </select>
+                                        <InputError message={errors[`products.${index}.priority`]} />
                                     </td>
                                     <td className="p-2 border">
                                         <textarea

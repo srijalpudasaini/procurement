@@ -13,7 +13,8 @@ class PurchaseRequestItem extends Model
         'selected',
         'price',
         'quantity',
-        'specifications'
+        'specifications',
+        'priority'
     ];
     public function purchase_request(){
         return $this->belongsTo(PurchaseRequest::class);

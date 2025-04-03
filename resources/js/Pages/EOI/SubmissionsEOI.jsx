@@ -56,12 +56,12 @@ const SubmissionEOI = ({ eoi, submissions }) => {
     const { flash, auth } = usePage().props;
     const [showModal, setShowModal] = useState(false);
     const [deleteId, setDeleteId] = useState(null);
-    const [application, setApplication] = useState(null);
     const userPermissions = auth?.user?.permissions || [];
 
     const columns = [
         { name: "Vendor", selector: row => row.vendor.name, sortable: true },
         { name: "Submission Date", selector: row => row.application_date, sortable: true },
+        { name: "Delivery Date", selector: row => row.delivery_date, sortable: true },
         {
             name: "Total", selector: row => row.proposals?.reduce((total, proposal) =>
                 total + proposal.price * proposal.purchase_request_item.quantity, 0
@@ -85,7 +85,6 @@ const SubmissionEOI = ({ eoi, submissions }) => {
                 <div className="flex gap-2">
                     <button
                         className='rounded-md border border-transparent bg-green-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-green-700 me-2'
-                        onClick={() => openApplication(row)}
                     >
                         View
                     </button>
@@ -102,10 +101,6 @@ const SubmissionEOI = ({ eoi, submissions }) => {
         setShowModal(true);
     };
 
-    const openApplication = (application) => {
-        setApplication(application);
-        setShowModal(true)
-    }
 
     const handleDelete = () => {
         router.put(`/requests/updateStatus/${deleteId}`, {
@@ -271,8 +266,6 @@ const SubmissionEOI = ({ eoi, submissions }) => {
                                 <option value="asc">Ascending</option>
                                 <option value="desc">Descending</option>
                             </select>
-
-
                         </div>
                     </div>
                 }

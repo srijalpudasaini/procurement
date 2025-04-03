@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\PurchaseRequest;
+use App\Repositories\PurchaseRequestItemRepository;
 use App\Repositories\PurchaseRequestRepository;
 use App\Models\Product;
 use App\Models\PurchaseRequestItem;
@@ -14,11 +15,12 @@ use Inertia\Inertia;
 class PurchaseRequestController extends Controller implements HasMiddleware
 {
 
-    protected $purchaseRequestRepository;
+    protected $purchaseRequestRepository,$purchaseRequestItemRepository;
 
-    public function __construct(PurchaseRequestRepository $purchaseRequestRepository)
+    public function __construct(PurchaseRequestRepository $purchaseRequestRepository, PurchaseRequestItemRepository $purchaseRequestItemRepository)
     {
         $this->purchaseRequestRepository = $purchaseRequestRepository;
+        $this->purchaseRequestItemRepository = $purchaseRequestItemRepository;
     }
     public static function middleware()
     {
@@ -31,7 +33,7 @@ class PurchaseRequestController extends Controller implements HasMiddleware
     public function index(Request $request)
     {
         $user = $request->user();
-        if ($user->hasRole('admin')) {
+        if ($user->hasRole('admin') || $user->is_superadmin) {
             $purchaseRequests = $this->purchaseRequestRepository->all(
                 $request->input('per_page', 10),
                 ['user', 'purchase_request_items.product']
@@ -64,13 +66,7 @@ class PurchaseRequestController extends Controller implements HasMiddleware
         $request = $this->purchaseRequestRepository->store(['user_id' => $userId, 'total' => $total]);
 
         foreach ($purchaseRequest->products as $product) {
-            $purchaseItem = new PurchaseRequestItem();
-            $purchaseItem->purchase_request_id = $request->id;
-            $purchaseItem->product_id = $product['product_id'];
-            $purchaseItem->price = $product['price'];
-            $purchaseItem->quantity = $product['quantity'];
-            $purchaseItem->specifications = $product['specifications'];
-            $purchaseItem->save();
+            $this->purchaseRequestItemRepository->store(array_merge($product,['purchase_request_id'=>$request->id]));
         }
 
         return redirect()->route('requests.index')->with('success', 'Request successfully created');

@@ -19,7 +19,7 @@ class EoiApplicationController extends Controller
     protected $eoiApplicationRepository;
     protected $eoiVendorProposalRepository;
 
-    public function __construct(EoiApplicationRepository $eoiApplicationRepository,EoiVendorProposalRepository $eoiVendorProposalRepository)
+    public function __construct(EoiApplicationRepository $eoiApplicationRepository, EoiVendorProposalRepository $eoiVendorProposalRepository)
     {
         $this->eoiApplicationRepository = $eoiApplicationRepository;
         $this->eoiVendorProposalRepository = $eoiVendorProposalRepository;
@@ -27,6 +27,7 @@ class EoiApplicationController extends Controller
 
     public function submitApplication(VendorApplicationRequest $request)
     {
+        // dd(array_merge($request->validated(), ['vendor_id' => $request->user()->id, 'application_date' => Carbon::now()]));
         DB::beginTransaction();
         try {
             $eoi = Eoi::findOrFail(id: $request->eoi_id);
@@ -34,12 +35,14 @@ class EoiApplicationController extends Controller
                 return abort(404);
             }
             $application = EoiVendorApplication::where('eoi_id', $request->eoi_id)->where('vendor_id', $request->user()->id)->get();
-    
+
             if (count($application) >= 1) {
                 return redirect()->route('vendor.eoi')->with('error', 'You cannot apply an more than once');
             }
-            $eoi_application = $this->eoiApplicationRepository->store(array_merge($request->validated(), ['vendor_id' => $request->user()->id, 'application_date' => Carbon::now()]));
-    
+            $eoi_application = $this->eoiApplicationRepository->store(
+                array_merge($request->validated(), ['vendor_id' => $request->user()->id, 'application_date' => Carbon::now()])
+            );
+
             foreach ($request->products as $product) {
                 $productData = array_merge(
                     Arr::except($product, ['id']),
@@ -47,7 +50,7 @@ class EoiApplicationController extends Controller
                 );
                 $this->eoiVendorProposalRepository->store($productData);
             }
-    
+
             foreach ($request->documents as $document) {
                 if (!empty($document['file'])) {
                     $vendor_document = new EoiVendorDocument();
@@ -62,7 +65,6 @@ class EoiApplicationController extends Controller
             return redirect()->route('vendor.eoi')->with('success', 'Application successfully submitted!');
         } catch (\Exception $e) {
             return redirect()->route('vendor.eoi')->with('error', $e->getMessage());
-            
         }
     }
 }

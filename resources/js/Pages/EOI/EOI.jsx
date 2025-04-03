@@ -162,7 +162,7 @@ const EOI = ({ eois }) => {
             </select>
             entries
           </div>
-          {hasPermission('create_request') &&
+          {!!hasPermission('create_request') &&
             <Link className='rounded-md border border-transparent bg-gray-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-gray-700' href='/eois/create'>+ Create EOI</Link>
           }
         </div>

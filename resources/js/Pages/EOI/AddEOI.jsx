@@ -137,7 +137,7 @@ const AddEOI = ({ purchaseRequests }) => {
             >
               Close
             </button>
-            {hasPermission('approve_request') && requestModal?.status === 'pending' &&
+            {!!hasPermission('approve_request') && requestModal?.status === 'pending' &&
               <button
                 className='rounded-md border border-transparent bg-blue-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-blue-700 me-2'
                 onClick={() => confirmDelete(requestModal?.id, 'approved')}
@@ -145,7 +145,7 @@ const AddEOI = ({ purchaseRequests }) => {
                 Approve
               </button>
             }
-            {hasPermission('delete_request') && requestModal?.status === 'pending' &&
+            {!!hasPermission('delete_request') && requestModal?.status === 'pending' &&
               <button
                 onClick={() => confirmDelete(requestModal?.id, 'rejected')}
                 className='rounded-md border border-transparent bg-red-600 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-red-700'
@@ -214,7 +214,7 @@ const AddEOI = ({ purchaseRequests }) => {
                     >
                       View
                     </button>
-                    {hasPermission('create_eoi') &&
+                    {!!hasPermission('create_eoi') &&
                       <Link
                         className='rounded-md border border-transparent bg-blue-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-blue-700 me-2'
                         href={route('eois.publish', { request: request.id })}

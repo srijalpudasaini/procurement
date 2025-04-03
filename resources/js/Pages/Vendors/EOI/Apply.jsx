@@ -20,10 +20,11 @@ const Apply = ({ eoi, hasApplied }) => {
     }
     const { data, setData, post, processing, errors, reset } = useForm({
         eoi_id: eoi.id,
+        deadline: eoi.deadline_date,
+        delivery_date: '',
         products: eoi.purchase_request_items.map((p) => ({ id: p.id, price: 0 })),
         documents: eoi.eoi_documents.map(doc => ({ id: doc.document.id, file: null, required: doc.required }))
     });
-    console.log(data.products)
 
     const handleChange = (e, id) => {
         const checked = e.target.checked
@@ -130,6 +131,14 @@ const Apply = ({ eoi, hasApplied }) => {
                         </tbody>
                     </table>
                     <InputError message={errors.products} />
+                    <InputError message={errors.generalProducts} />
+                    <h3 className="text-base font-semibold mb-1 mt-3 pt-3">Expected Delivery Date</h3>
+                    <TextInput type="date"
+                        value={data.delivery_date}
+                        className="py-1 w-72"
+                        onChange={(e) => setData('delivery_date', e.target.value)}
+                    />
+                    <InputError message={errors.delivery_date} />
                     <h3 className="text-xl font-semibold mb-1 mt-6 pt-3 border-t border-dotted border-gray-400">Required Documents</h3>
                     {eoi.eoi_documents.map((eoi_document) => (
                         <div key={eoi_document.id} className="mb-3">
@@ -139,10 +148,10 @@ const Apply = ({ eoi, hasApplied }) => {
                                 <input type="file" hidden={true} id={`${eoi_document.document.name}_${eoi_document.document.id}`} onChange={(e) => handleFileChange(e, eoi_document.document.id)} />
                                 {data.documents.find(d => d.id === eoi_document.document.id).file ?
                                     <div className="flex gap-4 items-center">
-                                        <span>
+                                        <span className="text-green-800">
                                             {data.documents.find(d => d.id === eoi_document.document.id).file.name}
                                         </span>
-                                        <i className="fa fa-times" onClick={(e) => handleFileRemove(e, eoi_document.document.id)}></i>
+                                        <i className="fa fa-times text-red-600" onClick={(e) => handleFileRemove(e, eoi_document.document.id)}></i>
                                     </div>
                                     :
                                     <p className="text-gray-500">Choose file from your device</p>
@@ -171,7 +180,9 @@ const Apply = ({ eoi, hasApplied }) => {
                         </div>
                         :
                         <div className="text-end">
-                            <PrimaryButton className="rounded-md bg-gray-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-gray-700 focus:bg-gray-700 focus:outline-none active:bg-gray-900">
+                            <PrimaryButton className="rounded-md bg-gray-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-gray-700 focus:bg-gray-700 focus:outline-none active:bg-gray-900"
+                                disabled={processing}
+                            >
                                 Apply
                             </PrimaryButton>
                         </div>

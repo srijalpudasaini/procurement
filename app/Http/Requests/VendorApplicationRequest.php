@@ -21,6 +21,7 @@ class VendorApplicationRequest extends FormRequest
      */
     public function rules(): array
     {
+        // dd($this);
         return [
             'eoi_id' => 'required|exists:eois,id',
             'products' => 'array|min:1',
@@ -28,7 +29,8 @@ class VendorApplicationRequest extends FormRequest
             'products.*.price' => 'required|numeric|min:1',
             'documents' => 'array|nullable',
             'documents.*.id' => 'required|exists:documents,id',
-            'documents.*.file' => 'nullable|file|mimes:jpeg,png,pdf,gif|max:2048'
+            'documents.*.file' => 'nullable|file|mimes:jpeg,png,pdf,gif|max:2048',
+            'delivery_date'=>'required|after:deadline'
         ];
     }
 

@@ -41,7 +41,7 @@ const Documents = () => {
             name: "Action",
             cell: row => (
                 <div className="flex gap-2">
-                    {hasPermission('edit_document') && (
+                    {!!hasPermission('edit_document') && (
                         <Link
                             href={`/documents/${row.id}/edit`}
                             className="rounded-md border border-transparent bg-blue-800 px-3 py-2 text-xs font-semibold uppercase text-white transition duration-150 ease-in-out hover:bg-blue-700 me-2"
@@ -109,7 +109,7 @@ const Documents = () => {
                         </select>
                         entries
                     </div>
-                    {hasPermission('create_document') &&
+                    {!!hasPermission('create_document') &&
                         <div className="text-end">
                             <Link className='rounded-md border border-transparent bg-gray-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-gray-700' href='/documents/create'>+ Add Document</Link>
                         </div>
@@ -143,7 +143,7 @@ const Documents = () => {
                                         <td className='p-2'>{document.title}</td>
                                         <td className='p-2'>{document.description || 'N/A'}</td>
                                         <td className='p-2'>
-                                            {hasPermission('edit_document') &&
+                                            {!!hasPermission('edit_document') &&
                                                 <Link
                                                     href={`/documents/${document.id}/edit`}
                                                     className='rounded-md border border-transparent bg-blue-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-blue-700 me-2'
@@ -151,7 +151,7 @@ const Documents = () => {
                                                     Edit
                                                 </Link>
                                             }
-                                            {hasPermission('delete_document') &&
+                                            {!!hasPermission('delete_document') &&
                                                 <button
                                                     onClick={() => confirmDelete(document.id)}
                                                     className='rounded-md border border-transparent bg-red-600 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-red-700'

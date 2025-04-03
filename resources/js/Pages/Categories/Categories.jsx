@@ -44,7 +44,7 @@ const Categories = ({ categories }) => {
             name: "Action",
             cell: row => (
                 <div className="flex gap-2">
-                    {hasPermission('edit_category') && (
+                    {!!hasPermission('edit_category') && (
                         <Link
                             href={`/categories/${row.id}/edit`}
                             className="rounded-md border border-transparent bg-blue-800 px-3 py-2 text-xs font-semibold uppercase text-white transition duration-150 ease-in-out hover:bg-blue-700 me-2"
@@ -53,7 +53,7 @@ const Categories = ({ categories }) => {
                         </Link>
                     )}
 
-                    {hasPermission('delete_category') && (
+                    {!!hasPermission('delete_category') && (
                         <button
                             onClick={() => confirmDelete(row.id)}
                             className="rounded-md border border-transparent bg-red-600 px-3 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-red-700"
@@ -70,7 +70,7 @@ const Categories = ({ categories }) => {
 
     return (
         <AuthenticatedLayout>
-            {hasPermission('delete_category') &&
+            {!!hasPermission('delete_category') &&
                 <Modal show={showModal} onClose={() => setShowModal(false)}>
                     <div className="p-6">
                         <h2 className="text-lg font-semibold text-gray-800">
@@ -113,7 +113,7 @@ const Categories = ({ categories }) => {
                         </select>
                         entries
                     </div>
-                    {hasPermission('create_category') &&
+                    {!!hasPermission('create_category') &&
                         <div className="text-end">
                             <Link className='rounded-md border border-transparent bg-gray-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-gray-700' href='/categories/create'>+ Add Category</Link>
                         </div>

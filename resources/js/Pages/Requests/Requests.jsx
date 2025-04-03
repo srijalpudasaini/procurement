@@ -185,6 +185,7 @@ const PurchaseRequests = ({ purchaseRequests }) => {
                   <th className="p-2 border">Quantity</th>
                   <th className="p-2 border">Price</th>
                   <th className="p-2 border">Specification</th>
+                  <th className="p-2 border">Priority</th>
                 </tr>
               </thead>
               <tbody>
@@ -202,6 +203,9 @@ const PurchaseRequests = ({ purchaseRequests }) => {
                     <td className="p-2 border">
                       {pro.specifications}
                     </td>
+                    <td className="p-2 border">
+                      {pro.priority}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -215,7 +219,7 @@ const PurchaseRequests = ({ purchaseRequests }) => {
             >
               Close
             </button>
-            {hasPermission('approve_request') && requestModal?.status === 'pending' &&
+            {!!hasPermission('approve_request') && requestModal?.status === 'pending' &&
               <button
                 className='rounded-md border border-transparent bg-blue-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-blue-700'
                 onClick={() => confirmDelete(requestModal?.id, 'approved')}
@@ -223,7 +227,7 @@ const PurchaseRequests = ({ purchaseRequests }) => {
                 Approve
               </button>
             }
-            {hasPermission('delete_request') && requestModal?.status === 'pending' &&
+            {!!hasPermission('delete_request') && requestModal?.status === 'pending' &&
               <button
                 onClick={() => confirmDelete(requestModal?.id, 'rejected')}
                 className='rounded-md border border-transparent bg-red-600 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-red-700'
@@ -255,12 +259,12 @@ const PurchaseRequests = ({ purchaseRequests }) => {
             </select>
             entries
           </div>
-          {hasPermission('create_request') &&
+          {!!hasPermission('create_request') &&
             <Link className='rounded-md border border-transparent bg-gray-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-gray-700' href='/requests/create'>+ Create Request</Link>
           }
         </div>
 
-        {hasPermission('create_eoi') &&
+        {!!hasPermission('create_eoi') &&
           <div className="my-3">
             {selectedRequests.length < 1 ?
               <Link
