@@ -112,7 +112,7 @@ const PurchaseRequests = ({ purchaseRequests }) => {
           >
             View
           </button>
-          {hasPermission('approve_request') && row.status === 'pending' &&
+          {!!hasPermission('approve_request') && row.status === 'pending' &&
             <button
               className='min-w-fit rounded-md border border-transparent bg-blue-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-blue-700'
               onClick={() => confirmDelete(row.id, 'approved')}
@@ -120,7 +120,7 @@ const PurchaseRequests = ({ purchaseRequests }) => {
               Approve
             </button>
           }
-          {hasPermission('delete_request') && row.status === 'pending' &&
+          {!!hasPermission('delete_request') && row.status === 'pending' &&
             <button
               onClick={() => confirmDelete(row.id, 'rejected')}
               className='min-w-fit rounded-md border border-transparent bg-red-600 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-red-700'

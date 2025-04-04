@@ -3,7 +3,6 @@ import Dropdown from "../Dropdown";
 
 export default function Header() {
     const { auth } = usePage().props;
-    const user = auth.user || auth.vendor
     return (
         <header className="py-3 bg-[#00AB66]">
             <div className="container">
@@ -66,7 +65,10 @@ export default function Header() {
                                         </Dropdown>
                                     </li>
                                     :
-                                    <li><Link href="/login" className="text-white">Login</Link></li>
+                                    <>
+                                        {/* <li><Link href="/vendor/login" className="text-white">VendorLogin</Link></li> */}
+                                        <li><Link href="/login" className="text-white">Login</Link></li>
+                                    </>
                             }
                         </ul>
                     </nav>

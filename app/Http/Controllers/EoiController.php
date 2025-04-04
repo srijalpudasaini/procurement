@@ -6,12 +6,14 @@ use App\Http\Requests\EoiRequest;
 use App\Models\Document;
 use App\Models\Eoi;
 use App\Models\EoiFile;
+use App\Models\EoiVendorProposal;
 use App\Models\Product;
 use App\Repositories\EoiRepository;
 use App\Repositories\PurchaseRequestRepository;
 use App\Repositories\PurchaseRequestItemRepository;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\DB;
@@ -116,20 +118,118 @@ class EoiController extends Controller implements HasMiddleware
         }
     }
 
-    public function submissions(Request $request,$id)
+    public function submissions(Request $request, $id)
     {
-        $eoi = $this->eoiRepository->find($id,['purchase_request_items.product','eoi_documents.document']);
+        $eoi = $this->eoiRepository->find($id, ['purchase_request_items.product', 'eoi_documents.document']);
 
         if ($eoi->status !== 'closed') {
             abort(404);
         }
-        $submissions = $eoi->eoi_vendor_applications()
+
+        $query = $eoi->eoi_vendor_applications()
             ->with([
                 'vendor',
                 'documents.document',
                 'proposals.purchase_request_item.product'
-            ])
-            ->paginate($request->input('per_page',10));
+            ]);
+
+        // Apply filters
+        $filters = $request->only([
+            'all_products',
+            'all_documents',
+            'min_price',
+            'max_price',
+            'rating',
+            'product_coverage',
+            'most_priority',
+            'sort_by',
+            'sort'
+        ]);
+
+        // All Products filter
+        if (!empty($filters['all_products'])) {
+            $requiredProductIds = $eoi->purchase_request_items->pluck('product.id');
+
+            $query->where(function ($q) use ($requiredProductIds) {
+                foreach ($requiredProductIds as $productId) {
+                    $q->whereHas('proposals.purchase_request_item', function ($q) use ($productId) {
+                        $q->where('product_id', $productId);
+                    });
+                }
+            });
+        }
+
+        // All Documents filter
+        if (!empty($filters['all_documents'])) {
+            $requiredDocumentIds = $eoi->eoi_documents->pluck('document_id');
+            $query->whereHas('documents', function ($q) use ($requiredDocumentIds) {
+                $q->whereIn('document_id', $requiredDocumentIds);
+            }, '>=', $requiredDocumentIds->count());
+        }
+
+        // Price range filter
+        if (!empty($filters['min_price']) || !empty($filters['max_price'])) {
+            $subQuery = DB::table('eoi_vendor_proposals')
+                ->select('eoi_vendor_application_id')
+                ->selectRaw('SUM(eoi_vendor_proposals.price * purchase_request_items.quantity) as total_price')
+                ->join('purchase_request_items', 'eoi_vendor_proposals.purchase_request_item_id', '=', 'purchase_request_items.id')
+                ->groupBy('eoi_vendor_application_id');
+                
+            if (!empty($filters['min_price'])) {
+                $subQuery->having('total_price', '>=', (float)$filters['min_price']);
+            }
+            if (!empty($filters['max_price'])) {
+                $subQuery->having('total_price', '<=', (float)$filters['max_price']);
+            }
+            
+            $query->whereIn('id', $subQuery->pluck('eoi_vendor_application_id'));
+        }
+
+        // Rating filter
+        if (!empty($filters['rating'])) {
+            $query->whereHas('vendor', function ($q) use ($filters) {
+                $q->where('rating', '>=', $filters['rating']);
+            });
+        }
+
+        // Sorting
+        if (!empty($filters['sort_by']) && !empty($filters['sort'])) {
+            $direction = $filters['sort'] === 'asc' ? 'asc' : 'desc';
+
+            $query->orderBy(
+                EoiVendorProposal::select('price')
+                    ->whereColumn('eoi_vendor_proposals.eoi_vendor_application_id', 'eoi_vendor_applications.id')
+                    ->where('purchase_request_item_id', $filters['sort_by'])
+                    ->limit(1),
+                $direction
+            );
+        }
+
+        // Product coverage sorting
+        if (!empty($filters['product_coverage'])) {
+            $query->withCount('proposals')->orderBy('proposals_count', 'desc');
+        }
+
+        // Priority sorting
+        if (!empty($filters['most_priority'])) {
+            $priorityPoints = [
+                'high' => 6,
+                'medium' => 3,
+                'low' => 1
+            ];
+
+            $query->addSelect([
+                'priority_score' => EoiVendorProposal::selectRaw('SUM(CASE WHEN purchase_request_items.priority = "high" THEN 6 
+                WHEN purchase_request_items.priority = "medium" THEN 3 
+                WHEN purchase_request_items.priority = "low" THEN 1 
+                ELSE 0 END)')
+                    ->join('purchase_request_items', 'eoi_vendor_proposals.purchase_request_item_id', '=', 'purchase_request_items.id')
+                    ->whereColumn('eoi_vendor_proposals.eoi_vendor_application_id', 'eoi_vendor_applications.id')
+                    ->groupBy('eoi_vendor_proposals.eoi_vendor_application_id')
+            ])->orderBy('priority_score', 'desc');
+        }
+
+        $submissions = $query->paginate($request->input('per_page', 10));
 
         return Inertia::render('EOI/SubmissionsEOI', [
             'eoi' => $eoi,

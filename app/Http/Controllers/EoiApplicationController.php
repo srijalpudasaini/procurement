@@ -27,7 +27,6 @@ class EoiApplicationController extends Controller
 
     public function submitApplication(VendorApplicationRequest $request)
     {
-        // dd(array_merge($request->validated(), ['vendor_id' => $request->user()->id, 'application_date' => Carbon::now()]));
         DB::beginTransaction();
         try {
             $eoi = Eoi::findOrFail(id: $request->eoi_id);
@@ -64,6 +63,7 @@ class EoiApplicationController extends Controller
             DB::commit();
             return redirect()->route('vendor.eoi')->with('success', 'Application successfully submitted!');
         } catch (\Exception $e) {
+            DB::rollback();
             return redirect()->route('vendor.eoi')->with('error', $e->getMessage());
         }
     }
