@@ -20,21 +20,21 @@ const AddCategory = ({ categories }) => {
 
     const breadCrumbItems = [
         {
-            title:'Dashboard',
-            href:'/dashboard'
+            title: 'Dashboard',
+            href: '/dashboard'
         },
         {
-            title:'Categories',
-            href:'/categories'
+            title: 'Categories',
+            href: '/categories'
         },
         {
-            title:'Add Category',
+            title: 'Add Category',
         },
     ]
     return (
         <AuthenticatedLayout>
             <Breadcrumb items={breadCrumbItems} />
-<div className="bg-white p-4 shadow sm:rounded-lg sm:p-8">
+            <div className="bg-white p-4 shadow sm:rounded-lg sm:p-8">
                 <h2 className="text-center text-2xl font-bold">Add Category</h2>
                 <form onSubmit={submit} className="mx-auto w-1/3">
                     <div className="mt-4">
@@ -73,7 +73,7 @@ const AddCategory = ({ categories }) => {
                             onChange={(e) => setData('category_id', e.target.value)}
                         >
                             <option value="">Select a category</option>
-                            {categories.map((category,index)=>(
+                            {categories.map((category, index) => (
                                 <option value={category.id} key={index}>{category.name}</option>
                             ))}
 

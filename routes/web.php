@@ -2,6 +2,7 @@
 require __DIR__.'/auth.php';
 require __DIR__.'/vendor.php';
 
+use App\Http\Controllers\ApprovalWorkflowController;
 use App\Http\Controllers\Auth\VendorAuthController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DocumentController;
@@ -51,6 +52,7 @@ Route::middleware(['auth'])->group(function(){
         'requests'=>PurchaseRequestController::class,
         'eois'=>EoiController::class,
         'documents'=>DocumentController::class,
+        'approval_workflows'=>ApprovalWorkflowController::class,
     ]);
 
     Route::put('requests/updateStatus/{id}',[PurchaseRequestController::class,'updateStatus']);

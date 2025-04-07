@@ -13,7 +13,6 @@ const EditCategory = ({ category, categories }) => {
         category_id: category.category_id || '',
         id: category.id
     });
-    console.log(categories)
 
     const submit = (e) => {
         e.preventDefault();
