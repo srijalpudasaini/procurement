@@ -20,7 +20,7 @@ const ApprovalWorkflows = ({ approval_workflows }) => {
     };
 
     const handleDelete = () => {
-        router.delete(`/approval_workflows/${deleteId}`, {
+        router.delete(`/approval-workflows/${deleteId}`, {
             onSuccess: () => setShowModal(false),
         });
     };
@@ -45,7 +45,7 @@ const ApprovalWorkflows = ({ approval_workflows }) => {
                 <div className="flex gap-2">
                     {!!hasPermission('edit_category') && (
                         <Link
-                            href={`/approval_workflows/${row.id}/edit`}
+                            href={`/approval-workflows/${row.id}/edit`}
                             className="rounded-md border border-transparent bg-blue-800 px-3 py-2 text-xs font-semibold uppercase text-white transition duration-150 ease-in-out hover:bg-blue-700 me-2"
                         >
                             Edit
@@ -104,7 +104,7 @@ const ApprovalWorkflows = ({ approval_workflows }) => {
                             id=""
                             className='py-1 mx-1'
                             value={approval_workflows.per_page}
-                            onChange={(e) => router.get('/approval_workflows', { per_page: e.target.value })}
+                            onChange={(e) => router.get('/approval-workflows', { per_page: e.target.value })}
                         >
                             <option value="5">5</option>
                             <option value="10">10</option>
@@ -114,7 +114,7 @@ const ApprovalWorkflows = ({ approval_workflows }) => {
                     </div>
                     {!!hasPermission('create_category') &&
                         <div className="text-end">
-                            <Link className='rounded-md border border-transparent bg-gray-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-gray-700' href='/approval_workflows/create'>+ Add Workflow</Link>
+                            <Link className='rounded-md border border-transparent bg-gray-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-gray-700' href='/approval-workflows/create'>+ Add Workflow</Link>
                         </div>
                     }
                 </div>
@@ -135,13 +135,13 @@ const ApprovalWorkflows = ({ approval_workflows }) => {
                         paginationTotalRows={approval_workflows.total}
                         paginationPerPage={approval_workflows.per_page}
                         onChangePage={(page) => {
-                            router.get('/approval_workflows', {
+                            router.get('/approval-workflows', {
                                 page,
                                 per_page: approval_workflows.per_page
                             }, { preserveState: true, replace: true });
                         }}
                         onChangeRowsPerPage={(perPage) => {
-                            router.get('/approval_workflows', {
+                            router.get('/approval-workflows', {
                                 per_page: perPage,
                                 page: 1
                             }, { preserveState: true, replace: true });

@@ -52,7 +52,7 @@ Route::middleware(['auth'])->group(function(){
         'requests'=>PurchaseRequestController::class,
         'eois'=>EoiController::class,
         'documents'=>DocumentController::class,
-        'approval_workflows'=>ApprovalWorkflowController::class,
+        'approval-workflows'=>ApprovalWorkflowController::class,
     ]);
 
     Route::put('requests/updateStatus/{id}',[PurchaseRequestController::class,'updateStatus']);

@@ -38,9 +38,10 @@ export default function Sidebar() {
                     <li className="border-b border-b-gray-300"><Link className="p-2 px-4 block" href="/documents">Documents</Link></li>
                 )
                 }
-                {/* {hasPermission('manage_approvals') && */}
-                    <li className="border-b border-b-gray-300"><Link className="p-2 px-4 block" href="/approval_workflows">Approval Workflow</Link></li>
-                {/* } */}
+                {!!hasPermission('view_workflow') && (
+                    <li className="border-b border-b-gray-300"><Link className="p-2 px-4 block" href="/approval-workflows">Approval Workflow</Link></li>
+                )
+                }
             </ul>
         </aside>
     )

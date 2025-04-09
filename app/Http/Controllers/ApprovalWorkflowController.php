@@ -23,10 +23,10 @@ class ApprovalWorkflowController extends Controller implements HasMiddleware
     public static function middleware(): array
     {
         return [
-            // new Middleware('permission:view_category', only: ['index']),
-            // new Middleware('permission:create_category', only: ['create','store']),
-            // new Middleware('permission:edit_category', only: ['edit','update']),
-            // new Middleware('permission:delete_category', only: ['destroy']),
+            // new Middleware('permission:view_workflow', only: ['index']),
+            // new Middleware('permission:create_workflow', only: ['create','store']),
+            // new Middleware('permission:edit_workflow', only: ['edit','update']),
+            // new Middleware('permission:delete_workflow', only: ['destroy']),
         ];
     }
     public function index(Request $request)
@@ -37,63 +37,106 @@ class ApprovalWorkflowController extends Controller implements HasMiddleware
     }
     public function create()
     {
-        $roles = Role::all();
+        $roles = Role::permission('approve_request')->get();
         return Inertia::render('ApprovalWorkflows/AddApprovalWorkflow', compact('roles'));
     }
 
     public function store(ApprovalWorkflowRequest $request)
     {
-
         DB::beginTransaction();
         try {
             $approval = $this->approvalWorkflowRepository->store($request->validated());
 
-            foreach ($request->steps as $step) {
-                ApprovalStep::create(array_merge(['approval_workflow_id' => $approval->id, 'step_number' => $step['step'], 'role_id' => $step['role_id'],]));
+            $previousStepId = null;
+            $steps = collect($request->steps)->sortBy('step');
+
+            foreach ($steps as $step) {
+                $createdStep = ApprovalStep::create([
+                    'approval_workflow_id' => $approval->id,
+                    'step_number' => $step['step'],
+                    'role_id' => $step['role_id'],
+                    'previous_step_id' => $previousStepId
+                ]);
+
+                $previousStepId = $createdStep->id;
             }
+
             DB::commit();
-            return redirect()->route('approval_workflows.index')->with('success', 'Workflow created successfully!');
+            return redirect()->route('approval-workflows.index')->with('success', 'Workflow created successfully!');
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->route('approval_workflows.index')->with('error', $e->getMessage());
+            return redirect()->route('approval-workflows.index')->with('error', $e->getMessage());
         }
     }
 
     public function edit($id)
     {
         $approval_workflow = $this->approvalWorkflowRepository->find($id, 'steps');
-        $roles = Role::all();
+        $roles = Role::permission('approve_request')->get();
         return Inertia::render('ApprovalWorkflows/EditApprovalWorkflow', compact('approval_workflow', 'roles'));
     }
     public function update(ApprovalWorkflowRequest $request, $id)
     {
+        DB::beginTransaction();
         try {
             $approval = $this->approvalWorkflowRepository->update($id, $request->validated());
+
+            // Get current steps and sort by step number
             $currentSteps = ApprovalStep::where('approval_workflow_id', $id)
+                ->orderBy('step_number')
                 ->get()
                 ->keyBy('step_number');
 
-            foreach ($request->steps as $step) {
-                if (isset($currentSteps[$step['step']])) {
-                    $currentSteps[$step['step']]->update([
-                        'role_id' => $step['role_id']
+            $previousStepId = null;
+            $sortedSteps = collect($request->steps)->sortBy('step');
+
+            foreach ($sortedSteps as $stepData) {
+                if (isset($currentSteps[$stepData['step']])) {
+                    // Update existing step
+                    $currentSteps[$stepData['step']]->update([
+                        'role_id' => $stepData['role_id'],
+                        'previous_step_id' => $previousStepId
                     ]);
+                    $previousStepId = $currentSteps[$stepData['step']]->id;
                 } else {
-                    ApprovalStep::create([
+                    // Create new step
+                    $createdStep = ApprovalStep::create([
                         'approval_workflow_id' => $id,
-                        'step_number' => $step['step'],
-                        'role_id' => $step['role_id']
+                        'step_number' => $stepData['step'],
+                        'role_id' => $stepData['role_id'],
+                        'previous_step_id' => $previousStepId
                     ]);
+                    $previousStepId = $createdStep->id;
                 }
             }
 
-            $submittedStepNumbers = collect($request->steps)->pluck('step')->toArray();
+            // Delete steps not in the submitted list
+            $submittedStepNumbers = $sortedSteps->pluck('step')->toArray();
             ApprovalStep::where('approval_workflow_id', $id)
                 ->whereNotIn('step_number', $submittedStepNumbers)
                 ->delete();
-            return redirect()->route('approval_workflows.index')->with('success', 'Workflow updated successfully!');
+
+            // Rebuild previous_step_id chain in case steps were deleted
+            $this->rebuildStepChain($id);
+
+            DB::commit();
+            return redirect()->route('approval-workflows.index')->with('success', 'Workflow updated successfully!');
         } catch (\Exception $e) {
-            return redirect()->route('approval_workflows.index')->with('error', $e->getMessage());
+            DB::rollBack();
+            return redirect()->route('approval-workflows.index')->with('error', $e->getMessage());
+        }
+    }
+
+    protected function rebuildStepChain($workflowId)
+    {
+        $steps = ApprovalStep::where('approval_workflow_id', $workflowId)
+            ->orderBy('step_number')
+            ->get();
+
+        $previousStepId = null;
+        foreach ($steps as $step) {
+            $step->update(['previous_step_id' => $previousStepId]);
+            $previousStepId = $step->id;
         }
     }
 
@@ -101,9 +144,9 @@ class ApprovalWorkflowController extends Controller implements HasMiddleware
     {
         try {
             $this->approvalWorkflowRepository->delete($id);
-            return redirect()->route('approval_workflows.index')->with('success', 'Workflow deleted successfully!');
+            return redirect()->route('approval-workflows.index')->with('success', 'Workflow deleted successfully!');
         } catch (\Exception $e) {
-            return redirect()->route('approval_workflows.index')->with('error', $e->getMessage());
+            return redirect()->route('approval-workflows.index')->with('error', $e->getMessage());
         }
     }
 }

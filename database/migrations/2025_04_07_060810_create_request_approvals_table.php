@@ -17,7 +17,7 @@ return new class extends Migration
             $table->unsignedBigInteger('approver_id')->nullable();
             $table->unsignedBigInteger('approval_step_id');
             $table->enum('status',['pending','approved','rejected'])->default('pending');
-            $table->string('remark');
+            $table->string('remark')->nullable();
             $table->foreign('purchase_request_id')->references('id')->on('purchase_requests');
             $table->foreign('approver_id')->references('id')->on('users');
             $table->foreign('approval_step_id')->references('id')->on('approval_steps');

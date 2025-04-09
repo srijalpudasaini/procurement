@@ -17,7 +17,7 @@ const AddApprovalWorkflow = ({ roles }) => {
 
     const submit = (e) => {
         e.preventDefault();
-        post(route('approval_workflows.store'));
+        post(route('approval-workflows.store'));
     };
 
     const breadCrumbItems = [
@@ -27,7 +27,7 @@ const AddApprovalWorkflow = ({ roles }) => {
         },
         {
             title: 'Approval Workflows',
-            href: '/approval_workflows'
+            href: '/approval-workflows'
         },
         {
             title: 'Add Workflow',
@@ -115,7 +115,7 @@ const AddApprovalWorkflow = ({ roles }) => {
                                             <i className="fa fa-trash-o text-red-500 cursor-pointer" onClick={() => handleStepRemove(index)}></i>
                                         }
                                     </div>
-                                    <InputLabel htmlFor="max_amount" value="Approver" />
+                                    <InputLabel htmlFor="max_amount" value="Select Approver" />
                                     <select name="" id="" className="py-1 mt-1 w-full" value={step.role_id}
                                         onChange={(e) => handleRoleChange(index, e.target.value)}
                                     >
@@ -126,8 +126,8 @@ const AddApprovalWorkflow = ({ roles }) => {
                                     </select>
                                 </div>
                                 {index < data.steps.length - 1 && (
-                                    <div className="text-center my-2">
-                                        <i className="fa fa-arrow-down"></i>
+                                    <div className="text-center my-3">
+                                        <i className="fa fa-long-arrow-down fa-lg"></i>
                                     </div>
                                 )}
                             </>

@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Permission;
@@ -34,8 +33,8 @@ class DatabaseSeeder extends Seeder
 
         $permissions = [
             'view_request',
-            'create_request',
             'approve_request',
+            'create_request',
             'delete_request',
             'create_user',
             'view_user',
@@ -62,6 +61,10 @@ class DatabaseSeeder extends Seeder
             'create_document',
             'edit_document',
             'delete_document',
+            'view_workflow',
+            'create_workflow',
+            'edit_workflow',
+            'delete_workflow',
         ];
 
         foreach ($permissions as $permission) {

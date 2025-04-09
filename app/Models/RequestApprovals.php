@@ -11,7 +11,7 @@ class RequestApprovals extends Model
     }
 
     public function step(){
-        return $this->belongsTo(ApprovalStep::class);
+        return $this->belongsTo(ApprovalStep::class,'approval_step_id');
     }
 
     public function approver() {

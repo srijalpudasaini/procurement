@@ -1,14 +1,13 @@
+import InputLabel from '@/Components/Form/InputLabel'
 import Alert from '@/Components/ui/Alert'
 import Breadcrumb from '@/Components/ui/Breadcrumb'
 import Modal from '@/Components/ui/Modal'
-import Pagination from '@/Components/ui/Pagination'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout'
-// import { compact } from '@headlessui/react/dist/utils/render'
 import { Link, usePage, router } from '@inertiajs/react'
 import React, { useState } from 'react'
 import DataTable from 'react-data-table-component'
 
-const PurchaseRequests = ({ purchaseRequests }) => {
+const PurchaseRequests = ({ requests, viewType }) => {
   const { flash, auth } = usePage().props;
   const [showModal, setShowModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
@@ -17,19 +16,29 @@ const PurchaseRequests = ({ purchaseRequests }) => {
   const [modalType, setModalType] = useState(null);
   const [selectedRequests, setSelectedRequests] = useState([])
   const userPermissions = auth?.user?.permissions || [];
+  const [requestStatus, setRequestStatus] = useState({ status: '', remarks: '' })
 
   const hasPermission = (permission) => (userPermissions.includes(permission) || auth.user.is_superadmin)
 
+  const normalizedData = viewType === 'approval'
+    ? requests.data.map(approval => ({
+      ...approval,
+      purchase_request: {
+        ...approval.purchase_request,
+        approval_id: approval.id // Attach approval ID for action handling
+      }
+    }))
+    : requests.data;
   const confirmDelete = (id, type) => {
     setModalType(type)
+    setRequestStatus({ ...requestStatus, status: type })
     setDeleteId(id);
     setShowModal(true);
   };
 
+
   const handleDelete = () => {
-    router.put(`/requests/updateStatus/${deleteId}`, {
-      status: modalType,
-    }, {
+    router.put(`/requests/updateStatus/${deleteId}`, requestStatus, {
       onSuccess: () => closeDetail()
     });
   };
@@ -68,24 +77,22 @@ const PurchaseRequests = ({ purchaseRequests }) => {
     }
   }
 
-  const columns = [
+  const approvalColumns = [
     ...hasPermission('create_eoi') ?
       [{
         name: "", cell: row => (
           <input type="checkbox"
-            disabled={row.status != 'approved'}
+            disabled={row.purchase_request.status != 'approved'}
             onChange={(e) => handleChange(e, row)}
-            checked={selectedRequests.includes(row.id)}
-            className={`${row.status != 'approved' ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+            checked={selectedRequests.includes(row.purchase_request.id)}
+            className={`mx-auto inline-block ${row.status != 'approved' ? 'cursor-not-allowed' : 'cursor-pointer'}`}
           />
         ),
         grow: 0,
-        minWidth: 'fit-content',
-        maxWidth: 'fit-content',
-        center: true
+        
       }] : [],
-    { name: "Requested By", selector: row => row.user.name, sortable: true,center:true },
-    { name: "Total", selector: row => row.total, sortable: true,center:true },
+    { name: "Requested By", selector: row => row.purchase_request.user?.name, sortable: true },
+    { name: "Total", selector: row => row.purchase_request.total, sortable: true },
     {
       name: "Status", cell: row => (
         <span
@@ -100,7 +107,74 @@ const PurchaseRequests = ({ purchaseRequests }) => {
           {row.status}
         </span>
       ),
-      center:true
+      
+    },
+    {
+      name: "Action",
+      cell: row => (
+        <div className="flex gap-1 flex-1 flex-nowrap justify-center">
+          <button
+            className='min-w-fit rounded-md border border-transparent bg-green-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-green-700'
+            onClick={() => viewDetail(row.purchase_request)}
+          >
+            View
+          </button>
+          {!!hasPermission('approve_request') && row.status === 'pending' &&
+            <button
+              className='min-w-fit rounded-md border border-transparent bg-blue-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-blue-700'
+              onClick={() => confirmDelete(row.id, 'approved')}
+            >
+              Approve
+            </button>
+          }
+          {!!hasPermission('delete_request') && row.status === 'pending' &&
+            <button
+              onClick={() => confirmDelete(row.id, 'rejected')}
+              className='min-w-fit rounded-md border border-transparent bg-red-600 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-red-700'
+            >
+              Reject
+            </button>
+          }
+        </div>
+      ),
+      ignoreRowClick: true,
+      
+    }
+  ];
+
+  const requestColumns = [
+    ...hasPermission('create_eoi') ?
+      [{
+        name: "", cell: row => (
+          <input type="checkbox"
+            disabled={row.status != 'approved'}
+            onChange={(e) => handleChange(e, row)}
+            checked={selectedRequests.includes(row.id)}
+            className={`${row.status != 'approved' ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+          />
+        ),
+        grow: 0,
+        minWidth: 'fit-content',
+        maxWidth: 'fit-content',
+        
+      }] : [],
+    { name: "Requested By", selector: row => row.user.name, sortable: true },
+    { name: "Total", selector: row => row.total, sortable: true },
+    {
+      name: "Status", cell: row => (
+        <span
+          className={`rounded-sm text-white font-medium px-2 py-1 capitalize text-xs
+          ${row.status == 'published' ? 'bg-blue-600' :
+              row.status == 'approved' ? 'bg-green-600' :
+                row.status == 'rejected' ? 'bg-red-600' :
+                  'bg-yellow-600'
+            }
+          `}
+        >
+          {row.status}
+        </span>
+      ),
+      
     },
     {
       name: "Action",
@@ -131,9 +205,11 @@ const PurchaseRequests = ({ purchaseRequests }) => {
         </div>
       ),
       ignoreRowClick: true,
-      center:true
+      
     }
-  ];
+  ]
+
+
   return (
     <AuthenticatedLayout>
       {/* {hasPermission('edit_request') && */}
@@ -142,6 +218,10 @@ const PurchaseRequests = ({ purchaseRequests }) => {
           <h2 className="text-lg font-semibold text-gray-800">
             Are you sure you want to {modalType == 'approved' ? 'approve' : 'reject'} this request?
           </h2>
+          <div className="mt-2">
+            <InputLabel htmlFor="remark" value="Enter your remark" />
+            <textarea id="remark" value={requestStatus.remarks} onChange={(e) => setRequestStatus({ ...requestStatus, remarks: e.target.value })} rows='3' className='w-full rounded-sm border border-gray-400 mt-1'></textarea>
+          </div>
           <div className="mt-4 flex justify-end">
             <button
               onClick={() => setShowModal(false)}
@@ -250,7 +330,7 @@ const PurchaseRequests = ({ purchaseRequests }) => {
               name=""
               id=""
               className='py-1 mx-1'
-              value={purchaseRequests.per_page}
+              value={requests.per_page}
               onChange={(e) => router.get('/requests', { per_page: e.target.value })}
             >
               <option value="5">5</option>
@@ -293,16 +373,16 @@ const PurchaseRequests = ({ purchaseRequests }) => {
 
         <div className="my-4">
           <DataTable
-            columns={columns}
-            data={purchaseRequests.data}
+            columns={viewType ==  'approval' ? approvalColumns : requestColumns}
+            data={normalizedData}
             pagination
             paginationServer
-            paginationTotalRows={purchaseRequests.total}
-            paginationPerPage={purchaseRequests.per_page}
+            paginationTotalRows={requests.total}
+            paginationPerPage={requests.per_page}
             onChangePage={(page) => {
               router.get('/requests', {
                 page,
-                per_page: purchaseRequests.per_page
+                per_page: requests.per_page
               }, { preserveState: true, replace: true });
             }}
             onChangeRowsPerPage={(perPage) => {
