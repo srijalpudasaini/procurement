@@ -38,28 +38,41 @@ class PurchaseRequestController extends Controller implements HasMiddleware
     public function index(Request $request)
     {
         $user = $request->user();
-        
+
         if ($user->is_superadmin) {
             $data = $this->purchaseRequestRepository->all(
                 $request->input('per_page', 10),
-                ['user', 'purchase_request_items.product','approvals.approver']
+                ['user', 'purchase_request_items.product', 'approvals.approver']
             );
         } else {
             $roleId = $user->roles()->first()->id;
-            
+
             if ($user->can('approve_request')) {
-                $data = RequestApprovals::whereHas('step', function ($q) use ($roleId) {
-                        $q->where('role_id', $roleId)
-                          ->where('status', 'pending')
-                          ->where(function ($query) {
-                              $query->whereDoesntHave('previousStep') // First step
-                                    ->orWhereHas('previousStep.approvals', function ($q1) {
-                                        $q1->where('status', 'approved'); // Previous step approved
-                                    });
-                          });
+                $data = RequestApprovals::select(
+                    'request_approvals.*',
+                    'approval_steps.id as app_id',
+                    'purchase_requests.id as pr_id'
+                )
+                    ->join('approval_steps', 'request_approvals.approval_step_id', '=', 'approval_steps.id')
+                    ->join('purchase_requests', 'request_approvals.purchase_request_id', '=', 'purchase_requests.id')
+                    ->where('request_approvals.status', 'pending')
+                    ->where('approval_steps.role_id', $roleId)
+                    ->where(function ($query) {
+                        $query->whereNull('approval_steps.previous_step_id')
+                            ->orWhereExists(function ($query) {
+                                $query->select(DB::raw(1))
+                                    ->from('request_approvals as prev_approval')
+                                    ->join('approval_steps as prev_step', 'prev_approval.approval_step_id', '=', 'prev_step.id')
+                                    ->whereColumn('prev_approval.purchase_request_id', 'request_approvals.purchase_request_id')
+                                    ->whereRaw('prev_step.id = approval_steps.previous_step_id')
+                                    ->where('prev_approval.status', 'approved');
+                            });
                     })
-                    ->with('purchase_request.purchase_request_items.product', 'purchase_request.user')
-                    ->paginate($request->input('per_page', 10));
+                    ->with([
+                        'purchase_request.purchase_request_items.product',
+                        'purchase_request.user'
+                    ])
+                    ->paginate(request('per_page', 10));
             } else {
                 $data = $this->purchaseRequestRepository->all(
                     $request->input('per_page', 10),
@@ -68,7 +81,7 @@ class PurchaseRequestController extends Controller implements HasMiddleware
                 );
             }
         }
-    
+
         return Inertia::render('Requests/Requests', [
             'requests' => $data,
             'viewType' => $user->can('approve_request') && !$user->is_superadmin ? 'approval' : 'standard'

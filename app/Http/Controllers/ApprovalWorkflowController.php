@@ -79,9 +79,8 @@ class ApprovalWorkflowController extends Controller implements HasMiddleware
     {
         DB::beginTransaction();
         try {
-            $approval = $this->approvalWorkflowRepository->update($id, $request->validated());
+            $this->approvalWorkflowRepository->update($id, $request->validated());
 
-            // Get current steps and sort by step number
             $currentSteps = ApprovalStep::where('approval_workflow_id', $id)
                 ->orderBy('step_number')
                 ->get()
@@ -92,14 +91,12 @@ class ApprovalWorkflowController extends Controller implements HasMiddleware
 
             foreach ($sortedSteps as $stepData) {
                 if (isset($currentSteps[$stepData['step']])) {
-                    // Update existing step
                     $currentSteps[$stepData['step']]->update([
                         'role_id' => $stepData['role_id'],
                         'previous_step_id' => $previousStepId
                     ]);
                     $previousStepId = $currentSteps[$stepData['step']]->id;
                 } else {
-                    // Create new step
                     $createdStep = ApprovalStep::create([
                         'approval_workflow_id' => $id,
                         'step_number' => $stepData['step'],
@@ -110,13 +107,11 @@ class ApprovalWorkflowController extends Controller implements HasMiddleware
                 }
             }
 
-            // Delete steps not in the submitted list
             $submittedStepNumbers = $sortedSteps->pluck('step')->toArray();
             ApprovalStep::where('approval_workflow_id', $id)
                 ->whereNotIn('step_number', $submittedStepNumbers)
                 ->delete();
 
-            // Rebuild previous_step_id chain in case steps were deleted
             $this->rebuildStepChain($id);
 
             DB::commit();

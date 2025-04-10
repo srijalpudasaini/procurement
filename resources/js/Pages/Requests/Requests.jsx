@@ -97,8 +97,7 @@ const PurchaseRequests = ({ requests, viewType }) => {
       name: "Status", cell: row => (
         <span
           className={`rounded-sm text-white font-medium px-2 py-1 capitalize text-xs
-            ${row.status == 'published' ? 'bg-blue-600' :
-              row.status == 'approved' ? 'bg-green-600' :
+            ${row.status == 'approved' ? 'bg-green-600' :
                 row.status == 'rejected' ? 'bg-red-600' :
                   'bg-yellow-600'
             }
