@@ -20,6 +20,8 @@ Route::middleware('guest')->group(function () {
 
     Route::get('login', [AuthenticatedSessionController::class, 'create'])
         ->name('login');
+    Route::get('vendor-login', [AuthenticatedSessionController::class, 'vendor_create'])
+        ->name('vendor.login');
 
     Route::post('login', [AuthenticatedSessionController::class, 'store']);
     

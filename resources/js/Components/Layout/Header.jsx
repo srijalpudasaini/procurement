@@ -68,6 +68,7 @@ export default function Header() {
                                     <>
                                         {/* <li><Link href="/vendor/login" className="text-white">VendorLogin</Link></li> */}
                                         <li><Link href="/login" className="text-white">Login</Link></li>
+                                        <li><Link href="/vendor-login" className="text-white">Vendor Login</Link></li>
                                     </>
                             }
                         </ul>

@@ -25,6 +25,13 @@ class AuthenticatedSessionController extends Controller
             'status' => session('status'),
         ]);
     }
+    public function vendor_create(): Response
+    {
+        return Inertia::render('Auth/VendorLogin', [
+            'canResetPassword' => Route::has('password.request'),
+            'status' => session('status'),
+        ]);
+    }
 
     /**
      * Handle an incoming authentication request.
@@ -36,11 +43,6 @@ class AuthenticatedSessionController extends Controller
             $request->session()->regenerate();
             return redirect()->intended(route('dashboard'));
         }
-    
-        // if (Auth::guard('vendor')->attempt($credentials)) {
-        //     $request->session()->regenerate();
-        //     return redirect()->intended(route('vendor.dashboard'));
-        // }
     
         return back()->withErrors(['email' => 'Invalid credentials'])->onlyInput('email');
     }

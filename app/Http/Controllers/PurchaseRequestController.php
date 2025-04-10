@@ -42,7 +42,7 @@ class PurchaseRequestController extends Controller implements HasMiddleware
         if ($user->is_superadmin) {
             $data = $this->purchaseRequestRepository->all(
                 $request->input('per_page', 10),
-                ['user', 'purchase_request_items.product','approver']
+                ['user', 'purchase_request_items.product','approvals.approver']
             );
         } else {
             $roleId = $user->roles()->first()->id;

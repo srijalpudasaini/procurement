@@ -153,10 +153,7 @@ const PurchaseRequests = ({ requests, viewType }) => {
             className={`${row.status != 'approved' ? 'cursor-not-allowed' : 'cursor-pointer'}`}
           />
         ),
-        grow: 0,
-        minWidth: 'fit-content',
-        maxWidth: 'fit-content',
-        
+        grow: 0,        
       }] : [],
     { name: "Requested By", selector: row => row.user.name, sortable: true },
     { name: "Total", selector: row => row.total, sortable: true },
