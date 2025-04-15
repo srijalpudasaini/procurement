@@ -55,11 +55,6 @@ input[type=number] {
 .rdt_TableRow:nth-child(even) {
   background-color: rgb(243, 244, 246);
 }
-
-/* .rdt_TableRow:nth-child(even):hover{
-  background-color: #fff;
-} */
-/* .rdt_TableRow:hover{
-  cursor: pointer;
-  background-color: #eee;
-} */
+.cell-head{
+  font-weight: 700;
+}

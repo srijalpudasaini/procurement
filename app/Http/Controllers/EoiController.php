@@ -8,12 +8,12 @@ use App\Models\Eoi;
 use App\Models\EoiFile;
 use App\Models\EoiVendorProposal;
 use App\Models\Product;
+use App\Models\PurchaseRequestItem;
 use App\Repositories\EoiRepository;
 use App\Repositories\PurchaseRequestRepository;
 use App\Repositories\PurchaseRequestItemRepository;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\DB;
@@ -143,8 +143,23 @@ class EoiController extends Controller implements HasMiddleware
             'product_coverage',
             'most_priority',
             'sort_by',
-            'sort'
+            'sort',
+            'mustHave',
+            'deliveryTime'
         ]);
+
+        // Must have products filter
+        if (!empty($filters['mustHave']) && is_array($filters['mustHave'])) {
+            $requiredProductIds = $filters['mustHave'];
+            
+            $query->where(function($q) use ($requiredProductIds) {
+                foreach ($requiredProductIds as $productId) {
+                    $q->whereHas('proposals', function($q) use ($productId) {
+                        $q->where('purchase_request_item_id', $productId);
+                    });
+                }
+            });
+        }
 
         // All Products filter
         if (!empty($filters['all_products'])) {
@@ -165,6 +180,13 @@ class EoiController extends Controller implements HasMiddleware
             $query->whereHas('documents', function ($q) use ($requiredDocumentIds) {
                 $q->whereIn('document_id', $requiredDocumentIds);
             }, '>=', $requiredDocumentIds->count());
+        }
+
+        if(!empty($filters['deliveryTime'])){
+            $deadline = new Carbon($eoi->deadline_date);
+
+            $query->where('delivery_date','<=',$deadline->addDays((int)$filters['deliveryTime']));
+            
         }
 
         // Price range filter
@@ -193,16 +215,27 @@ class EoiController extends Controller implements HasMiddleware
         }
 
         // Sorting
-        if (!empty($filters['sort_by']) && !empty($filters['sort'])) {
+        if (!empty($filters['sort_by'])) {
             $direction = $filters['sort'] === 'asc' ? 'asc' : 'desc';
-
-            $query->orderBy(
-                EoiVendorProposal::select('price')
+            $productId = PurchaseRequestItem::find($filters['sort_by'])->product_id;
+        
+            $query->addSelect([
+                'has_product' => EoiVendorProposal::selectRaw('COUNT(*) > 0')
+                    ->whereColumn('eoi_vendor_proposals.eoi_vendor_application_id', 'eoi_vendor_applications.id')
+                    ->whereHas('purchase_request_item', function($q) use ($productId) {
+                        $q->where('product_id', $productId);
+                    })
+            ]);
+        
+            $query->addSelect([
+                'product_price' => EoiVendorProposal::select('price')
                     ->whereColumn('eoi_vendor_proposals.eoi_vendor_application_id', 'eoi_vendor_applications.id')
                     ->where('purchase_request_item_id', $filters['sort_by'])
-                    ->limit(1),
-                $direction
-            );
+                    ->limit(1)
+            ]);
+        
+            $query->orderBy('has_product', 'desc') // Vendors with product first
+                  ->orderBy('product_price', $direction); // Then sort by price
         }
 
         // Product coverage sorting
@@ -212,11 +245,6 @@ class EoiController extends Controller implements HasMiddleware
 
         // Priority sorting
         if (!empty($filters['most_priority'])) {
-            $priorityPoints = [
-                'high' => 6,
-                'medium' => 3,
-                'low' => 1
-            ];
 
             $query->addSelect([
                 'priority_score' => EoiVendorProposal::selectRaw('SUM(CASE WHEN purchase_request_items.priority = "high" THEN 6 

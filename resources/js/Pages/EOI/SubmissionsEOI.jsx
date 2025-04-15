@@ -1,9 +1,6 @@
-import InputLabel from '@/Components/Form/InputLabel'
 import TextInput from '@/Components/Form/TextInput'
 import Alert from '@/Components/ui/Alert'
 import Breadcrumb from '@/Components/ui/Breadcrumb'
-import Modal from '@/Components/ui/Modal'
-import Pagination from '@/Components/ui/Pagination'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout'
 import { Link, usePage, router } from '@inertiajs/react'
 import React, { useEffect, useState } from 'react'
@@ -52,21 +49,36 @@ const ExpandedComponent = ({ data }) => (
 )
 
 const SubmissionEOI = ({ eoi, submissions }) => {
+    const urlParams = new URLSearchParams(window.location.search);
+
+    const params = {};
+    const mustHave = [];
+
+    urlParams.forEach((value, key) => {
+        if (key.startsWith('mustHave[')) {
+            mustHave.push(parseInt(value));
+        } else {
+            params[key] = value;
+        }
+    });
+
     const { flash, auth } = usePage().props;
     const [showModal, setShowModal] = useState(false);
     const [deleteId, setDeleteId] = useState(null);
     const userPermissions = auth?.user?.permissions || [];
 
     const [filters, setFilters] = useState({
-        allProducts: false,
-        allDocuments: false,
-        minPrice: '',
-        maxPrice: '',
-        sortBy: '',
-        sort: '',
-        rating: 0,
-        productCoverage: false,
-        mostPriority: false
+        allProducts: params.all_products == '1' ? true : false,
+        allDocuments: params.all_documents == '1' ? true : false,
+        minPrice: params.min_price,
+        maxPrice: params.max_price,
+        sortBy: params.sort_by,
+        sort: params.sort == '' ? 'asc' : params.sort,
+        rating: params.rating,
+        productCoverage: params.product_coverage,
+        mostPriority: params.most_priority,
+        mustHave: mustHave,
+        deliveryTime: params.deliveryTime
     })
 
     const columns = [
@@ -158,7 +170,7 @@ const SubmissionEOI = ({ eoi, submissions }) => {
         }
         handleFilterChange();
     }, [filters]); // Add all filter dependencies here
-    
+
     const handleFilterChange = () => {
         if (isInitialLoad) return;
         try {
@@ -173,6 +185,8 @@ const SubmissionEOI = ({ eoi, submissions }) => {
                 most_priority: filters.mostPriority ? 1 : null,
                 sort_by: filters.sortBy || null,
                 sort: filters.sort || null,
+                mustHave: filters.mustHave,
+                deliveryTime: filters.deliveryTime,
                 page: 1
             }, {
                 preserveState: true,
@@ -186,7 +200,17 @@ const SubmissionEOI = ({ eoi, submissions }) => {
         }
     };
 
-   
+    const toggleMustHave = (id) => {
+        if (filters.mustHave.includes(id)) {
+            setFilters({ ...filters, mustHave: filters.mustHave.filter((p) => p != id), allProducts: false })
+        }
+        else {
+            setFilters({ ...filters, mustHave: [...filters.mustHave, id], allProducts: false })
+        }
+        handleFilterChange()
+    }
+
+
     const changeRating = (rating) => {
         const newRating = rating === filters.rating ? 0 : rating;
         setFilters({ ...filters, rating: newRating });
@@ -235,7 +259,7 @@ const SubmissionEOI = ({ eoi, submissions }) => {
                     </div>
 
                     <div
-                        className={`border border-gray-300 rounded-md py-2 px-5 cursor-pointer select-none flex items-center gap-2 transition
+                        className={`border border-gray-300 rounded-md py-1 px-5 cursor-pointer select-none flex items-center gap-2 transition
                             ${filterDropdownOpen ? 'bg-gray-300' : 'hover:bg-gray-100'}`}
                         onClick={() => setFilterDropdownOpen(!filterDropdownOpen)}
                     >
@@ -254,8 +278,7 @@ const SubmissionEOI = ({ eoi, submissions }) => {
                                 className={`py-1 px-3 rounded-md text-center border select-none cursor-pointer
                                     ${filters.allProducts ? 'bg-[#00AB66] text-white border-[#00AB66]' : 'border-gray-400'}`}
                                 onClick={() => {
-                                    setFilters({ ...filters, allProducts: !filters.allProducts });
-                                    
+                                    setFilters({ ...filters, allProducts: !filters.allProducts, mustHave: [] });
                                 }}
                             >
                                 All Products Submitted
@@ -265,10 +288,40 @@ const SubmissionEOI = ({ eoi, submissions }) => {
                                     ${filters.allDocuments ? 'bg-[#00AB66] text-white border-[#00AB66]' : 'border-gray-400'}`}
                                 onClick={() => {
                                     setFilters({ ...filters, allDocuments: !filters.allDocuments });
-                                    
+
                                 }}
                             >
                                 All Documents Submitted
+                            </div>
+                            <div
+                                className={`py-1 px-3 rounded-md text-center border select-none cursor-pointer
+            ${filters.productCoverage ? 'bg-[#00AB66] text-white border-[#00AB66]' : 'border-gray-400'}`}
+                                onClick={() => toggleFilter('productCoverage')}
+                            >
+                                Most Products Submitted
+                            </div>
+                            <div
+                                className={`py-1 px-3 rounded-md text-center border select-none cursor-pointer
+            ${filters.mostPriority ? 'bg-[#00AB66] text-white border-[#00AB66]' : 'border-gray-400'}`}
+                                onClick={() => toggleFilter('mostPriority')}
+                            >
+                                Most Priority Products Submitted
+                            </div>
+                        </div>
+
+                        {/* Must have */}
+                        <div>
+                            <h3 className="text-base font-semibold mb-2">Must have</h3>
+                            <div className="flex gap-3">
+                                {eoi.purchase_request_items.map((p, index) => (
+                                    <div key={index}
+                                        className={`py-1 px-3 rounded-md text-center border select-none cursor-pointer
+            ${filters.mustHave.includes(p.id) ? 'bg-[#00AB66] text-white border-[#00AB66]' : 'border-gray-400'}`}
+                                        onClick={() => toggleMustHave(p.id)}
+                                    >
+                                        {p.product.name}
+                                    </div>
+                                ))}
                             </div>
                         </div>
 
@@ -306,7 +359,7 @@ const SubmissionEOI = ({ eoi, submissions }) => {
                                     placeholder="Max"
                                     className="py-1 px-2 border rounded-md w-24"
                                     onChange={(e) => {
-                                        setFilters({ ...filters, maxPrice: e.target.value });  
+                                        setFilters({ ...filters, maxPrice: e.target.value });
                                     }}
                                 />
                             </div>
@@ -342,22 +395,19 @@ const SubmissionEOI = ({ eoi, submissions }) => {
                             </div>
                         </div>
 
-                        {/* Additional Filters */}
-                        <div className="flex gap-3">
-                            <div
-                                className={`py-1 px-3 rounded-md text-center border select-none cursor-pointer
-            ${filters.productCoverage ? 'bg-[#00AB66] text-white border-[#00AB66]' : 'border-gray-400'}`}
-                                onClick={() => toggleFilter('productCoverage')}
+                        {/* Delivered within */}
+                        <div>
+                            <h3 className="text-base font-semibold mb-2">Delivery Time</h3>
+                            <select
+                                value={filters.deliveryTime}
+                                onChange={(e) => setFilters({ ...filters, deliveryTime: e.target.value })}
+                                className="py-1 px-3 border rounded-md w-48"
                             >
-                                Most Products Submitted
-                            </div>
-                            <div
-                                className={`py-1 px-3 rounded-md text-center border select-none cursor-pointer
-            ${filters.mostPriority ? 'bg-[#00AB66] text-white border-[#00AB66]' : 'border-gray-400'}`}
-                                onClick={() => toggleFilter('mostPriority')}
-                            >
-                                Most Priority Products Submitted
-                            </div>
+                                <option value="">Any</option>
+                                <option value="7">Within 7 days</option>
+                                <option value="14">Within 14 days</option>
+                                <option value="30">Within 30 days</option>
+                            </select>
                         </div>
                     </div>
                 )}

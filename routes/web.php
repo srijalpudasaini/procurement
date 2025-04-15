@@ -11,6 +11,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PurchaseRequestController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
 use Illuminate\Foundation\Application;
@@ -57,6 +58,7 @@ Route::middleware(['auth'])->group(function(){
 
     Route::put('requests/updateStatus/{id}',[PurchaseRequestController::class,'updateStatus']);
     Route::get('/eois/submissions/{id}',[EoiController::class,'submissions']);
+    Route::get('/reports',[ReportController::class,'index']);
     // Route::get('/roles', function(){
     //     return 'abc';
     // });
