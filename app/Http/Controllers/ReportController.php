@@ -137,6 +137,9 @@ class ReportController extends Controller
 
         // Score vendors and keep only top 3 per product
         foreach ($grouped as &$eoi) {
+            // Collect total proposed amount per vendor per EOI
+            $vendorTotals = [];
+
             foreach ($eoi['products'] as &$product) {
                 $priorityBonus = match ($product['priority']) {
                     'high' => 10,
@@ -145,32 +148,59 @@ class ReportController extends Controller
                     default => 0,
                 };
 
-                // Calculate score for each vendor based on factors excluding proposed price
                 foreach ($product['vendor_submissions'] as &$submission) {
                     $daysToDelivery = Carbon::parse($submission['delivery_date'])->diffInDays(now());
 
-                    $submission['score'] =
+                    // Score calculation
+                    $score =
                         $priorityBonus +
                         ($submission['document_count'] * 2) +
-                        ($submission['rating'] * 5) +
+                        ($submission['rating'] * 2) +
                         max(0, 30 - $daysToDelivery);
+
+                    $submission['score'] = $score;
+
+                    // Add to vendor's total proposed price for this EOI
+                    $vendorId = $submission['vendor_id'];
+                    if (!isset($vendorTotals[$vendorId])) {
+                        $vendorTotals[$vendorId] = [
+                            'vendor_id' => $vendorId,
+                            'vendor_name' => $submission['vendor_name'],
+                            'total_proposed_amount' => 0,
+                            'total_score' => 0,
+                        ];
+                    }
+
+                    $vendorTotals[$vendorId]['total_proposed_amount'] += $submission['proposed_price'];
+                    $vendorTotals[$vendorId]['total_score'] += $score;
                 }
 
-                // Sort vendors by score first
-                usort($product['vendor_submissions'], fn($a, $b) => $b['score'] <=> $a['score']);
-
-                // After sorting by score, we now sort top vendors by total proposed amount (sum of proposed prices)
-                $topVendors = array_slice($product['vendor_submissions'], 0, 3);
-
-                // Sort top 3 vendors based on their total proposed price (descending order)
-                usort($topVendors, function ($a, $b) {
-                    return $a['proposed_price'] <=> $b['proposed_price'];
-                });
-
-                // Update the vendor submissions with the top vendors sorted by total amount
-                $product['vendor_submissions'] = $topVendors;
+                // We'll do final top-3 selection after looping all products
             }
+
+            // Get top 3 vendors across the whole EOI by score
+            usort($vendorTotals, fn($a, $b) => $b['total_score'] <=> $a['total_score']);
+            $topVendors = array_values($vendorTotals);
+            $topVendors = array_slice($topVendors, 0, 3);
+
+            // Store top 3 vendor ids
+            $topVendorIds = array_column($topVendors, 'vendor_id');
+
+            // Now for each product, only keep submissions from top 3 vendors
+            foreach ($eoi['products'] as &$product) {
+                $product['vendor_submissions'] = array_values(array_filter(
+                    $product['vendor_submissions'],
+                    fn($s) => in_array($s['vendor_id'], $topVendorIds)
+                ));
+
+                // Sort vendors by proposed price for the product
+                usort($product['vendor_submissions'], fn($a, $b) => $a['proposed_price'] <=> $b['proposed_price']);
+            }
+
+            // Attach top vendor info to the EOI
+            $eoi['top_vendors'] = $topVendors;
         }
+
 
 
         $results = array_values(array_map(function ($eoi) {

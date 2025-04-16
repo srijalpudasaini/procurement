@@ -7,6 +7,7 @@ use App\Models\ApprovalStep;
 use App\Repositories\ApprovalWorkflowRepository;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Spatie\Permission\Models\Role;
@@ -23,10 +24,10 @@ class ApprovalWorkflowController extends Controller implements HasMiddleware
     public static function middleware(): array
     {
         return [
-            // new Middleware('permission:view_workflow', only: ['index']),
-            // new Middleware('permission:create_workflow', only: ['create','store']),
-            // new Middleware('permission:edit_workflow', only: ['edit','update']),
-            // new Middleware('permission:delete_workflow', only: ['destroy']),
+            new Middleware('permission:view_workflow', only: ['index']),
+            new Middleware('permission:create_workflow', only: ['create','store']),
+            new Middleware('permission:edit_workflow', only: ['edit','update']),
+            new Middleware('permission:delete_workflow', only: ['destroy']),
         ];
     }
     public function index(Request $request)

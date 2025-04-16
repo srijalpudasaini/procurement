@@ -27,7 +27,7 @@ export default function Login({ status, canResetPassword }) {
             <Head title="Log in" />
             <div className="flex min-h-screen flex-col items-center bg-gray-100 pt-6 sm:justify-center sm:pt-0">
                 <div className="mt-6 w-full overflow-hidden bg-white px-6 py-4 shadow-md sm:max-w-md sm:rounded-lg">
-                    <h2 className="text-center text-2xl font-bold">Login</h2>
+                    <h2 className="text-center text-2xl font-bold">Vendor Login</h2>
                     {status && (
                         <div className="mb-4 text-sm font-medium text-green-600">
                             {status}

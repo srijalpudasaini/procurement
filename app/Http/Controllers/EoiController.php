@@ -37,6 +37,7 @@ class EoiController extends Controller implements HasMiddleware
         return [
             new Middleware('permission:view_eoi', ['index']),
             new Middleware('permission:create_eoi', ['create', 'store', 'publish']),
+            new Middleware('permission:view_submissions_eoi', ['submissions']),
             new Middleware('permission:edit_eoi', ['edit', 'update']),
             new Middleware('permission:delete_eoi', ['destroy']),
         ];

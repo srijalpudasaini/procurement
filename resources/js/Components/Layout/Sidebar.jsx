@@ -42,7 +42,10 @@ export default function Sidebar() {
                     <li className="border-b border-b-gray-300"><Link className="p-2 px-4 block" href="/approval-workflows">Approval Workflow</Link></li>
                 )
                 }
-                <li className="border-b border-b-gray-300"><Link className="p-2 px-4 block" href="/reports">Reports</Link></li>
+                {!!hasPermission('view_workflow') && (
+                    <li className="border-b border-b-gray-300"><Link className="p-2 px-4 block" href="/reports">Reports</Link></li>
+                )
+                }
             </ul>
         </aside>
     )

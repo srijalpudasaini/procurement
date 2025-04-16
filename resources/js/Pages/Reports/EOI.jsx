@@ -94,7 +94,7 @@ const EOI = ({ results }) => {
                     </div>
                 </div>
                 <div className="overflow-x-auto scrollbar-none">
-                    <table className='border text-center mt-4 whitespace-nowrap max-w-full'>
+                    <table className='border text-center mt-4 whitespace-nowrap w-full'>
                         {/* <thead> */}
                             <tr className='bg-green-600 text-white'>
                                 <th className='p-1'>EOI</th>

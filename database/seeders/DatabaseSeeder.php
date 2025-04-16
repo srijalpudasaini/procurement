@@ -17,12 +17,18 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
-        $admin = User::create([
+        User::create([
             'name' => 'Super Admin',
+            'email' => 'superadmin@example.com',
+            'contact' => '9810008988',
+            'password' => Hash::make('admin123'),
+            'is_superadmin' => true,
+        ]);
+        $admin = User::create([
+            'name' => 'Admin',
             'email' => 'admin@example.com',
             'contact' => '9810008986',
             'password' => Hash::make('admin123'),
-            'is_superadmin' => true,
         ]);
         $employee = User::create([
             'name' => 'Employee',
@@ -45,6 +51,7 @@ class DatabaseSeeder extends Seeder
             'edit_eoi',
             'delete_eoi',
             'apply_eoi',
+            'view_submissions_eoi',
             'view_product',
             'edit_product',
             'delete_product',
@@ -65,6 +72,7 @@ class DatabaseSeeder extends Seeder
             'create_workflow',
             'edit_workflow',
             'delete_workflow',
+            'view_report'
         ];
 
         foreach ($permissions as $permission) {
@@ -77,6 +85,7 @@ class DatabaseSeeder extends Seeder
         $adminRole->givePermissionTo($permissions); 
 
         $employee->assignRole($employeeRole);
+        $admin->assignRole($adminRole);
 
         $employeeRole->givePermissionTo([
             'create_request',

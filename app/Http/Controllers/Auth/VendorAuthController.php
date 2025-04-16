@@ -42,7 +42,7 @@ class VendorAuthController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        return redirect(route('vendor.login'));
+        return redirect()->route('vendor.loginShow')->with('success','Registration successful!');
     }
 
     public function login(Request $request)

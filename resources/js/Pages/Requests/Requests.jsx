@@ -312,7 +312,6 @@ const PurchaseRequests = ({ requests, viewType }) => {
                       <td className='p-2 border'>{approval.status}</td>
                       <td className='p-2 border'>{approval.remark}</td>
                     </tr>
-
                     ))}
                   </table>
                 </>

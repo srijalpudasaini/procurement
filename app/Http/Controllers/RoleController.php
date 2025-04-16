@@ -38,11 +38,16 @@ class RoleController extends Controller implements HasMiddleware
     public function create()
     {
         $permissions = Permission::pluck('name');
-        $groupPermissions = array();
+        $groupPermissions = [];
+
         foreach ($permissions as $permission) {
-            $arr = explode("_", $permission);
-            $action = array_shift($arr);
-            $group = implode("_", $arr);
+            $parts = explode("_", $permission);
+
+            // Take the last part as the group
+            $group = array_pop($parts);
+
+            // The rest is the action (joined with space)
+            $action = implode(" ", $parts);
 
             if (!isset($groupPermissions[$group])) {
                 $groupPermissions[$group] = [];
@@ -53,6 +58,7 @@ class RoleController extends Controller implements HasMiddleware
             }
         }
 
+        // Optional: sort actions, e.g., prioritize 'view'
         foreach ($groupPermissions as &$actions) {
             usort($actions, function ($a, $b) {
                 return $a === 'view' ? -1 : ($b === 'view' ? 1 : strcmp($a, $b));
@@ -62,6 +68,7 @@ class RoleController extends Controller implements HasMiddleware
         $groupPermissionsArray = array_map(function ($key, $values) {
             return ['group' => $key, 'permissions' => $values];
         }, array_keys($groupPermissions), $groupPermissions);
+
         return Inertia::render('Roles/AddRole', compact('groupPermissionsArray'));
     }
 
@@ -81,13 +88,16 @@ class RoleController extends Controller implements HasMiddleware
     public function edit($id)
     {
         $role = $this->roleRepository->find($id);
-        $permissions = Permission::get()->pluck('name');
         $rolePermissions = $role->permissions->pluck('name');
-        $groupPermissions = array();
+        $permissions = Permission::pluck('name');
+        $groupPermissions = [];
+
         foreach ($permissions as $permission) {
-            $arr = explode("_", $permission);
-            $action = array_shift($arr);
-            $group = implode("_", $arr);
+            $parts = explode("_", $permission);
+
+            $group = array_pop($parts);
+
+            $action = implode(" ", $parts);
 
             if (!isset($groupPermissions[$group])) {
                 $groupPermissions[$group] = [];
@@ -98,6 +108,7 @@ class RoleController extends Controller implements HasMiddleware
             }
         }
 
+        // Optional: sort actions, e.g., prioritize 'view'
         foreach ($groupPermissions as &$actions) {
             usort($actions, function ($a, $b) {
                 return $a === 'view' ? -1 : ($b === 'view' ? 1 : strcmp($a, $b));
@@ -107,6 +118,7 @@ class RoleController extends Controller implements HasMiddleware
         $groupPermissionsArray = array_map(function ($key, $values) {
             return ['group' => $key, 'permissions' => $values];
         }, array_keys($groupPermissions), $groupPermissions);
+
         return Inertia::render('Roles/EditRole', compact('role', 'groupPermissionsArray', 'rolePermissions'));
     }
 
