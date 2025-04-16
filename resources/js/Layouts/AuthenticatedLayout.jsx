@@ -10,7 +10,7 @@ export default function AuthenticatedLayout({ header, children }) {
                     <div className='w-1/6 bg-white'>
                         <Sidebar />
                     </div>
-                    <main className='flex-grow mx-5 mt-4'>{children}</main>
+                    <main className='w-5/6 mx-5 mt-4'>{children}</main>
                 </div>
             </div>
         </Layout>

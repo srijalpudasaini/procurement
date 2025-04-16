@@ -3,13 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\PurchaseRequest;
-use App\Models\ApprovalStep;
 use App\Models\ApprovalWorkflow;
 use App\Repositories\PurchaseRequestItemRepository;
 use App\Repositories\PurchaseRequestRepository;
 use App\Models\Product;
-use App\Models\PurchaseRequest as ModelsPurchaseRequest;
-use App\Models\PurchaseRequestItem;
 use App\Models\RequestApprovals;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -42,7 +39,7 @@ class PurchaseRequestController extends Controller implements HasMiddleware
         if ($user->is_superadmin) {
             $data = $this->purchaseRequestRepository->all(
                 $request->input('per_page', 10),
-                ['user', 'purchase_request_items.product', 'approvals.approver']
+                ['user', 'purchase_request_items.product', 'approvals.approver','approvals.step']
             );
         } else {
             $roleId = $user->roles()->first()->id;
@@ -143,7 +140,7 @@ class PurchaseRequestController extends Controller implements HasMiddleware
         ]);
 
         // Get the role ID of the current user
-        // $roleId = $request->user()->roles()->first()->id;
+        $roleId = $request->user()->roles()->first()->id;
 
         DB::beginTransaction();
 
@@ -153,6 +150,13 @@ class PurchaseRequestController extends Controller implements HasMiddleware
 
             if (!$requestApproval) {
                 throw new \Exception('No pending approval found for this request and role.');
+            }
+
+            if($requestApproval->status != 'pending'){
+                return redirect()->back()->with('error',"Could not update the request's status");
+            }
+            if($requestApproval->step->role_id != $roleId){
+                return redirect()->back()->with('error',"You are not authorized to update the request's status");
             }
 
             // Update the request approval with the new status and remark

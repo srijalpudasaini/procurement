@@ -15,6 +15,13 @@ class ReportController extends Controller
         $totalsSubquery = DB::table('purchase_request_items')
             ->select('eoi_id', DB::raw('SUM(price * quantity) as total_amount'))
             ->groupBy('eoi_id');
+        $productCountSubquery = DB::table('purchase_request_items')
+            ->select('eoi_id', DB::raw('COUNT(*) as product_count'))
+            ->groupBy('eoi_id');
+        $applicationCountSubquery = DB::table('eoi_vendor_applications')
+            ->select('eoi_id', DB::raw('COUNT(*) as application_count'))
+            ->groupBy('eoi_id');
+
         $query = DB::table('eois')
             ->leftJoin('purchase_request_items as pri', 'pri.eoi_id', '=', 'eois.id')
             ->leftJoin('products', 'products.id', '=', 'pri.product_id')
@@ -27,9 +34,17 @@ class ReportController extends Controller
             ->leftJoinSub($totalsSubquery, 'totals', function ($join) {
                 $join->on('totals.eoi_id', '=', 'eois.id');
             })
+            ->leftJoinSub($productCountSubquery, 'product_counts', function ($join) {
+                $join->on('product_counts.eoi_id', '=', 'eois.id');
+            })
+            ->leftJoinSub($applicationCountSubquery, 'application_counts', function ($join) {
+                $join->on('application_counts.eoi_id', '=', 'eois.id');
+            })
             ->select([
                 'eois.id as eoi_id',
                 'eois.title as eoi_title',
+                'eois.published_date as published_date',
+                'eois.deadline_date as deadline_date',
                 'pri.id as item_id',
                 'pri.priority as item_priority',
                 'pri.quantity',
@@ -47,7 +62,9 @@ class ReportController extends Controller
 
                 'pri2.id as proposal_item_id',
                 'p2.name as proposal_product_name',
-                'totals.total_amount'
+                'totals.total_amount',
+                'product_counts.product_count',
+                'application_counts.application_count',
             ]);
         if ($request->filled('status')) {
             $query->where('eois.status', $request->status);
@@ -77,11 +94,19 @@ class ReportController extends Controller
             $eoiId = $row->eoi_id;
             $itemId = $row->item_id;
             $proposedItemId = $row->proposal_item_id;
+            $total_amount = $row->total_amount;
+            $product_count = $row->product_count;
+            $application_count = $row->application_count;
 
             if (!isset($grouped[$eoiId])) {
                 $grouped[$eoiId] = [
                     'eoi_id' => $eoiId,
                     'eoi_title' => $row->eoi_title,
+                    'published_date' => $row->published_date,
+                    'deadline_date' => $row->deadline_date,
+                    'product_count' => $row->product_count,
+                    'total_amount' => $row->total_amount,
+                    'application_count' => $row->application_count,
                     'products' => [],
                 ];
             }

@@ -89,7 +89,7 @@ const PurchaseRequests = ({ requests, viewType }) => {
           />
         ),
         grow: 0,
-        
+
       }] : [],
     { name: "Requested By", selector: row => row.purchase_request.user?.name, sortable: true },
     { name: "Total", selector: row => row.purchase_request.total, sortable: true },
@@ -98,15 +98,15 @@ const PurchaseRequests = ({ requests, viewType }) => {
         <span
           className={`rounded-sm text-white font-medium px-2 py-1 capitalize text-xs
             ${row.status == 'approved' ? 'bg-green-600' :
-                row.status == 'rejected' ? 'bg-red-600' :
-                  'bg-yellow-600'
+              row.status == 'rejected' ? 'bg-red-600' :
+                'bg-yellow-600'
             }
             `}
         >
           {row.status}
         </span>
       ),
-      
+
     },
     {
       name: "Action",
@@ -137,7 +137,7 @@ const PurchaseRequests = ({ requests, viewType }) => {
         </div>
       ),
       ignoreRowClick: true,
-      
+
     }
   ];
 
@@ -152,7 +152,7 @@ const PurchaseRequests = ({ requests, viewType }) => {
             className={`${row.status != 'approved' ? 'cursor-not-allowed' : 'cursor-pointer'}`}
           />
         ),
-        grow: 0,        
+        grow: 0,
       }] : [],
     { name: "Requested By", selector: row => row.user.name, sortable: true },
     { name: "Total", selector: row => row.total, sortable: true },
@@ -170,7 +170,7 @@ const PurchaseRequests = ({ requests, viewType }) => {
           {row.status}
         </span>
       ),
-      
+
     },
     {
       name: "Action",
@@ -201,7 +201,7 @@ const PurchaseRequests = ({ requests, viewType }) => {
         </div>
       ),
       ignoreRowClick: true,
-      
+
     }
   ]
 
@@ -254,7 +254,10 @@ const PurchaseRequests = ({ requests, viewType }) => {
                 <td>{new Date(requestModal?.created_at).toLocaleDateString('en-CA')}</td>
               </tr>
             </table>
-            <table className="requisition-form w-full my-4 table border-collapse overflow-x-auto text-center">
+            <h3 className="text-md font-semibold text-gray-800 mt-4">
+                    Products
+                  </h3>
+            <table className="requisition-form w-full mb-4 mt-3 table border-collapse overflow-x-auto text-center">
               <thead>
                 <tr>
                   <th className="p-2 border">Product</th>
@@ -287,6 +290,34 @@ const PurchaseRequests = ({ requests, viewType }) => {
               </tbody>
 
             </table>
+            {auth.user.is_superadmin &&
+              (
+                <>
+                  <h3 className="text-md font-semibold text-gray-800">
+                    Approvals
+                  </h3>
+                  <table className='w-full mt-3 table border-collapse overflow-x-auto text-center'>
+                    <tr>
+                      <th className='p-2 border'>S.N</th>
+                      <th className='p-2 border'>Approved By</th>
+                      <th className='p-2 border'>Step</th>
+                      <th className='p-2 border'>Status</th>
+                      <th className='p-2 border'>Remarks</th>
+                    </tr>
+                    {requestModal?.approvals.map((approval,index)=>(
+                    <tr key={index}>
+                      <td className='p-2 border'>{index + 1}</td>
+                      <td className='p-2 border'>{approval.approver?.name}</td>
+                      <td className='p-2 border'>{approval.step.step_number}</td>
+                      <td className='p-2 border'>{approval.status}</td>
+                      <td className='p-2 border'>{approval.remark}</td>
+                    </tr>
+
+                    ))}
+                  </table>
+                </>
+              )
+            }
           </div>
           <div className="mt-4 flex justify-end">
             <button
@@ -369,7 +400,7 @@ const PurchaseRequests = ({ requests, viewType }) => {
 
         <div className="my-4">
           <DataTable
-            columns={viewType ==  'approval' ? approvalColumns : requestColumns}
+            columns={viewType == 'approval' ? approvalColumns : requestColumns}
             data={normalizedData}
             pagination
             paginationServer

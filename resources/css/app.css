@@ -9,6 +9,7 @@ input::-webkit-inner-spin-button {
 
 input[type=number] {
   -moz-appearance: textfield;
+  appearance: textfield;
 }
 
 .text-main {
@@ -57,4 +58,7 @@ input[type=number] {
 }
 .cell-head{
   font-weight: 700;
+}
+.scrollbar-none{
+  scrollbar-width: none;
 }
