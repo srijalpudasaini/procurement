@@ -51,7 +51,7 @@ class EoiController extends Controller implements HasMiddleware
     {
         $purchaseRequests = $this->purchaseRequestRepository->all(
             $request->input('per_page', 10),
-            ['user', 'purchase_request_items.product'],
+            ['user', 'purchase_request_items.product','approvals.approver','approvals.step'],
             ['status' => 'approved']
         );
         return Inertia::render('EOI/AddEOI', compact('purchaseRequests'));

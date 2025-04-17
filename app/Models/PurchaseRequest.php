@@ -11,6 +11,8 @@ class PurchaseRequest extends Model
         'total',
         'status',
     ];
+
+
     public function user()
     {
         return $this->belongsTo(User::class);
@@ -25,9 +27,9 @@ class PurchaseRequest extends Model
         return $this->hasMany(PurchaseRequestItem::class);
     }
 
-    public function approvals()
+    public function requestApprovals()
     {
-        return $this->hasMany(RequestApprovals::class);
+        return $this->morphMany(RequestApprovals::class, 'approvable');
     }
 
     public function steps()

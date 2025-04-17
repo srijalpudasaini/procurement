@@ -114,7 +114,7 @@ const PurchaseRequests = ({ requests, viewType }) => {
         <div className="flex gap-1 flex-1 flex-nowrap justify-center">
           <button
             className='min-w-fit rounded-md border border-transparent bg-green-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-green-700'
-            onClick={() => viewDetail(row.purchase_request)}
+            onClick={() => viewDetail(row)}
           >
             View
           </button>
@@ -243,15 +243,15 @@ const PurchaseRequests = ({ requests, viewType }) => {
             <table>
               <tr className='pb-3'>
                 <th className='pe-5'>Requested By:</th>
-                <td>{requestModal?.user.name}</td>
+                <td>{requestModal?.purchase_request?.user?.name}</td>
               </tr>
               <tr className='pb-3'>
                 <th className='pe-5'>Total Amount:</th>
-                <td>{requestModal?.total}</td>
+                <td>{requestModal?.purchase_request?.total}</td>
               </tr>
               <tr className='pb-3'>
                 <th className='pe-5'>Requested On:</th>
-                <td>{new Date(requestModal?.created_at).toLocaleDateString('en-CA')}</td>
+                <td>{new Date(requestModal?.purchase_request?.created_at).toLocaleDateString('en-CA')}</td>
               </tr>
             </table>
             <h3 className="text-md font-semibold text-gray-800 mt-4">
@@ -268,7 +268,7 @@ const PurchaseRequests = ({ requests, viewType }) => {
                 </tr>
               </thead>
               <tbody>
-                {requestModal?.purchase_request_items?.map((pro, index) => (
+                {requestModal?.purchase_request?.purchase_request_items?.map((pro, index) => (
                   <tr key={index} className="border">
                     <td className="p-2 border">
                       {pro.product.name}
@@ -290,7 +290,7 @@ const PurchaseRequests = ({ requests, viewType }) => {
               </tbody>
 
             </table>
-            {auth.user.is_superadmin &&
+            {!!auth.user.is_superadmin &&
               (
                 <>
                   <h3 className="text-md font-semibold text-gray-800">
@@ -304,7 +304,7 @@ const PurchaseRequests = ({ requests, viewType }) => {
                       <th className='p-2 border'>Status</th>
                       <th className='p-2 border'>Remarks</th>
                     </tr>
-                    {requestModal?.approvals.map((approval,index)=>(
+                    {requestModal?.purchase_request?.approvals.map((approval,index)=>(
                     <tr key={index}>
                       <td className='p-2 border'>{index + 1}</td>
                       <td className='p-2 border'>{approval.approver?.name}</td>
@@ -325,7 +325,7 @@ const PurchaseRequests = ({ requests, viewType }) => {
             >
               Close
             </button>
-            {!!hasPermission('approve_request') && requestModal?.status === 'pending' &&
+            {!!hasPermission('approve_request') && requestModal?.purchase_request?.status === 'pending' &&
               <button
                 className='rounded-md border border-transparent bg-blue-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-blue-700'
                 onClick={() => confirmDelete(requestModal?.id, 'approved')}
@@ -333,7 +333,7 @@ const PurchaseRequests = ({ requests, viewType }) => {
                 Approve
               </button>
             }
-            {!!hasPermission('delete_request') && requestModal?.status === 'pending' &&
+            {!!hasPermission('delete_request') && requestModal?.purchase_request?.status === 'pending' &&
               <button
                 onClick={() => confirmDelete(requestModal?.id, 'rejected')}
                 className='rounded-md border border-transparent bg-red-600 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-red-700'
