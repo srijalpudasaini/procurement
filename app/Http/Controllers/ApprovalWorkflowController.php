@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\ApprovalWorkflowRequest;
 use App\Models\ApprovalStep;
+use App\Models\RequestApprovals;
 use App\Repositories\ApprovalWorkflowRepository;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -25,8 +26,8 @@ class ApprovalWorkflowController extends Controller implements HasMiddleware
     {
         return [
             new Middleware('permission:view_workflow', only: ['index']),
-            new Middleware('permission:create_workflow', only: ['create','store']),
-            new Middleware('permission:edit_workflow', only: ['edit','update']),
+            new Middleware('permission:create_workflow', only: ['create', 'store']),
+            new Middleware('permission:edit_workflow', only: ['edit', 'update']),
             new Middleware('permission:delete_workflow', only: ['destroy']),
         ];
     }
@@ -80,16 +81,20 @@ class ApprovalWorkflowController extends Controller implements HasMiddleware
     {
         DB::beginTransaction();
         try {
+            $workflow = $this->approvalWorkflowRepository->find($id, 'steps');
+            $inUse = RequestApprovals::whereIn(
+                'approval_step_id',
+                $workflow->steps->pluck('id')
+            )->where('status', 'pending')->exists();
+            if ($inUse) {
+                return redirect()->back()
+                    ->with('error', 'Cannot update workflow. It is currently in use by one or more requests.');
+            }
             $this->approvalWorkflowRepository->update($id, $request->validated());
-
-            $currentSteps = ApprovalStep::where('approval_workflow_id', $id)
-                ->orderBy('step_number')
-                ->get()
-                ->keyBy('step_number');
-
+            $currentSteps = ApprovalStep::where('approval_workflow_id', $id)->orderBy('step_number')->get()
+            ->keyBy('step_number');
             $previousStepId = null;
             $sortedSteps = collect($request->steps)->sortBy('step');
-
             foreach ($sortedSteps as $stepData) {
                 if (isset($currentSteps[$stepData['step']])) {
                     $currentSteps[$stepData['step']]->update([
@@ -107,14 +112,11 @@ class ApprovalWorkflowController extends Controller implements HasMiddleware
                     $previousStepId = $createdStep->id;
                 }
             }
-
             $submittedStepNumbers = $sortedSteps->pluck('step')->toArray();
             ApprovalStep::where('approval_workflow_id', $id)
                 ->whereNotIn('step_number', $submittedStepNumbers)
                 ->delete();
-
             $this->rebuildStepChain($id);
-
             DB::commit();
             return redirect()->route('approval-workflows.index')->with('success', 'Workflow updated successfully!');
         } catch (\Exception $e) {
@@ -139,6 +141,17 @@ class ApprovalWorkflowController extends Controller implements HasMiddleware
     public function destroy($id)
     {
         try {
+            $workflow = $this->approvalWorkflowRepository->find($id, 'steps');
+
+            $inUse = RequestApprovals::whereIn(
+                'approval_step_id',
+                $workflow->steps->pluck('id')
+            )->where('status', 'pending')->exists();
+
+            if ($inUse) {
+                return redirect()->back()
+                    ->with('error', 'Cannot update workflow. It is currently in use by one or more requests.');
+            }
             $this->approvalWorkflowRepository->delete($id);
             return redirect()->route('approval-workflows.index')->with('success', 'Workflow deleted successfully!');
         } catch (\Exception $e) {

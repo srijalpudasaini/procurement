@@ -1,16 +1,25 @@
-
-import Layout from './Layout';
-import Sidebar from '@/Components/Layout/Sidebar';
+import Layout from "./Layout";
+import Sidebar from "@/Components/Layout/Sidebar";
 
 export default function AuthenticatedLayout({ header, children }) {
     return (
         <Layout>
-            <div className="min-h-screen bg-gray-200">
-                <div className="flex">
-                    <div className='w-1/6 bg-white'>
+            <div className="min-h-screen bg-slate-100 flex flex-col">
+                <div className="flex flex-1">
+                    {/* Fixed Width Left Sidebar */}
+                    <div className="w-56 shrink-0 bg-white">
                         <Sidebar />
                     </div>
-                    <main className='w-5/6 mx-5 mt-4'>{children}</main>
+
+                    {/* Main Content Area */}
+                    <main className="flex-1 p-6 overflow-x-hidden">
+                        {header && (
+                            <header className="bg-white shadow-sm rounded-xl p-4 mb-6 border border-slate-200">
+                                {header}
+                            </header>
+                        )}
+                        {children}
+                    </main>
                 </div>
             </div>
         </Layout>

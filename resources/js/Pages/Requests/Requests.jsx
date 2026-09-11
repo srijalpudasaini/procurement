@@ -8,6 +8,11 @@ import React, { useState } from 'react'
 import DataTable from 'react-data-table-component'
 
 const PurchaseRequests = ({ requests, viewType }) => {
+  const page = usePage();
+
+  console.log(page.props);
+  console.log(page.props.requests);
+  console.log(requests)
   const { flash, auth } = usePage().props;
   const [showModal, setShowModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
@@ -29,6 +34,7 @@ const PurchaseRequests = ({ requests, viewType }) => {
       }
     }))
     : requests.data;
+    
   const confirmDelete = (id, type) => {
     setModalType(type)
     setRequestStatus({ ...requestStatus, status: type })
@@ -114,25 +120,25 @@ const PurchaseRequests = ({ requests, viewType }) => {
         <div className="flex gap-1 flex-1 flex-nowrap justify-center">
           <button
             className='min-w-fit rounded-md border border-transparent bg-green-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-green-700'
-            onClick={() => viewDetail(row)}
+            onClick={() => viewDetail(row.purchase_request)}
           >
             View
           </button>
           {!!hasPermission('approve_request') && row.status === 'pending' &&
-            <button
-              className='min-w-fit rounded-md border border-transparent bg-blue-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-blue-700'
-              onClick={() => confirmDelete(row.id, 'approved')}
-            >
-              Approve
-            </button>
-          }
-          {!!hasPermission('delete_request') && row.status === 'pending' &&
-            <button
-              onClick={() => confirmDelete(row.id, 'rejected')}
-              className='min-w-fit rounded-md border border-transparent bg-red-600 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-red-700'
-            >
-              Reject
-            </button>
+            <>
+              <button
+                className='min-w-fit rounded-md border border-transparent bg-blue-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-blue-700'
+                onClick={() => confirmDelete(row.id, 'approved')}
+              >
+                Approve
+              </button>
+              <button
+                onClick={() => confirmDelete(row.id, 'rejected')}
+                className='min-w-fit rounded-md border border-transparent bg-red-600 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-red-700'
+              >
+                Reject
+              </button>
+            </>
           }
         </div>
       ),
@@ -243,32 +249,28 @@ const PurchaseRequests = ({ requests, viewType }) => {
             <table>
               <tr className='pb-3'>
                 <th className='pe-5'>Requested By:</th>
-                <td>{requestModal?.purchase_request?.user?.name}</td>
+                <td>{requestModal?.user.name}</td>
               </tr>
               <tr className='pb-3'>
                 <th className='pe-5'>Total Amount:</th>
-                <td>{requestModal?.purchase_request?.total}</td>
+                <td>{requestModal?.total}</td>
               </tr>
               <tr className='pb-3'>
                 <th className='pe-5'>Requested On:</th>
-                <td>{new Date(requestModal?.purchase_request?.created_at).toLocaleDateString('en-CA')}</td>
+                <td>{new Date(requestModal?.created_at).toLocaleDateString('en-CA')}</td>
               </tr>
             </table>
-            <h3 className="text-md font-semibold text-gray-800 mt-4">
-                    Products
-                  </h3>
-            <table className="requisition-form w-full mb-4 mt-3 table border-collapse overflow-x-auto text-center">
+            <table className="requisition-form w-full my-4 table border-collapse overflow-x-auto text-center">
               <thead>
                 <tr>
                   <th className="p-2 border">Product</th>
                   <th className="p-2 border">Quantity</th>
                   <th className="p-2 border">Price</th>
                   <th className="p-2 border">Specification</th>
-                  <th className="p-2 border">Priority</th>
                 </tr>
               </thead>
               <tbody>
-                {requestModal?.purchase_request?.purchase_request_items?.map((pro, index) => (
+                {requestModal?.purchase_request_items?.map((pro, index) => (
                   <tr key={index} className="border">
                     <td className="p-2 border">
                       {pro.product.name}
@@ -281,9 +283,6 @@ const PurchaseRequests = ({ requests, viewType }) => {
                     </td>
                     <td className="p-2 border">
                       {pro.specifications}
-                    </td>
-                    <td className="p-2 border">
-                      {pro.priority}
                     </td>
                   </tr>
                 ))}
@@ -304,14 +303,14 @@ const PurchaseRequests = ({ requests, viewType }) => {
                       <th className='p-2 border'>Status</th>
                       <th className='p-2 border'>Remarks</th>
                     </tr>
-                    {requestModal?.purchase_request?.approvals.map((approval,index)=>(
-                    <tr key={index}>
-                      <td className='p-2 border'>{index + 1}</td>
-                      <td className='p-2 border'>{approval.approver?.name}</td>
-                      <td className='p-2 border'>{approval.step.step_number}</td>
-                      <td className='p-2 border'>{approval.status}</td>
-                      <td className='p-2 border'>{approval.remark}</td>
-                    </tr>
+                    {requestModal?.approvals?.map((approval, index) => (
+                      <tr key={index}>
+                        <td className='p-2 border'>{index + 1}</td>
+                        <td className='p-2 border'>{approval.approver?.name}</td>
+                        <td className='p-2 border'>{approval.step.step_number}</td>
+                        <td className='p-2 border'>{approval.status}</td>
+                        <td className='p-2 border'>{approval.remark}</td>
+                      </tr>
                     ))}
                   </table>
                 </>
@@ -325,15 +324,15 @@ const PurchaseRequests = ({ requests, viewType }) => {
             >
               Close
             </button>
-            {!!hasPermission('approve_request') && requestModal?.purchase_request?.status === 'pending' &&
+            {!!hasPermission('approve_request') && requestModal?.status === 'pending' &&
               <button
-                className='rounded-md border border-transparent bg-blue-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-blue-700'
+                className='rounded-md border border-transparent bg-blue-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-blue-700 me-2'
                 onClick={() => confirmDelete(requestModal?.id, 'approved')}
               >
                 Approve
               </button>
             }
-            {!!hasPermission('delete_request') && requestModal?.purchase_request?.status === 'pending' &&
+            {!!hasPermission('delete_request') && requestModal?.status === 'pending' &&
               <button
                 onClick={() => confirmDelete(requestModal?.id, 'rejected')}
                 className='rounded-md border border-transparent bg-red-600 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-red-700'
@@ -356,7 +355,7 @@ const PurchaseRequests = ({ requests, viewType }) => {
               name=""
               id=""
               className='py-1 mx-1'
-              value={requests.per_page}
+              // value={requests.per_page}
               onChange={(e) => router.get('/requests', { per_page: e.target.value })}
             >
               <option value="5">5</option>
@@ -404,11 +403,11 @@ const PurchaseRequests = ({ requests, viewType }) => {
             pagination
             paginationServer
             paginationTotalRows={requests.total}
-            paginationPerPage={requests.per_page}
+            // paginationPerPage={requests.per_page}
             onChangePage={(page) => {
               router.get('/requests', {
                 page,
-                per_page: requests.per_page
+                // per_page: requests.per_page
               }, { preserveState: true, replace: true });
             }}
             onChangeRowsPerPage={(perPage) => {

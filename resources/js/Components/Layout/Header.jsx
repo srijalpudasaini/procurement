@@ -2,79 +2,147 @@ import { Link, usePage } from "@inertiajs/react";
 import Dropdown from "../Dropdown";
 
 export default function Header() {
-    const { auth } = usePage().props;
+    const { auth, url } = usePage().props;
+
+    const isActive = (path) => {
+        if (path === "/") {
+            return window.location.pathname === "/";
+        }
+        return window.location.pathname.startsWith(path);
+    };
+
     return (
-        <header className="py-3 bg-[#00AB66]">
-            <div className="container">
-                <div className="flex justify-between items-center">
-                    <div className="logo">
-                        <h1 className="text-white text-xl letter tracking-wider font-bold">Procurement</h1>
+        <header className="bg-[#00AB66] shadow-sm sticky top-0 z-50">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="flex justify-between items-center h-16">
+                    {/* Brand Logo */}
+                    <div className="flex items-center">
+                        <Link
+                            href={auth?.user ? "/dashboard" : "/"}
+                            className="flex items-center gap-2.5 group"
+                        >
+                            <span className="w-9 h-9 rounded-xl bg-white/20 group-hover:bg-white/30 text-white flex items-center justify-center font-black text-lg transition shadow-sm">
+                                P
+                            </span>
+                            <span className="text-white text-lg font-extrabold tracking-wide">
+                                Procurement
+                            </span>
+                        </Link>
                     </div>
+
+                    {/* Navigation Links */}
                     <nav>
-                        <ul className="flex gap-12 items-center">
-                            <li><Link href="/eoi" className="text-white">Home</Link></li>
-                            <li><Link href="/eoi" className="text-white">About</Link></li>
-                            <li><Link href="/eoi" className="text-white">EOI</Link></li>
-                            {
-                                auth.user || auth.vendor ?
-                                    <li>
-                                        <Dropdown>
-                                            <Dropdown.Trigger>
-                                                <span className="inline-flex rounded-md">
-                                                    <button
-                                                        type="button"
-                                                        className="inline-flex items-center rounded-md border border-transparent bg-white px-3 py-2 text-sm font-medium leading-4 text-gray-500 transition duration-150 ease-in-out hover:text-gray-700 focus:outline-none"
-                                                    >
-                                                        {auth.user?.name || auth.vendor?.name}
+                        <ul className="flex items-center gap-6 sm:gap-8">
+                            <li>
+                                <Link
+                                    href="/"
+                                    className={`text-sm font-medium transition py-1.5 px-3 rounded-lg ${
+                                        isActive("/")
+                                            ? "bg-white/20 text-white font-bold"
+                                            : "text-white/90 hover:text-white hover:bg-white/10"
+                                    }`}
+                                >
+                                    Home
+                                </Link>
+                            </li>
 
-                                                        <svg
-                                                            className="-me-0.5 ms-2 h-4 w-4"
-                                                            xmlns="http://www.w3.org/2000/svg"
-                                                            viewBox="0 0 20 20"
-                                                            fill="currentColor"
-                                                        >
-                                                            <path
-                                                                fillRule="evenodd"
-                                                                d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                                                                clipRule="evenodd"
-                                                            />
-                                                        </svg>
-                                                    </button>
-                                                </span>
-                                            </Dropdown.Trigger>
+                            <li>
+                                <Link
+                                    href="/eoi"
+                                    className={`text-sm font-medium transition py-1.5 px-3 rounded-lg ${
+                                        isActive("/eoi")
+                                            ? "bg-white/20 text-white font-bold"
+                                            : "text-white/90 hover:text-white hover:bg-white/10"
+                                    }`}
+                                >
+                                    Tenders & EOIs
+                                </Link>
+                            </li>
 
-                                            <Dropdown.Content>
-                                                <Dropdown.Link
-                                                    href={auth.vendor ? '/vendor/dashboard' : '/dashboard'}
-                                                >
-                                                    Dashboard
-                                                </Dropdown.Link>
-                                                <Dropdown.Link
-                                                    href={route('profile.edit')}
-                                                >
-                                                    Profile
-                                                </Dropdown.Link>
-                                                <Dropdown.Link
-                                                    href={auth.vendor ? '/vendor/logout' : '/logout'}
-                                                    method="post"
-                                                    as="button"
-                                                >
-                                                    Log Out
-                                                </Dropdown.Link>
-                                            </Dropdown.Content>
-                                        </Dropdown>
-                                    </li>
-                                    :
-                                    <>
-                                        {/* <li><Link href="/vendor/login" className="text-white">VendorLogin</Link></li> */}
-                                        <li><Link href="/login" className="text-white">Login</Link></li>
-                                        <li><Link href="/vendor-login" className="text-white">Vendor Login</Link></li>
-                                    </>
-                            }
+                            {auth?.user && (
+                                <li>
+                                    <Link
+                                        href="/dashboard"
+                                        className={`text-sm font-medium transition py-1.5 px-3 rounded-lg ${
+                                            isActive("/dashboard")
+                                                ? "bg-white/20 text-white font-bold"
+                                                : "text-white/90 hover:text-white hover:bg-white/10"
+                                        }`}
+                                    >
+                                        Dashboard
+                                    </Link>
+                                </li>
+                            )}
+
+                            {auth?.vendor && (
+                                <li>
+                                    <Link
+                                        href="/vendor/dashboard"
+                                        className={`text-sm font-medium transition py-1.5 px-3 rounded-lg ${
+                                            isActive("/vendor/dashboard")
+                                                ? "bg-white/20 text-white font-bold"
+                                                : "text-white/90 hover:text-white hover:bg-white/10"
+                                        }`}
+                                    >
+                                        Vendor Dashboard
+                                    </Link>
+                                </li>
+                            )}
+
+                            {/* Auth Dropdown or Login Buttons */}
+                            {auth?.user || auth?.vendor ? (
+                                <li className="ms-2">
+                                    <Dropdown>
+                                        <Dropdown.Trigger>
+                                            <button
+                                                type="button"
+                                                className="inline-flex items-center gap-2 rounded-lg bg-white px-3.5 py-1.5 text-xs font-bold text-gray-800 transition shadow-sm hover:bg-gray-50 focus:outline-none"
+                                            >
+                                                <i className="fa fa-user-circle text-sm text-[#00AB66]"></i>
+                                                <span>{auth.user?.name || auth.vendor?.name}</span>
+                                                <i className="fa fa-caret-down text-gray-500 text-xs"></i>
+                                            </button>
+                                        </Dropdown.Trigger>
+
+                                        <Dropdown.Content>
+                                            <Dropdown.Link
+                                                href={auth.vendor ? "/vendor/dashboard" : "/dashboard"}
+                                            >
+                                                Dashboard
+                                            </Dropdown.Link>
+                                            <Dropdown.Link href={route("profile.edit")}>
+                                                Profile
+                                            </Dropdown.Link>
+                                            <Dropdown.Link
+                                                href={auth.vendor ? "/vendor/logout" : "/logout"}
+                                                method="post"
+                                                as="button"
+                                            >
+                                                Log Out
+                                            </Dropdown.Link>
+                                        </Dropdown.Content>
+                                    </Dropdown>
+                                </li>
+                            ) : (
+                                <li className="flex items-center gap-2.5 ms-2">
+                                    <Link
+                                        href="/login"
+                                        className="text-xs font-semibold text-white bg-white/15 hover:bg-white/25 px-3.5 py-2 rounded-lg transition"
+                                    >
+                                        Staff Login
+                                    </Link>
+                                    <Link
+                                        href="/vendor-login"
+                                        className="text-xs font-bold text-[#00AB66] bg-white hover:bg-gray-100 px-3.5 py-2 rounded-lg transition shadow-sm"
+                                    >
+                                        Vendor Login
+                                    </Link>
+                                </li>
+                            )}
                         </ul>
                     </nav>
                 </div>
             </div>
         </header>
-    )
+    );
 }

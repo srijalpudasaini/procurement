@@ -24,7 +24,7 @@ class UpdateEOIStatusJob implements ShouldQueue
      */
     public function handle(): void
     {
-        Eoi::where('deadline', '<', Carbon::now())
+        Eoi::where('deadline_date', '<', Carbon::now())
             ->where('status', '!=', 'closed')
             ->update(['status' => 'closed']);
     }

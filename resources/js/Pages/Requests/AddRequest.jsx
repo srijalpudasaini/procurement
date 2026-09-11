@@ -12,12 +12,6 @@ const AddRequest = ({ products }) => {
     const [productList, setProductList] = useState([{ product_id: "", quantity: "", price: "", priority: "", specifications: "", }]);
     const { data, setData, post, processing, errors, reset } = useForm({ products: [] });
 
-    const breadCrumbItems = [
-        { title: 'Dashboard', href: '/dashboard' },
-        { title: 'Requests', href: '/requests' },
-        { title: 'Create Request' }
-    ];
-
     useEffect(() => {
         setData('products', productList);
     }, [productList]);
@@ -42,6 +36,11 @@ const AddRequest = ({ products }) => {
         newValues[i][e.target.name] = e.target.value;
         setProductList(newValues);
     };
+    const breadCrumbItems = [
+        { title: 'Dashboard', href: '/dashboard' },
+        { title: 'Requests', href: '/requests' },
+        { title: 'Create Request' }
+    ];
 
     return (
         <AuthenticatedLayout>

@@ -15,8 +15,8 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             // $table->string('approvable_type')->default('pr');
-            $table->decimal('min_amount');
-            $table->decimal('max_amount');
+            $table->decimal('min_amount', 14, 2);
+            $table->decimal('max_amount', 14, 2);
             $table->timestamps();
         });
     }

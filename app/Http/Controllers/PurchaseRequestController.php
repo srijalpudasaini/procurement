@@ -69,7 +69,7 @@ class PurchaseRequestController extends Controller implements HasMiddleware
                         'purchase_request.purchase_request_items.product',
                         'purchase_request.user'
                     ])
-                    ->paginate(request('per_page', 10));
+                    ->paginate( $request->input('per_page', 10));
             } else {
                 $data = $this->purchaseRequestRepository->all(
                     $request->input('per_page', 10),
@@ -100,19 +100,20 @@ class PurchaseRequestController extends Controller implements HasMiddleware
             foreach ($purchaseRequest->products as $product) {
                 $total += $product['price'] * $product['quantity'];
             }
-
             $approval = ApprovalWorkflow::where('min_amount', '<=', $total)
                 ->where('max_amount', '>=', $total)
                 ->with('steps')
                 ->first();
 
-            // dd($approval);
+            if (!$approval) {
+                throw new \Exception('No approval workflow configured for total amount of ' . number_format($total, 2) . '. Please contact an administrator.');
+            }
+
             $request = $this->purchaseRequestRepository->store(['user_id' => $userId, 'total' => $total]);
 
             foreach ($purchaseRequest->products as $product) {
                 $this->purchaseRequestItemRepository->store(array_merge($product, ['purchase_request_id' => $request->id]));
             }
-
             foreach ($approval->steps as $step) {
                 $approvalRequest = new RequestApprovals();
                 $approvalRequest->purchase_request_id = $request->id;

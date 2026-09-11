@@ -12,6 +12,8 @@ use App\Models\PurchaseRequestItem;
 use App\Repositories\EoiRepository;
 use App\Repositories\PurchaseRequestRepository;
 use App\Repositories\PurchaseRequestItemRepository;
+// use App\Services\SplitAwardService;
+use App\Services\TopsisService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -24,12 +26,21 @@ class EoiController extends Controller implements HasMiddleware
     protected $eoiRepository;
     protected $purchaseRequestRepository;
     protected $purchaseRequestItemRepository;
+    protected $topsisService;
+    // protected $splitAwardService;
 
-    public function __construct(EoiRepository $eoiRepository, PurchaseRequestRepository $purchaseRequestRepository, PurchaseRequestItemRepository $purchaseRequestItemRepository)
-    {
+    public function __construct(
+        EoiRepository $eoiRepository,
+        PurchaseRequestRepository $purchaseRequestRepository,
+        PurchaseRequestItemRepository $purchaseRequestItemRepository,
+        TopsisService $topsisService
+        // SplitAwardService $splitAwardService
+    ) {
         $this->eoiRepository = $eoiRepository;
         $this->purchaseRequestRepository = $purchaseRequestRepository;
         $this->purchaseRequestItemRepository = $purchaseRequestItemRepository;
+        $this->topsisService = $topsisService;
+        // $this->splitAwardService = $splitAwardService;
     }
 
     public static function middleware(): array
@@ -51,7 +62,7 @@ class EoiController extends Controller implements HasMiddleware
     {
         $purchaseRequests = $this->purchaseRequestRepository->all(
             $request->input('per_page', 10),
-            ['user', 'purchase_request_items.product','approvals.approver','approvals.step'],
+            ['user', 'purchase_request_items.product', 'approvals.approver', 'approvals.step'],
             ['status' => 'approved']
         );
         return Inertia::render('EOI/AddEOI', compact('purchaseRequests'));
@@ -71,8 +82,7 @@ class EoiController extends Controller implements HasMiddleware
         return Inertia::render('EOI/PublishEOI', compact('purchaseRequests', 'documents', 'products'));
     }
 
-    public function store(EoiRequest $request)
-    {
+    public function store(EoiRequest $request){
         DB::beginTransaction();
         try {
             $latestEOI = Eoi::whereDate('created_at', now())->count() + 1;
@@ -83,7 +93,6 @@ class EoiController extends Controller implements HasMiddleware
                 $purchaseRequest->status = 'published';
                 $purchaseRequest->eoi_id = $eoi->id;
                 $purchaseRequest->save();
-
                 foreach ($purchaseRequest->purchase_request_items as $item) {
                     $matchedProduct = collect($request->products)->firstWhere('id', $item->id);
                     if ($matchedProduct) {
@@ -93,23 +102,28 @@ class EoiController extends Controller implements HasMiddleware
                     }
                 }
             }
-            foreach ($request->newProducts as $item) {
-                $this->purchaseRequestItemRepository->store(array_merge($item, ['selected' => true, 'eoi_id' => $eoi->id]));
+            if (!empty($request->newProducts)) {
+                foreach ($request->newProducts as $item) {
+                    $this->purchaseRequestItemRepository->store(array_merge($item, ['selected' => true, 'eoi_id' => $eoi->id]));
+                }
             }
-
             if (isset($request->documents)) {
                 foreach ($request->documents as $doc) {
                     $eoi->documents()->attach($doc['id'], ['required' => $doc['compulsory']]);
                 }
             }
-
-            foreach ($request->files1 as $file) {
-                $eoi_file = new EoiFile();
-                $eoi_file->eoi_id = $eoi->id;
-                $path = $file['file']->store('files', 'public');
-                $eoi_file->file_path = $path;
-                $eoi_file->file_name = $file['name'];
-                $eoi_file->save();
+            if (isset($request->files1)) {
+                foreach ($request->files1 as $index => $fileData) {
+                    $uploadedFile = $request->file("files1.$index.file") ?? ($fileData['file'] ?? null);
+                    if ($uploadedFile) {
+                        $eoi_file = new EoiFile();
+                        $eoi_file->eoi_id = $eoi->id;
+                        $path = $uploadedFile->store('files', 'public');
+                        $eoi_file->file_path = $path;
+                        $eoi_file->file_name = $request->input("files1.$index.name") ?? ($fileData['name'] ?? 'document');
+                        $eoi_file->save();
+                    }
+                }
             }
             DB::commit();
             return redirect()->route('eois.index')->with('success', 'Eoi created successfully!');
@@ -128,6 +142,7 @@ class EoiController extends Controller implements HasMiddleware
         }
 
         $query = $eoi->eoi_vendor_applications()
+            ->select('eoi_vendor_applications.*')
             ->with([
                 'vendor',
                 'documents.document',
@@ -152,10 +167,10 @@ class EoiController extends Controller implements HasMiddleware
         // Must have products filter
         if (!empty($filters['mustHave']) && is_array($filters['mustHave'])) {
             $requiredProductIds = $filters['mustHave'];
-            
-            $query->where(function($q) use ($requiredProductIds) {
+
+            $query->where(function ($q) use ($requiredProductIds) {
                 foreach ($requiredProductIds as $productId) {
-                    $q->whereHas('proposals', function($q) use ($productId) {
+                    $q->whereHas('proposals', function ($q) use ($productId) {
                         $q->where('purchase_request_item_id', $productId);
                     });
                 }
@@ -183,11 +198,10 @@ class EoiController extends Controller implements HasMiddleware
             }, '>=', $requiredDocumentIds->count());
         }
 
-        if(!empty($filters['deliveryTime'])){
+        if (!empty($filters['deliveryTime'])) {
             $deadline = new Carbon($eoi->deadline_date);
 
-            $query->where('delivery_date','<=',$deadline->addDays((int)$filters['deliveryTime']));
-            
+            $query->where('delivery_date', '<=', $deadline->addDays((int)$filters['deliveryTime']));
         }
 
         // Price range filter
@@ -197,14 +211,14 @@ class EoiController extends Controller implements HasMiddleware
                 ->selectRaw('SUM(eoi_vendor_proposals.price * purchase_request_items.quantity) as total_price')
                 ->join('purchase_request_items', 'eoi_vendor_proposals.purchase_request_item_id', '=', 'purchase_request_items.id')
                 ->groupBy('eoi_vendor_application_id');
-                
+
             if (!empty($filters['min_price'])) {
                 $subQuery->having('total_price', '>=', (float)$filters['min_price']);
             }
             if (!empty($filters['max_price'])) {
                 $subQuery->having('total_price', '<=', (float)$filters['max_price']);
             }
-            
+
             $query->whereIn('id', $subQuery->pluck('eoi_vendor_application_id'));
         }
 
@@ -219,24 +233,24 @@ class EoiController extends Controller implements HasMiddleware
         if (!empty($filters['sort_by'])) {
             $direction = $filters['sort'] === 'asc' ? 'asc' : 'desc';
             $productId = PurchaseRequestItem::find($filters['sort_by'])->product_id;
-        
+
             $query->addSelect([
                 'has_product' => EoiVendorProposal::selectRaw('COUNT(*) > 0')
                     ->whereColumn('eoi_vendor_proposals.eoi_vendor_application_id', 'eoi_vendor_applications.id')
-                    ->whereHas('purchase_request_item', function($q) use ($productId) {
+                    ->whereHas('purchase_request_item', function ($q) use ($productId) {
                         $q->where('product_id', $productId);
                     })
             ]);
-        
+
             $query->addSelect([
                 'product_price' => EoiVendorProposal::select('price')
                     ->whereColumn('eoi_vendor_proposals.eoi_vendor_application_id', 'eoi_vendor_applications.id')
                     ->where('purchase_request_item_id', $filters['sort_by'])
                     ->limit(1)
             ]);
-        
+
             $query->orderBy('has_product', 'desc') // Vendors with product first
-                  ->orderBy('product_price', $direction); // Then sort by price
+                ->orderBy('product_price', $direction); // Then sort by price
         }
 
         // Product coverage sorting
@@ -260,15 +274,39 @@ class EoiController extends Controller implements HasMiddleware
 
         $submissions = $query->paginate($request->input('per_page', 10));
 
+        // 1. Calculate TOPSIS rankings across all submissions for this EOI
+        $allApplications = $eoi->eoi_vendor_applications()
+            ->with(['vendor', 'documents.document', 'proposals.purchase_request_item.product'])
+            ->get();
+
+        $totalProductsCount = $eoi->purchase_request_items->count();
+        $totalRequiredDocsCount = $eoi->eoi_documents->where('required', true)->count();
+        $topsisDetails = $this->topsisService->evaluateDetailed($allApplications, $totalProductsCount, $totalRequiredDocsCount);
+        $topsisRankings = $topsisDetails['rankings'] ?? [];
+
+        // Attach TOPSIS evaluation to each paginated submission item
+        $submissions->getCollection()->transform(function ($item) use ($topsisRankings) {
+            if (isset($topsisRankings[$item->id])) {
+                $item->topsis = $topsisRankings[$item->id];
+            }
+            return $item;
+        });
+
+        // 2. Calculate Optimal Split-Award Recommendation (Disabled for now)
+        // $splitAward = $this->splitAwardService->calculateOptimalSplit($eoi);
+
         return Inertia::render('EOI/SubmissionsEOI', [
             'eoi' => $eoi,
-            'submissions' => $submissions
+            'submissions' => $submissions,
+            // 'splitAward' => $splitAward,
+            'topsisRankings' => $topsisRankings,
+            'topsisDetails' => $topsisDetails,
         ]);
     }
     public function edit($id)
     {
         $eoi = $this->eoiRepository->find($id);
-        return Inertia::render('EOI/EditEOI', compact('eoi', 'eois'));
+        return Inertia::render('EOI/EditEOI', compact('eoi'));
     }
     public function update(EoiRequest $request, $id)
     {

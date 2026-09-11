@@ -31,31 +31,39 @@ class HandleInertiaRequests extends Middleware
      * @return array<string, mixed>
      */
     public function share(Request $request): array
-{
-    $user = Auth::guard('web')->id() ? User::find(Auth::guard('web')->id()) : null;
-    $vendor = Auth::guard('vendor')->user();
+    {
+        $user = $request->user('web');
+        $vendor = $request->user('vendor');
 
-    return array_merge(parent::share($request), [
-        'auth' => [
-            'user' => $user ? [
+        $userData = null;
+        if ($user) {
+            $user->loadMissing('roles.permissions');
+            $roles = $user->roles->pluck('name')->toArray();
+            $permissions = $user->roles->flatMap->permissions->pluck('name')->unique()->values()->toArray();
+
+            $userData = [
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
-                'is_superadmin' => $user->is_superadmin,
-                'roles' => $user->roles->pluck('name')->toArray(), // Get user roles
-                'permissions' => $user->getPermissionsViaRoles()->pluck('name')->toArray(), // Get user permissions
-            ] : null,
+                'is_superadmin' => (bool) $user->is_superadmin,
+                'roles' => $roles,
+                'permissions' => $permissions,
+            ];
+        }
 
-            'vendor' => $vendor ? [
-                'id' => $vendor->id,
-                'name' => $vendor->name,
-                'email' => $vendor->email,
-            ] : null,
-        ],
-        'flash' => [
-            'success' => session('success'),
-            'error' => session('error'),
-        ],
-    ]);
-}
+        return array_merge(parent::share($request), [
+            'auth' => [
+                'user' => $userData,
+                'vendor' => $vendor ? [
+                    'id' => $vendor->id,
+                    'name' => $vendor->name,
+                    'email' => $vendor->email,
+                ] : null,
+            ],
+            'flash' => [
+                'success' => session('success'),
+                'error' => session('error'),
+            ],
+        ]);
+    }
 }

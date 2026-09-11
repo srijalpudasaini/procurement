@@ -6,17 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class RequestApprovals extends Model
 {
-    protected $fillable = [
-        'approvable_type',
-        'approvable_id',
-        'approver_id',
-        'approval_step_id',
-        'status',
-        'remark',
-    ];
-    public function approvable()
-    {
-        return $this->morphTo();
+    protected $guarded = [];
+    public function purchase_request(){
+        return $this->belongsTo(PurchaseRequest::class);
     }
 
     public function step(){

@@ -221,7 +221,7 @@ const AddEOI = ({ purchaseRequests }) => {
                       <th className='p-2 border'>Status</th>
                       <th className='p-2 border'>Remarks</th>
                     </tr>
-                    {requestModal?.approvals.map((approval, index) => (
+                    {requestModal?.approvals?.map((approval, index) => (
                       <tr key={index}>
                         <td className='p-2 border'>{index + 1}</td>
                         <td className='p-2 border'>{approval.approver?.name}</td>

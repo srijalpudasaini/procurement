@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Eoi;
 use App\Models\Product;
+use App\Services\TopsisService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -10,6 +12,13 @@ use Inertia\Inertia;
 
 class ReportController extends Controller
 {
+    protected $topsisService;
+
+    public function __construct(TopsisService $topsisService)
+    {
+        $this->topsisService = $topsisService;
+    }
+
     public function index(Request $request)
     {
         $totalsSubquery = DB::table('purchase_request_items')
@@ -135,70 +144,52 @@ class ReportController extends Controller
             }
         }
 
-        // Score vendors and keep only top 3 per product
+        // Score vendors and keep top 3 per EOI using TOPSIS
         foreach ($grouped as &$eoi) {
-            // Collect total proposed amount per vendor per EOI
-            $vendorTotals = [];
+            $eoiModel = Eoi::with([
+                'purchase_request_items',
+                'eoi_documents',
+                'eoi_vendor_applications.vendor',
+                'eoi_vendor_applications.documents.document',
+                'eoi_vendor_applications.proposals.purchase_request_item.product'
+            ])->find($eoi['eoi_id']);
 
-            foreach ($eoi['products'] as &$product) {
-                $priorityBonus = match ($product['priority']) {
-                    'high' => 10,
-                    'medium' => 5,
-                    'low' => 1,
-                    default => 0,
-                };
+            $topVendors = [];
+            if ($eoiModel && $eoiModel->eoi_vendor_applications->isNotEmpty()) {
+                $totalProducts = $eoiModel->purchase_request_items->count();
+                $totalDocs = $eoiModel->eoi_documents->where('required', true)->count();
+                $topsisResults = $this->topsisService->evaluate($eoiModel->eoi_vendor_applications, $totalProducts, $totalDocs);
 
-                foreach ($product['vendor_submissions'] as &$submission) {
-                    $daysToDelivery = Carbon::parse($submission['delivery_date'])->diffInDays(now());
-
-                    // Score calculation
-                    $score =
-                        $priorityBonus +
-                        ($submission['document_count'] * 2) +
-                        ($submission['rating'] * 2) +
-                        max(0, 30 - $daysToDelivery);
-
-                    $submission['score'] = $score;
-
-                    // Add to vendor's total proposed price for this EOI
-                    $vendorId = $submission['vendor_id'];
-                    if (!isset($vendorTotals[$vendorId])) {
-                        $vendorTotals[$vendorId] = [
-                            'vendor_id' => $vendorId,
-                            'vendor_name' => $submission['vendor_name'],
-                            'total_proposed_amount' => 0,
-                            'total_score' => 0,
-                        ];
-                    }
-
-                    $vendorTotals[$vendorId]['total_proposed_amount'] += $submission['proposed_price'];
-                    $vendorTotals[$vendorId]['total_score'] += $score;
+                foreach ($topsisResults as $res) {
+                    $topVendors[] = [
+                        'vendor_id' => $res['vendor_id'],
+                        'vendor_name' => $res['vendor_name'],
+                        'total_proposed_amount' => $res['raw_price'],
+                        'total_score' => $res['percentage'],
+                        'topsis_score' => $res['score'],
+                        'rank' => $res['rank'],
+                    ];
                 }
 
-                // We'll do final top-3 selection after looping all products
+                usort($topVendors, fn($a, $b) => $a['rank'] <=> $b['rank']);
             }
 
-            // Get top 3 vendors across the whole EOI by score
-            usort($vendorTotals, fn($a, $b) => $b['total_score'] <=> $a['total_score']);
-            $topVendors = array_values($vendorTotals);
-            $topVendors = array_slice($topVendors, 0, 3);
-
-            // Store top 3 vendor ids
-            $topVendorIds = array_column($topVendors, 'vendor_id');
-
-            // Now for each product, only keep submissions from top 3 vendors
-            foreach ($eoi['products'] as &$product) {
-                $product['vendor_submissions'] = array_values(array_filter(
-                    $product['vendor_submissions'],
-                    fn($s) => in_array($s['vendor_id'], $topVendorIds)
-                ));
-
-                // Sort vendors by proposed price for the product
-                usort($product['vendor_submissions'], fn($a, $b) => $a['proposed_price'] <=> $b['proposed_price']);
-            }
+            $top3 = array_slice($topVendors, 0, 3);
+            $top3Ids = array_column($top3, 'vendor_id');
 
             // Attach top vendor info to the EOI
-            $eoi['top_vendors'] = $topVendors;
+            $eoi['top_vendors'] = $top3;
+
+            // For each product, keep submissions from top 3 vendors
+            foreach ($eoi['products'] as &$product) {
+                if (!empty($top3Ids)) {
+                    $product['vendor_submissions'] = array_values(array_filter(
+                        $product['vendor_submissions'],
+                        fn($s) => in_array($s['vendor_id'], $top3Ids)
+                    ));
+                }
+                usort($product['vendor_submissions'], fn($a, $b) => $a['proposed_price'] <=> $b['proposed_price']);
+            }
         }
 
 
@@ -207,8 +198,7 @@ class ReportController extends Controller
             $eoi['products'] = array_values($eoi['products']);
             return $eoi;
         }, $grouped));
-        $products = Product::all();
 
-        return Inertia::render('Reports/EOI', compact('results', 'products'));
+        return Inertia::render('Reports/EOI', compact('results'));
     }
 }

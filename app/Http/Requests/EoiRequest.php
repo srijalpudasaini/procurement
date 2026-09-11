@@ -30,7 +30,7 @@ class EoiRequest extends FormRequest
             'documents' => 'nullable|array',
             'documents.*.id' => 'exists:documents,id',
             'documents.*.compulsory' => 'boolean',
-            'files1'=>'nullable|array',
+            // 'files1'=>'nullable|array',
             'files1.*.name' => 'required|string',
             'files1.*.file' => 'required|file|mimes:jpeg,png,pdf,gif|max:4096',
             'products'=>'array|min:1',
