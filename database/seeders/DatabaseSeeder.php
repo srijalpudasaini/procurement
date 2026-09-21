@@ -33,6 +33,7 @@ class DatabaseSeeder extends Seeder
         // 1. Permissions & Roles
         $permissions = [
             'view_request',
+            'view_all_request',
             'approve_request',
             'create_request',
             'delete_request',
@@ -73,14 +74,12 @@ class DatabaseSeeder extends Seeder
             Permission::firstOrCreate(['name' => $permission]);
         }
 
-        $superAdminRole = Role::firstOrCreate(['name' => 'super_admin']);
         $adminRole = Role::firstOrCreate(['name' => 'admin']);
         $approverRole = Role::firstOrCreate(['name' => 'approver']);
         $officerRole = Role::firstOrCreate(['name' => 'procurement_officer']);
         $employeeRole = Role::firstOrCreate(['name' => 'employee']);
 
         $adminRole->givePermissionTo($permissions);
-        $superAdminRole->givePermissionTo($permissions);
 
         $approverRole->givePermissionTo([
             'view_request',
@@ -94,6 +93,7 @@ class DatabaseSeeder extends Seeder
 
         $officerRole->givePermissionTo([
             'view_request',
+            'view_all_request',
             'view_eoi',
             'create_eoi',
             'edit_eoi',
@@ -123,7 +123,6 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make('admin123'),
             'is_superadmin' => true,
         ]);
-        $superAdmin->assignRole($superAdminRole);
 
         $admin = User::create([
             'name' => 'General Administrator',
@@ -274,7 +273,7 @@ class DatabaseSeeder extends Seeder
             'step_number' => 1,
             'previous_step_id' => null,
         ]);
-        ApprovalStep::create([
+        $step2_2 = ApprovalStep::create([
             'approval_workflow_id' => $wfTier2->id,
             'role_id' => $adminRole->id,
             'step_number' => 2,
@@ -293,7 +292,7 @@ class DatabaseSeeder extends Seeder
             'step_number' => 1,
             'previous_step_id' => null,
         ]);
-        ApprovalStep::create([
+        $step3_2 = ApprovalStep::create([
             'approval_workflow_id' => $wfTier3->id,
             'role_id' => $adminRole->id,
             'step_number' => 2,
@@ -411,6 +410,22 @@ class DatabaseSeeder extends Seeder
             'selected' => true,
         ]);
 
+        // Attach approval steps to PR 1 (Tier 3: Approver then Admin)
+        RequestApprovals::create([
+            'purchase_request_id' => $pr1->id,
+            'approval_step_id' => $step3_1->id,
+            'approver_id' => $approver->id,
+            'status' => 'approved',
+            'remark' => 'Technical specifications and pricing approved.',
+        ]);
+        RequestApprovals::create([
+            'purchase_request_id' => $pr1->id,
+            'approval_step_id' => $step3_2->id,
+            'approver_id' => $admin->id,
+            'status' => 'approved',
+            'remark' => 'Final procurement clearance granted.',
+        ]);
+
         // PR 2: 6 Managed Network Switches -> Total Rs. 570,000 (Approved & converted to EOI #2)
         $pr2 = PurchaseRequest::create([
             'user_id' => $employee->id,
@@ -425,6 +440,21 @@ class DatabaseSeeder extends Seeder
             'specifications' => 'Cisco Catalyst 24-Port Gigabit PoE+ Managed Switch',
             'priority' => 'high',
             'selected' => true,
+        ]);
+        // Attach approval steps to PR 2 (Tier 3: Approver then Admin)
+        RequestApprovals::create([
+            'purchase_request_id' => $pr2->id,
+            'approval_step_id' => $step3_1->id,
+            'approver_id' => $approver->id,
+            'status' => 'approved',
+            'remark' => 'Approved by Department Director.',
+        ]);
+        RequestApprovals::create([
+            'purchase_request_id' => $pr2->id,
+            'approval_step_id' => $step3_2->id,
+            'approver_id' => $admin->id,
+            'status' => 'approved',
+            'remark' => 'Approved for tender publication.',
         ]);
 
         // PR 3: Pending Approval Request for Chairs and Paper -> Total Rs. 140,500
@@ -451,10 +481,16 @@ class DatabaseSeeder extends Seeder
             'priority' => 'low',
             'selected' => false,
         ]);
-        // Attach approval steps to PR 3
+        // Attach approval steps to PR 3 (Tier 2: Step 1 approver pending, Step 2 admin pending)
         RequestApprovals::create([
             'purchase_request_id' => $pr3->id,
             'approval_step_id' => $step2_1->id,
+            'status' => 'pending',
+            'remark' => null,
+        ]);
+        RequestApprovals::create([
+            'purchase_request_id' => $pr3->id,
+            'approval_step_id' => $step2_2->id,
             'status' => 'pending',
             'remark' => null,
         ]);

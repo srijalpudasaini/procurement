@@ -12,7 +12,6 @@ use App\Models\PurchaseRequestItem;
 use App\Repositories\EoiRepository;
 use App\Repositories\PurchaseRequestRepository;
 use App\Repositories\PurchaseRequestItemRepository;
-// use App\Services\SplitAwardService;
 use App\Services\TopsisService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -27,20 +26,17 @@ class EoiController extends Controller implements HasMiddleware
     protected $purchaseRequestRepository;
     protected $purchaseRequestItemRepository;
     protected $topsisService;
-    // protected $splitAwardService;
 
     public function __construct(
         EoiRepository $eoiRepository,
         PurchaseRequestRepository $purchaseRequestRepository,
         PurchaseRequestItemRepository $purchaseRequestItemRepository,
         TopsisService $topsisService
-        // SplitAwardService $splitAwardService
     ) {
         $this->eoiRepository = $eoiRepository;
         $this->purchaseRequestRepository = $purchaseRequestRepository;
         $this->purchaseRequestItemRepository = $purchaseRequestItemRepository;
         $this->topsisService = $topsisService;
-        // $this->splitAwardService = $splitAwardService;
     }
 
     public static function middleware(): array
@@ -292,13 +288,9 @@ class EoiController extends Controller implements HasMiddleware
             return $item;
         });
 
-        // 2. Calculate Optimal Split-Award Recommendation (Disabled for now)
-        // $splitAward = $this->splitAwardService->calculateOptimalSplit($eoi);
-
         return Inertia::render('EOI/SubmissionsEOI', [
             'eoi' => $eoi,
             'submissions' => $submissions,
-            // 'splitAward' => $splitAward,
             'topsisRankings' => $topsisRankings,
             'topsisDetails' => $topsisDetails,
         ]);

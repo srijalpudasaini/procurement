@@ -84,29 +84,29 @@ export default function Dashboard({
 
                 {/* Overall KPI Metrics Cards - Rendered dynamically based on View Permissions */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-                    {/* 1. Overall Purchase Requisitions Card */}
-                    {hasPermission("view_request") && (
+                    {/* 1. Purchase Requisitions Card */}
+                    {(hasPermission("view_all_request") || hasPermission("view_request")) && (
                         <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex flex-col justify-between">
                             <div>
                                 <div className="flex justify-between items-center">
                                     <span className="text-xs font-bold uppercase tracking-wider text-gray-500">
-                                        Purchase Requisitions
+                                        {hasPermission("view_all_request") ? "Purchase Requisitions (Org)" : "My Requisitions"}
                                     </span>
                                     <span className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-sm">
                                         <i className="fa fa-file-text-o"></i>
                                     </span>
                                 </div>
                                 <div className="text-2xl font-extrabold text-gray-900 mt-2">
-                                    {stats.total_requests ?? 0}
+                                    {hasPermission("view_all_request") ? (stats.total_requests ?? 0) : (stats.my_total_requests ?? 0)}
                                 </div>
                             </div>
                             <div className="text-xs text-gray-500 mt-3 pt-2.5 border-t border-gray-100 flex items-center justify-between">
                                 <div className="flex gap-2.5">
                                     <span className="text-amber-600 font-semibold">
-                                        {stats.pending_requests ?? 0} Pending
+                                        {hasPermission("view_all_request") ? (stats.pending_requests ?? 0) : (stats.my_pending_requests ?? 0)} Pending
                                     </span>
                                     <span className="text-emerald-600 font-semibold">
-                                        {stats.approved_requests ?? 0} Approved
+                                        {hasPermission("view_all_request") ? (stats.approved_requests ?? 0) : (stats.my_approved_requests ?? 0)} Approved
                                     </span>
                                 </div>
                                 <Link
@@ -298,17 +298,17 @@ export default function Dashboard({
                 {/* Activity Tables Grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {/* Left Column: Purchase Requisitions (Organization or Personal depending on view_request permission) */}
-                    {(hasPermission("view_request") || hasPermission("create_request")) && (
+                    {(hasPermission("view_all_request") || hasPermission("view_request") || hasPermission("create_request")) && (
                         <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                             <div className="p-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
                                 <div>
                                     <h3 className="text-sm font-bold text-gray-800">
-                                        {hasPermission("view_request")
+                                        {hasPermission("view_all_request")
                                             ? "Recent Purchase Requisitions"
                                             : "My Recent Requisitions"}
                                     </h3>
                                     <p className="text-[11px] text-gray-500">
-                                        {hasPermission("view_request")
+                                        {hasPermission("view_all_request")
                                             ? "Latest requisitions across the organization"
                                             : "Track the status of your submitted requests"}
                                     </p>

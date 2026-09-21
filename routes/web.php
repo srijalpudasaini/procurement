@@ -64,6 +64,7 @@ Route::middleware(['auth'])->group(function(){
         $isSuperAdmin = !empty($user->is_superadmin);
         $canApprove = $user->can('approve_request') || $isSuperAdmin;
         $canViewRequest = $user->can('view_request') || $isSuperAdmin;
+        $canViewAllRequest = $user->can('view_all_request') || $isSuperAdmin;
         $canViewEoi = $user->can('view_eoi') || $isSuperAdmin;
         $canCreateEoi = $user->can('create_eoi') || $isSuperAdmin;
 
@@ -89,7 +90,7 @@ Route::middleware(['auth'])->group(function(){
         ];
 
         $recentRequestsQuery = PurchaseRequest::with('user')->latest();
-        if (!$isSuperAdmin && !$canViewRequest && !$canApprove) {
+        if (!$canViewAllRequest) {
             $recentRequestsQuery->where('user_id', $user->id);
         }
         $recentRequests = $recentRequestsQuery->take(5)->get();
@@ -105,6 +106,7 @@ Route::middleware(['auth'])->group(function(){
             'userRole' => [
                 'is_superadmin' => $isSuperAdmin,
                 'can_approve' => $canApprove,
+                'can_view_all_request' => $canViewAllRequest,
                 'can_manage_eoi' => $canCreateEoi || $canViewEoi,
             ],
         ]);

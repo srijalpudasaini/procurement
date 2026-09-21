@@ -4,6 +4,8 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+use Illuminate\Validation\Rule;
+
 class RoleRequest extends FormRequest
 {
     /**
@@ -21,11 +23,18 @@ class RoleRequest extends FormRequest
      */
     public function rules(): array
     {
-        // dd($this->permissions);
+        $roleParam = $this->route('role');
+        $roleId = $roleParam instanceof \Spatie\Permission\Models\Role ? $roleParam->id : ($roleParam ?? $this->id);
+
         return [
-            'name'=>'required|unique:roles,name,'.$this->id,
-            'permissions'=>'nullable|array',
-            'permissions.*'=>'exists:permissions,name'
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('roles', 'name')->ignore($roleId),
+            ],
+            'permissions' => 'nullable|array',
+            'permissions.*' => 'exists:permissions,name',
         ];
     }
 }

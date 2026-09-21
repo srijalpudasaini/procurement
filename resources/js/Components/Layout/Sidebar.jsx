@@ -27,7 +27,7 @@ export default function Sidebar() {
             name: "Purchase Requests",
             href: "/requests",
             icon: "fa-file-text-o",
-            visible: hasPermission("view_request"),
+            visible: hasPermission("view_request") || hasPermission("view_all_request") || hasPermission("approve_request"),
         },
         {
             name: "EOI Tenders",
