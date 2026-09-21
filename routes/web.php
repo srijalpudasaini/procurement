@@ -14,6 +14,7 @@ use App\Http\Controllers\PurchaseRequestController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\VendorController;
 use App\Models\ApprovalWorkflow;
 use App\Models\Category;
 use App\Models\Eoi;
@@ -125,6 +126,13 @@ Route::middleware(['auth'])->group(function(){
 
     Route::put('requests/updateStatus/{id}',[PurchaseRequestController::class,'updateStatus']);
     Route::get('/eois/submissions/{id}',[EoiController::class,'submissions']);
+    Route::post('/eois/{eoi}/items/{item}/award', [EoiController::class, 'awardItemProposal'])->name('eois.items.award');
+    Route::post('/eois/{eoi}/items/{item}/revoke', [EoiController::class, 'revokeItemAward'])->name('eois.items.revoke');
+    Route::post('/eois/{eoi}/applications/{application}/award', [EoiController::class, 'awardApplication'])->name('eois.applications.award');
+    Route::post('/eois/{eoi}/applications/{application}/revoke', [EoiController::class, 'revokeApplication'])->name('eois.applications.revoke');
+    Route::post('/eois/{eoi}/awards', [EoiController::class, 'awardSelection'])->name('eois.awards.save');
+    Route::post('/eois/{eoi}/awards/revoke-all', [EoiController::class, 'revokeAllAwards'])->name('eois.awards.revokeAll');
+    Route::post('/vendors/{id}/rating', [VendorController::class, 'updateRating'])->name('vendors.rating.update');
     Route::get('/reports',[ReportController::class,'index']);
     // Route::get('/roles', function(){
     //     return 'abc';

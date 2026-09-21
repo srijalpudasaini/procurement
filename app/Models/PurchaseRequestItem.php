@@ -14,7 +14,8 @@ class PurchaseRequestItem extends Model
         'price',
         'quantity',
         'specifications',
-        'priority'
+        'priority',
+        'awarded_vendor_proposal_id',
     ];
     public function purchase_request(){
         return $this->belongsTo(PurchaseRequest::class);
@@ -30,5 +31,9 @@ class PurchaseRequestItem extends Model
 
     public function proposals(){
         return $this->hasMany(EoiVendorProposal::class);
+    }
+
+    public function awarded_proposal(){
+        return $this->belongsTo(EoiVendorProposal::class, 'awarded_vendor_proposal_id');
     }
 }

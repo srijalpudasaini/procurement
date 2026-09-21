@@ -22,4 +22,17 @@ class EoiVendorApplication extends Model
     public function documents(){
         return $this->hasMany(EoiVendorDocument::class);
     }
+
+    public function syncStatus()
+    {
+        $hasAwarded = $this->proposals()->where('status', 'awarded')->exists();
+        if ($hasAwarded) {
+            $this->status = 'approved';
+        } else {
+            $hasPending = $this->proposals()->where('status', 'pending')->exists();
+            $this->status = $hasPending ? 'pending' : 'rejected';
+        }
+        $this->save();
+        return $this->status;
+    }
 }

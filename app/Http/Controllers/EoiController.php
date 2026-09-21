@@ -6,6 +6,7 @@ use App\Http\Requests\EoiRequest;
 use App\Models\Document;
 use App\Models\Eoi;
 use App\Models\EoiFile;
+use App\Models\EoiVendorApplication;
 use App\Models\EoiVendorProposal;
 use App\Models\Product;
 use App\Models\PurchaseRequestItem;
@@ -45,7 +46,7 @@ class EoiController extends Controller implements HasMiddleware
             new Middleware('permission:view_eoi', ['index']),
             new Middleware('permission:create_eoi', ['create', 'store', 'publish']),
             new Middleware('permission:view_submissions_eoi', ['submissions']),
-            new Middleware('permission:edit_eoi', ['edit', 'update']),
+            new Middleware('permission:edit_eoi', ['edit', 'update', 'awardItemProposal', 'revokeItemAward', 'awardApplication', 'revokeApplication', 'awardSelection', 'revokeAllAwards']),
             new Middleware('permission:delete_eoi', ['destroy']),
         ];
     }
@@ -131,7 +132,12 @@ class EoiController extends Controller implements HasMiddleware
 
     public function submissions(Request $request, $id)
     {
-        $eoi = $this->eoiRepository->find($id, ['purchase_request_items.product', 'eoi_documents.document']);
+        $eoi = $this->eoiRepository->find($id, [
+            'purchase_request_items.product',
+            'purchase_request_items.awarded_proposal.eoi_vendor_application.vendor',
+            'purchase_request_items.proposals.eoi_vendor_application.vendor',
+            'eoi_documents.document'
+        ]);
 
         if ($eoi->status !== 'closed') {
             abort(404);
@@ -291,6 +297,7 @@ class EoiController extends Controller implements HasMiddleware
         return Inertia::render('EOI/SubmissionsEOI', [
             'eoi' => $eoi,
             'submissions' => $submissions,
+            'allApplications' => $allApplications,
             'topsisRankings' => $topsisRankings,
             'topsisDetails' => $topsisDetails,
         ]);
@@ -319,4 +326,278 @@ class EoiController extends Controller implements HasMiddleware
             return redirect()->route('eois.index')->with('error', $e->getMessage());
         }
     }
+
+    public function awardItemProposal(Request $request, $eoiId, $itemId)
+    {
+        $request->validate([
+            'proposal_id' => 'required|exists:eoi_vendor_proposals,id',
+        ]);
+
+        $eoi = Eoi::findOrFail($eoiId);
+        if ($eoi->status !== 'closed') {
+            return redirect()->back()->with('error', 'Vendors can only be selected after the EOI is closed.');
+        }
+
+        $item = PurchaseRequestItem::where('eoi_id', $eoi->id)->findOrFail($itemId);
+        $proposal = EoiVendorProposal::where('purchase_request_item_id', $item->id)->findOrFail($request->proposal_id);
+
+        DB::beginTransaction();
+        try {
+            // 1. Mark this proposal as awarded
+            $proposal->status = 'awarded';
+            $proposal->save();
+
+            // 2. Reject other proposals for this specific item
+            EoiVendorProposal::where('purchase_request_item_id', $item->id)
+                ->where('id', '!=', $proposal->id)
+                ->update(['status' => 'rejected']);
+
+            // 3. Link awarded proposal to the item
+            $item->awarded_vendor_proposal_id = $proposal->id;
+            $item->save();
+
+            // 4. Sync application status for the winning vendor
+            $winningApplication = $proposal->eoi_vendor_application;
+            if ($winningApplication) {
+                $winningApplication->syncStatus();
+            }
+
+            // 5. Sync application statuses for competing vendors who bid on this item
+            $competingApplicationIds = EoiVendorProposal::where('purchase_request_item_id', $item->id)
+                ->where('id', '!=', $proposal->id)
+                ->pluck('eoi_vendor_application_id')
+                ->unique();
+
+            foreach ($competingApplicationIds as $appId) {
+                $app = EoiVendorApplication::find($appId);
+                if ($app) {
+                    $app->syncStatus();
+                }
+            }
+
+            DB::commit();
+            return redirect()->back()->with('success', 'Product award assigned successfully!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Failed to award product: ' . $e->getMessage());
+        }
+    }
+
+    public function revokeItemAward(Request $request, $eoiId, $itemId)
+    {
+        $eoi = Eoi::findOrFail($eoiId);
+        if ($eoi->status !== 'closed') {
+            return redirect()->back()->with('error', 'Actions can only be performed on closed EOIs.');
+        }
+
+        $item = PurchaseRequestItem::where('eoi_id', $eoi->id)->findOrFail($itemId);
+
+        DB::beginTransaction();
+        try {
+            $prevProposalId = $item->awarded_vendor_proposal_id;
+            if ($prevProposalId) {
+                $proposal = EoiVendorProposal::find($prevProposalId);
+                if ($proposal) {
+                    $proposal->status = 'pending';
+                    $proposal->save();
+
+                    // Revert competing proposals to pending
+                    EoiVendorProposal::where('purchase_request_item_id', $item->id)
+                        ->where('id', '!=', $proposal->id)
+                        ->update(['status' => 'pending']);
+
+                    $item->awarded_vendor_proposal_id = null;
+                    $item->save();
+
+                    $winningApplication = $proposal->eoi_vendor_application;
+                    if ($winningApplication) {
+                        $winningApplication->syncStatus();
+                    }
+                }
+            }
+
+            DB::commit();
+            return redirect()->back()->with('success', 'Product award revoked successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Failed to revoke product award: ' . $e->getMessage());
+        }
+    }
+
+    public function awardApplication(Request $request, $eoiId, $applicationId)
+    {
+        $eoi = Eoi::findOrFail($eoiId);
+        if ($eoi->status !== 'closed') {
+            return redirect()->back()->with('error', 'Vendors can only be selected after the EOI is closed.');
+        }
+
+        $application = EoiVendorApplication::where('eoi_id', $eoi->id)->findOrFail($applicationId);
+
+        DB::beginTransaction();
+        try {
+            foreach ($application->proposals as $proposal) {
+                $item = $proposal->purchase_request_item;
+                if ($item) {
+                    $proposal->status = 'awarded';
+                    $proposal->save();
+
+                    EoiVendorProposal::where('purchase_request_item_id', $item->id)
+                        ->where('id', '!=', $proposal->id)
+                        ->update(['status' => 'rejected']);
+
+                    $item->awarded_vendor_proposal_id = $proposal->id;
+                    $item->save();
+                }
+            }
+
+            $application->syncStatus();
+
+            $otherApplications = EoiVendorApplication::where('eoi_id', $eoi->id)
+                ->where('id', '!=', $application->id)
+                ->get();
+
+            foreach ($otherApplications as $otherApp) {
+                $otherApp->syncStatus();
+            }
+
+            DB::commit();
+            return redirect()->back()->with('success', "All items offered by {$application->vendor->name} awarded successfully!");
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Failed to award vendor application: ' . $e->getMessage());
+        }
+    }
+
+    public function revokeApplication(Request $request, $eoiId, $applicationId)
+    {
+        $eoi = Eoi::findOrFail($eoiId);
+        if ($eoi->status !== 'closed') {
+            return redirect()->back()->with('error', 'Actions can only be performed on closed EOIs.');
+        }
+
+        $application = EoiVendorApplication::where('eoi_id', $eoi->id)->findOrFail($applicationId);
+
+        DB::beginTransaction();
+        try {
+            foreach ($application->proposals as $proposal) {
+                if ($proposal->status === 'awarded') {
+                    $proposal->status = 'pending';
+                    $proposal->save();
+
+                    $item = $proposal->purchase_request_item;
+                    if ($item && $item->awarded_vendor_proposal_id == $proposal->id) {
+                        $item->awarded_vendor_proposal_id = null;
+                        $item->save();
+
+                        EoiVendorProposal::where('purchase_request_item_id', $item->id)
+                            ->update(['status' => 'pending']);
+                    }
+                }
+            }
+
+            $application->syncStatus();
+
+            $otherApplications = EoiVendorApplication::where('eoi_id', $eoi->id)
+                ->where('id', '!=', $application->id)
+                ->get();
+
+            foreach ($otherApplications as $otherApp) {
+                $otherApp->syncStatus();
+            }
+
+            DB::commit();
+            return redirect()->back()->with('success', "Award for {$application->vendor->name} revoked.");
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Failed to revoke award: ' . $e->getMessage());
+        }
+    }
+
+    public function awardSelection(Request $request, $eoiId)
+    {
+        $request->validate([
+            'selections' => 'required|array',
+        ]);
+
+        $eoi = Eoi::findOrFail($eoiId);
+        if ($eoi->status !== 'closed') {
+            return redirect()->back()->with('error', 'Awards can only be assigned after the EOI is closed.');
+        }
+
+        DB::beginTransaction();
+        try {
+            $selections = $request->input('selections', []);
+            $items = PurchaseRequestItem::where('eoi_id', $eoi->id)->get();
+
+            foreach ($items as $item) {
+                $chosenProposalId = $selections[$item->id] ?? null;
+
+                if ($chosenProposalId) {
+                    $proposal = EoiVendorProposal::where('purchase_request_item_id', $item->id)->find($chosenProposalId);
+                    if ($proposal) {
+                        $proposal->status = 'awarded';
+                        $proposal->save();
+
+                        EoiVendorProposal::where('purchase_request_item_id', $item->id)
+                            ->where('id', '!=', $proposal->id)
+                            ->update(['status' => 'rejected']);
+
+                        $item->awarded_vendor_proposal_id = $proposal->id;
+                        $item->save();
+                        continue;
+                    }
+                }
+
+                // If not chosen or cleared for this item
+                if ($item->awarded_vendor_proposal_id) {
+                    EoiVendorProposal::where('purchase_request_item_id', $item->id)
+                        ->update(['status' => 'pending']);
+                    $item->awarded_vendor_proposal_id = null;
+                    $item->save();
+                }
+            }
+
+            // Sync all applications for this EOI
+            $applications = EoiVendorApplication::where('eoi_id', $eoi->id)->get();
+            foreach ($applications as $app) {
+                $app->syncStatus();
+            }
+
+            DB::commit();
+            return redirect()->back()->with('success', 'Awards saved successfully!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Failed to save awards: ' . $e->getMessage());
+        }
+    }
+
+    public function revokeAllAwards(Request $request, $eoiId)
+    {
+        $eoi = Eoi::findOrFail($eoiId);
+        if ($eoi->status !== 'closed') {
+            return redirect()->back()->with('error', 'Actions can only be performed on closed EOIs.');
+        }
+
+        DB::beginTransaction();
+        try {
+            $items = PurchaseRequestItem::where('eoi_id', $eoi->id)->get();
+            foreach ($items as $item) {
+                $item->awarded_vendor_proposal_id = null;
+                $item->save();
+                EoiVendorProposal::where('purchase_request_item_id', $item->id)->update(['status' => 'pending']);
+            }
+
+            $applications = EoiVendorApplication::where('eoi_id', $eoi->id)->get();
+            foreach ($applications as $app) {
+                $app->syncStatus();
+            }
+
+            DB::commit();
+            return redirect()->back()->with('success', 'All awards revoked successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Failed to revoke awards: ' . $e->getMessage());
+        }
+    }
 }
+

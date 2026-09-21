@@ -108,14 +108,18 @@ class VendorController extends Controller
 
     public function updateRating(Request $request, $id){
         $request->validate([
-            'rating' => 'required|integer|min:1|max:5',
+            'rating' => 'required|numeric|min:1|max:5',
         ]);
         $vendor = $this->vendorRepository->find($id);
+        if (!$vendor) {
+            return redirect()->back()->with('error', 'Vendor not found.');
+        }
 
-        $newRating = $request->rating;
-        $vendor->rating = (($vendor->rating * $vendor->rating_count) + $newRating) / ($vendor->rating_count + 1);
+        $newRating = (float) $request->rating;
+        $vendor->rating = round((($vendor->rating * $vendor->rating_count) + $newRating) / ($vendor->rating_count + 1), 2);
         $vendor->rating_count += 1;
-    
         $vendor->save();
+
+        return redirect()->back()->with('success', "Rating for {$vendor->name} updated successfully to {$vendor->rating} ★!");
     }
 }
