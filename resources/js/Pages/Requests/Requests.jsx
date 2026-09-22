@@ -533,28 +533,35 @@ const PurchaseRequests = ({
             entries
           </div>
 
-          {hasPermission('create_eoi') && (
-            <div>
-              {selectedRequests.length < 1 ? (
-                <button
-                  type="button"
-                  disabled
-                  className='rounded-lg px-3.5 py-2 text-xs font-semibold text-gray-400 bg-gray-100 cursor-not-allowed transition'
-                >
-                  <i className="fa fa-bullhorn mr-1.5"></i>
-                  ({selectedRequests.length} selected) Create EOI
-                </button>
-              ) : (
-                <Link
-                  className='rounded-lg px-3.5 py-2 text-xs font-semibold text-white bg-blue-700 hover:bg-blue-800 shadow-sm transition inline-flex items-center'
-                  href={`/eois/publish?requests=${selectedRequests.join(',')}`}
-                >
-                  <i className="fa fa-bullhorn mr-1.5"></i>
-                  ({selectedRequests.length} selected) Create EOI &rarr;
-                </Link>
-              )}
-            </div>
-          )}
+          <div className="flex items-center gap-2">
+            <Link
+              href="/eois/create"
+              className="rounded-lg px-3.5 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 shadow-xs transition"
+            >
+              Auto-Bundle with BFD
+            </Link>
+
+            {hasPermission('create_eoi') && (
+              <div>
+                {selectedRequests.length < 1 ? (
+                  <button
+                    type="button"
+                    disabled
+                    className='rounded-lg px-3.5 py-2 text-xs font-semibold text-gray-400 bg-gray-100 cursor-not-allowed transition'
+                  >
+                    Create EOI ({selectedRequests.length} selected)
+                  </button>
+                ) : (
+                  <Link
+                    className='rounded-lg px-3.5 py-2 text-xs font-semibold text-white bg-blue-700 hover:bg-blue-800 shadow-sm transition'
+                    href={`/eois/publish?requests=${selectedRequests.join(',')}`}
+                  >
+                    Create EOI ({selectedRequests.length} selected)
+                  </Link>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         {flash?.success && (

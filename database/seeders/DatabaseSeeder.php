@@ -495,6 +495,200 @@ class DatabaseSeeder extends Seeder
             'remark' => null,
         ]);
 
+        // Approved Requisitions for Smart Tender Packaging (Bin Packing BFD)
+        // PR 4: IT Dept - 8 Laptops (Rs. 960,000)
+        $pr4 = PurchaseRequest::create([
+            'user_id' => $employee->id,
+            'total' => 960000,
+            'status' => 'approved',
+        ]);
+        PurchaseRequestItem::create([
+            'purchase_request_id' => $pr4->id,
+            'product_id' => $prodLaptop->id,
+            'quantity' => 8,
+            'price' => 120000,
+            'specifications' => 'Dell Latitude 5440 i7 for Engineering team',
+            'priority' => 'high',
+            'selected' => false,
+        ]);
+        RequestApprovals::create([
+            'purchase_request_id' => $pr4->id,
+            'approval_step_id' => $step3_1->id,
+            'approver_id' => $approver->id,
+            'status' => 'approved',
+            'remark' => 'Approved budget allocation.',
+        ]);
+
+        // PR 5: Network Dept - 5 Managed Cisco Switches (Rs. 475,000)
+        $pr5 = PurchaseRequest::create([
+            'user_id' => $employee->id,
+            'total' => 475000,
+            'status' => 'approved',
+        ]);
+        PurchaseRequestItem::create([
+            'purchase_request_id' => $pr5->id,
+            'product_id' => $prodSwitch->id,
+            'quantity' => 5,
+            'price' => 95000,
+            'specifications' => 'Cisco Catalyst 24-Port Switches for Branch Office',
+            'priority' => 'high',
+            'selected' => false,
+        ]);
+        RequestApprovals::create([
+            'purchase_request_id' => $pr5->id,
+            'approval_step_id' => $step2_1->id,
+            'approver_id' => $approver->id,
+            'status' => 'approved',
+            'remark' => 'Network capacity expansion approved.',
+        ]);
+
+        // PR 6: Administration - 20 Ergonomic Mesh Chairs (Rs. 370,000)
+        $pr6 = PurchaseRequest::create([
+            'user_id' => $employee->id,
+            'total' => 370000,
+            'status' => 'approved',
+        ]);
+        PurchaseRequestItem::create([
+            'purchase_request_id' => $pr6->id,
+            'product_id' => $prodChair->id,
+            'quantity' => 20,
+            'price' => 18500,
+            'specifications' => 'Ergonomic high-back chairs for new floor workstations',
+            'priority' => 'medium',
+            'selected' => false,
+        ]);
+        RequestApprovals::create([
+            'purchase_request_id' => $pr6->id,
+            'approval_step_id' => $step2_1->id,
+            'approver_id' => $approver->id,
+            'status' => 'approved',
+            'remark' => 'Admin facility setup cleared.',
+        ]);
+
+        // PR 7: Printing Unit - 4 Enterprise Multifunction Printers (Rs. 360,000)
+        $pr7 = PurchaseRequest::create([
+            'user_id' => $employee->id,
+            'total' => 360000,
+            'status' => 'approved',
+        ]);
+        PurchaseRequestItem::create([
+            'purchase_request_id' => $pr7->id,
+            'product_id' => $prodPrinter->id,
+            'quantity' => 4,
+            'price' => 90000,
+            'specifications' => 'HP Enterprise LaserJet Multifunction Printers',
+            'priority' => 'medium',
+            'selected' => false,
+        ]);
+        RequestApprovals::create([
+            'purchase_request_id' => $pr7->id,
+            'approval_step_id' => $step2_1->id,
+            'approver_id' => $approver->id,
+            'status' => 'approved',
+            'remark' => 'Documentation printing upgrade approved.',
+        ]);
+
+        // PR 8: Design Dept - 5 UltraSharp 4K Displays (Rs. 210,000)
+        $pr8 = PurchaseRequest::create([
+            'user_id' => $employee->id,
+            'total' => 210000,
+            'status' => 'approved',
+        ]);
+        PurchaseRequestItem::create([
+            'purchase_request_id' => $pr8->id,
+            'product_id' => $prodMonitor->id,
+            'quantity' => 5,
+            'price' => 42000,
+            'specifications' => 'Dell UltraSharp 27" 4K UHD Monitors',
+            'priority' => 'high',
+            'selected' => false,
+        ]);
+        RequestApprovals::create([
+            'purchase_request_id' => $pr8->id,
+            'approval_step_id' => $step2_1->id,
+            'approver_id' => $approver->id,
+            'status' => 'approved',
+            'remark' => 'CAD / Design display approval.',
+        ]);
+
+        // PR 9: Communications & Security - Safety Equipment (Rs. 550,000)
+        $pr9 = PurchaseRequest::create([
+            'user_id' => $employee->id,
+            'total' => 550000,
+            'status' => 'approved',
+        ]);
+        PurchaseRequestItem::create([
+            'purchase_request_id' => $pr9->id,
+            'product_id' => $prodSwitch->id,
+            'quantity' => 4,
+            'price' => 95000,
+            'specifications' => 'Cisco switches for Security CCTV monitoring',
+            'priority' => 'high',
+            'selected' => false,
+        ]);
+        PurchaseRequestItem::create([
+            'purchase_request_id' => $pr9->id,
+            'product_id' => $prodMonitor->id,
+            'quantity' => 4,
+            'price' => 42500,
+            'specifications' => 'Surveillance console displays',
+            'priority' => 'medium',
+            'selected' => false,
+        ]);
+        RequestApprovals::create([
+            'purchase_request_id' => $pr9->id,
+            'approval_step_id' => $step3_1->id,
+            'approver_id' => $approver->id,
+            'status' => 'approved',
+            'remark' => 'Campus security modernization.',
+        ]);
+
+        // PR 10: Office Logistics - 45 Cartons A4 Copy Paper (Rs. 144,000)
+        $pr10 = PurchaseRequest::create([
+            'user_id' => $employee->id,
+            'total' => 144000,
+            'status' => 'approved',
+        ]);
+        PurchaseRequestItem::create([
+            'purchase_request_id' => $pr10->id,
+            'product_id' => $prodPaper->id,
+            'quantity' => 45,
+            'price' => 3200,
+            'specifications' => 'A4 80 GSM heavy duty copy paper cartons',
+            'priority' => 'low',
+            'selected' => false,
+        ]);
+        RequestApprovals::create([
+            'purchase_request_id' => $pr10->id,
+            'approval_step_id' => $step2_1->id,
+            'approver_id' => $approver->id,
+            'status' => 'approved',
+            'remark' => 'Quarterly office supplies.',
+        ]);
+
+        // PR 11: Enterprise Data Center - Core Backbone Switch (Rs. 1,250,000)
+        $pr11 = PurchaseRequest::create([
+            'user_id' => $employee->id,
+            'total' => 1250000,
+            'status' => 'approved',
+        ]);
+        PurchaseRequestItem::create([
+            'purchase_request_id' => $pr11->id,
+            'product_id' => $prodSwitch->id,
+            'quantity' => 10,
+            'price' => 125000,
+            'specifications' => 'High-Density 48-Port 10G/40G Modular Core Switch',
+            'priority' => 'high',
+            'selected' => false,
+        ]);
+        RequestApprovals::create([
+            'purchase_request_id' => $pr11->id,
+            'approval_step_id' => $step3_1->id,
+            'approver_id' => $approver->id,
+            'status' => 'approved',
+            'remark' => 'Approved by Director and Admin for Data Center upgrade.',
+        ]);
+
         // 9. Expressions of Interest (EOIs)
 
         // EOI #1: Closed for Evaluation (4 competing bids to showcase TOPSIS Decision Science)

@@ -273,4 +273,116 @@ class TopsisService
             'criteria' => $activeCriteria,
         ];
     }
+
+    /**
+     * Predefined weights for strategic TOPSIS evaluations.
+     */
+    public function getWeightsForStrategy(string $strategy): array
+    {
+        return match ($strategy) {
+            'cost' => [
+                'price' => 0.60,
+                'delivery_days' => 0.10,
+                'rating' => 0.10,
+                'doc_compliance' => 0.10,
+                'product_coverage' => 0.10,
+            ],
+            'speed' => [
+                'price' => 0.15,
+                'delivery_days' => 0.50,
+                'rating' => 0.15,
+                'doc_compliance' => 0.10,
+                'product_coverage' => 0.10,
+            ],
+            'quality' => [
+                'price' => 0.15,
+                'delivery_days' => 0.15,
+                'rating' => 0.40,
+                'doc_compliance' => 0.20,
+                'product_coverage' => 0.10,
+            ],
+            default => [
+                'price' => 0.35,
+                'delivery_days' => 0.20,
+                'rating' => 0.20,
+                'doc_compliance' => 0.15,
+                'product_coverage' => 0.10,
+            ],
+        };
+    }
+
+    /**
+     * Provide an automated award recommendation based on TOPSIS rankings.
+     */
+    public function recommend($applications, $items, string $strategy = 'balanced'): array
+    {
+        $weights = $this->getWeightsForStrategy($strategy);
+        $totalProducts = count($items);
+
+        $detailed = $this->evaluateDetailed($applications, $totalProducts, 0, $weights);
+        $rankings = $detailed['rankings'] ?? [];
+
+        // Sort applications by rank ascending
+        $sortedApps = collect($applications)->sortBy(function ($app) use ($rankings) {
+            return $rankings[$app->id]['rank'] ?? 999;
+        })->values();
+
+        $topApp = $sortedApps->first();
+        $selections = [];
+        $selectedDetails = [];
+        $totalCost = 0;
+
+        foreach ($items as $item) {
+            $chosenProposal = null;
+            $chosenApp = null;
+
+            foreach ($sortedApps as $app) {
+                $prop = $app->proposals->firstWhere('purchase_request_item_id', $item->id);
+                if ($prop && $prop->price > 0) {
+                    $chosenProposal = $prop;
+                    $chosenApp = $app;
+                    break;
+                }
+            }
+
+            if ($chosenProposal) {
+                $selections[$item->id] = $chosenProposal->id;
+                $cost = (float)($chosenProposal->price * ($item->quantity ?? 1));
+                $totalCost += $cost;
+                $selectedDetails[$item->id] = [
+                    'item_id' => $item->id,
+                    'product_name' => $item->product?->name ?? "Item #{$item->id}",
+                    'proposal_id' => $chosenProposal->id,
+                    'vendor_name' => $chosenApp->vendor?->name ?? 'Vendor',
+                    'cost' => $cost,
+                ];
+            }
+        }
+
+        $strategyLabels = [
+            'balanced' => 'Balanced Strategy',
+            'cost' => 'Lowest Price Strategy',
+            'speed' => 'Fast Delivery Strategy',
+            'quality' => 'High Reputation Strategy',
+        ];
+
+        return [
+            'selections' => $selections,
+            'selected_details' => $selectedDetails,
+            'top_vendor' => $topApp ? [
+                'id' => $topApp->vendor_id,
+                'application_id' => $topApp->id,
+                'name' => $topApp->vendor?->name ?? 'Top Vendor',
+                'rank' => $rankings[$topApp->id]['rank'] ?? 1,
+                'score' => $rankings[$topApp->id]['score'] ?? 0,
+                'percentage' => $rankings[$topApp->id]['percentage'] ?? 0,
+            ] : null,
+            'strategy' => $strategy,
+            'strategy_label' => $strategyLabels[$strategy] ?? 'Balanced Strategy',
+            'rankings' => $rankings,
+            'total_cost' => round($totalCost, 2),
+            'fulfilled_count' => count($selections),
+            'total_items_count' => count($items),
+        ];
+    }
 }

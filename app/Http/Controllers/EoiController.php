@@ -9,11 +9,14 @@ use App\Models\EoiFile;
 use App\Models\EoiVendorApplication;
 use App\Models\EoiVendorProposal;
 use App\Models\Product;
+use App\Models\PurchaseRequest;
 use App\Models\PurchaseRequestItem;
 use App\Repositories\EoiRepository;
 use App\Repositories\PurchaseRequestRepository;
 use App\Repositories\PurchaseRequestItemRepository;
 use App\Services\TopsisService;
+use App\Services\KnapsackProcurementService;
+use App\Services\BinPackingService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -27,26 +30,32 @@ class EoiController extends Controller implements HasMiddleware
     protected $purchaseRequestRepository;
     protected $purchaseRequestItemRepository;
     protected $topsisService;
+    protected $knapsackService;
+    protected $binPackingService;
 
     public function __construct(
         EoiRepository $eoiRepository,
         PurchaseRequestRepository $purchaseRequestRepository,
         PurchaseRequestItemRepository $purchaseRequestItemRepository,
-        TopsisService $topsisService
+        TopsisService $topsisService,
+        KnapsackProcurementService $knapsackService,
+        BinPackingService $binPackingService
     ) {
         $this->eoiRepository = $eoiRepository;
         $this->purchaseRequestRepository = $purchaseRequestRepository;
         $this->purchaseRequestItemRepository = $purchaseRequestItemRepository;
         $this->topsisService = $topsisService;
+        $this->knapsackService = $knapsackService;
+        $this->binPackingService = $binPackingService;
     }
 
     public static function middleware(): array
     {
         return [
             new Middleware('permission:view_eoi', ['index']),
-            new Middleware('permission:create_eoi', ['create', 'store', 'publish']),
+            new Middleware('permission:create_eoi', ['create', 'store', 'publish', 'autoBundleRequests']),
             new Middleware('permission:view_submissions_eoi', ['submissions']),
-            new Middleware('permission:edit_eoi', ['edit', 'update', 'awardItemProposal', 'revokeItemAward', 'awardApplication', 'revokeApplication', 'awardSelection', 'revokeAllAwards']),
+            new Middleware('permission:edit_eoi', ['edit', 'update', 'awardItemProposal', 'revokeItemAward', 'awardApplication', 'revokeApplication', 'awardSelection', 'revokeAllAwards', 'knapsackRecommend', 'topsisRecommend']),
             new Middleware('permission:delete_eoi', ['destroy']),
         ];
     }
@@ -286,7 +295,7 @@ class EoiController extends Controller implements HasMiddleware
         $topsisDetails = $this->topsisService->evaluateDetailed($allApplications, $totalProductsCount, $totalRequiredDocsCount);
         $topsisRankings = $topsisDetails['rankings'] ?? [];
 
-        // Attach TOPSIS evaluation to each paginated submission item
+        // Attach TOPSIS evaluation to each paginated submission item and allApplications
         $submissions->getCollection()->transform(function ($item) use ($topsisRankings) {
             if (isset($topsisRankings[$item->id])) {
                 $item->topsis = $topsisRankings[$item->id];
@@ -294,12 +303,38 @@ class EoiController extends Controller implements HasMiddleware
             return $item;
         });
 
+        $allApplications->transform(function ($item) use ($topsisRankings) {
+            if (isset($topsisRankings[$item->id])) {
+                $item->topsis = $topsisRankings[$item->id];
+            }
+            return $item;
+        });
+
+        // Compute procurement budget benchmarks on backend for Knapsack
+        $minPossibleTotal = 0;
+        $estimatedTotal = 0;
+        foreach ($eoi->purchase_request_items as $item) {
+            $qty = (float)($item->quantity ?? 1);
+            $estUnitPrice = (float)($item->price ?? 0);
+            $estimatedTotal += ($estUnitPrice * $qty);
+
+            $minItemBid = $item->proposals->where('price', '>', 0)->min('price');
+            if ($minItemBid !== null) {
+                $minPossibleTotal += ($minItemBid * $qty);
+            }
+        }
+
+        $budgetBenchmarks = [
+            'minCost' => round($minPossibleTotal, 2),
+            'estTotal' => round($estimatedTotal > 0 ? $estimatedTotal : $minPossibleTotal, 2),
+        ];
+
         return Inertia::render('EOI/SubmissionsEOI', [
             'eoi' => $eoi,
             'submissions' => $submissions,
             'allApplications' => $allApplications,
             'topsisRankings' => $topsisRankings,
-            'topsisDetails' => $topsisDetails,
+            'budgetBenchmarks' => $budgetBenchmarks,
         ]);
     }
     public function edit($id)
@@ -598,6 +633,74 @@ class EoiController extends Controller implements HasMiddleware
             DB::rollBack();
             return redirect()->back()->with('error', 'Failed to revoke awards: ' . $e->getMessage());
         }
+    }
+
+    public function knapsackRecommend(Request $request, $eoiId)
+    {
+        $request->validate([
+            'budget' => 'required|numeric|min:0',
+            'strategy' => 'nullable|string|in:standard,cost_priority,value_priority',
+        ]);
+
+        $eoi = Eoi::with([
+            'purchase_request_items.product',
+            'purchase_request_items.proposals.eoi_vendor_application.vendor',
+        ])->findOrFail($eoiId);
+
+        $budget = (float) $request->input('budget');
+        $strategy = $request->input('strategy', 'standard');
+
+        $result = $this->knapsackService->solve($eoi->purchase_request_items, $budget, $strategy);
+
+        return response()->json($result);
+    }
+
+    public function topsisRecommend(Request $request, $eoiId)
+    {
+        $request->validate([
+            'strategy' => 'nullable|string|in:balanced,cost,speed,quality',
+        ]);
+
+        $eoi = Eoi::with([
+            'purchase_request_items.product',
+            'eoi_vendor_applications.vendor',
+            'eoi_vendor_applications.documents.document',
+            'eoi_vendor_applications.proposals.purchase_request_item.product',
+        ])->findOrFail($eoiId);
+
+        $strategy = $request->input('strategy', 'balanced');
+        $result = $this->topsisService->recommend(
+            $eoi->eoi_vendor_applications,
+            $eoi->purchase_request_items,
+            $strategy
+        );
+
+        return response()->json($result);
+    }
+
+    public function autoBundleRequests(Request $request)
+    {
+        $request->validate([
+            'capacity' => 'required|numeric|min:1',
+            'request_ids' => 'nullable|array',
+            'request_ids.*' => 'integer|exists:purchase_requests,id',
+        ]);
+
+        $capacity = (float) $request->input('capacity');
+        $requestIds = $request->input('request_ids');
+
+        $query = PurchaseRequest::with(['user', 'purchase_request_items.product'])
+            ->where('status', 'approved');
+
+        if (!empty($requestIds)) {
+            $query->whereIn('id', $requestIds);
+        }
+
+        $requests = $query->get();
+
+        $result = $this->binPackingService->packRequests($requests, $capacity);
+
+        return response()->json($result);
     }
 }
 

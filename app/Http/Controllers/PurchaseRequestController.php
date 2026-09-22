@@ -37,8 +37,10 @@ class PurchaseRequestController extends Controller implements HasMiddleware
         $user = $request->user();
         $isSuperAdmin = !empty($user->is_superadmin);
         $canViewAll = $isSuperAdmin || $user->can('view_all_request');
-        $canApprove = $isSuperAdmin || $user->can('approve_request');
         $roleId = $user->roles()->first()?->id;
+        // Workflow approvals strictly require an assigned role matching the approval step.
+        // If a user has no assigned role (e.g. standalone superadmin), they do not have workflow approvals assigned.
+        $canApprove = !empty($roleId) && ($user->can('approve_request') || $isSuperAdmin);
 
         $requestedView = $request->input('view'); // 'all', 'pending', or null
 
@@ -53,13 +55,10 @@ class PurchaseRequestController extends Controller implements HasMiddleware
         }
 
         $pendingApprovalsCount = 0;
-        if ($canApprove) {
+        if ($canApprove && $roleId) {
             $pendingQuery = RequestApprovals::join('approval_steps', 'request_approvals.approval_step_id', '=', 'approval_steps.id')
-                ->where('request_approvals.status', 'pending');
-
-            if (!$isSuperAdmin && $roleId) {
-                $pendingQuery->where('approval_steps.role_id', $roleId);
-            }
+                ->where('request_approvals.status', 'pending')
+                ->where('approval_steps.role_id', $roleId);
 
             $pendingQuery->where(function ($query) {
                 $query->whereNull('approval_steps.previous_step_id')
@@ -78,7 +77,7 @@ class PurchaseRequestController extends Controller implements HasMiddleware
 
         $perPage = (int) $request->input('per_page', 10);
 
-        if ($viewType === 'approval') {
+        if ($viewType === 'approval' && $roleId) {
             $approvalQuery = RequestApprovals::select(
                 'request_approvals.*',
                 'approval_steps.id as app_id',
@@ -86,11 +85,8 @@ class PurchaseRequestController extends Controller implements HasMiddleware
             )
                 ->join('approval_steps', 'request_approvals.approval_step_id', '=', 'approval_steps.id')
                 ->join('purchase_requests', 'request_approvals.purchase_request_id', '=', 'purchase_requests.id')
-                ->where('request_approvals.status', 'pending');
-
-            if (!$isSuperAdmin && $roleId) {
-                $approvalQuery->where('approval_steps.role_id', $roleId);
-            }
+                ->where('request_approvals.status', 'pending')
+                ->where('approval_steps.role_id', $roleId);
 
             $approvalQuery->where(function ($query) {
                 $query->whereNull('approval_steps.previous_step_id')

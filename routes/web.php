@@ -63,7 +63,8 @@ Route::middleware(['auth'])->group(function(){
     Route::get('/dashboard', function () {
         $user = auth()->user();
         $isSuperAdmin = !empty($user->is_superadmin);
-        $canApprove = $user->can('approve_request') || $isSuperAdmin;
+        $roleId = $user->roles()->first()?->id;
+        $canApprove = !empty($roleId) && ($user->can('approve_request') || $isSuperAdmin);
         $canViewRequest = $user->can('view_request') || $isSuperAdmin;
         $canViewAllRequest = $user->can('view_all_request') || $isSuperAdmin;
         $canViewEoi = $user->can('view_eoi') || $isSuperAdmin;
@@ -132,6 +133,9 @@ Route::middleware(['auth'])->group(function(){
     Route::post('/eois/{eoi}/applications/{application}/revoke', [EoiController::class, 'revokeApplication'])->name('eois.applications.revoke');
     Route::post('/eois/{eoi}/awards', [EoiController::class, 'awardSelection'])->name('eois.awards.save');
     Route::post('/eois/{eoi}/awards/revoke-all', [EoiController::class, 'revokeAllAwards'])->name('eois.awards.revokeAll');
+    Route::post('/eois/{eoi}/knapsack-recommend', [EoiController::class, 'knapsackRecommend'])->name('eois.knapsack.recommend');
+    Route::post('/eois/{eoi}/topsis-recommend', [EoiController::class, 'topsisRecommend'])->name('eois.topsis.recommend');
+    Route::post('/eois/auto-bundle', [EoiController::class, 'autoBundleRequests'])->name('eois.autoBundle');
     Route::post('/vendors/{id}/rating', [VendorController::class, 'updateRating'])->name('vendors.rating.update');
     Route::get('/reports',[ReportController::class,'index']);
     // Route::get('/roles', function(){

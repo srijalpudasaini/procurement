@@ -162,9 +162,12 @@ const EOI = ({ eois }) => {
             </select>
             entries
           </div>
-          {!!hasPermission('create_request') &&
-            <Link className='rounded-md border border-transparent bg-gray-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-gray-700' href='/eois/create'>+ Create EOI</Link>
-          }
+          <Link
+            className='rounded-lg bg-indigo-600 px-3.5 py-2 text-xs font-semibold text-white transition duration-150 ease-in-out hover:bg-indigo-700 shadow-xs'
+            href='/eois/create'
+          >
+            Create EOI (Smart Bundler)
+          </Link>
         </div>
 
         {flash?.success && (

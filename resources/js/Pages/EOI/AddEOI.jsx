@@ -5,6 +5,7 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout"
 import { Link, router, usePage } from "@inertiajs/react";
 import { useState } from "react";
 import DataTable from "react-data-table-component";
+import axios from "axios";
 
 
 const AddEOI = ({ purchaseRequests }) => {
@@ -15,7 +16,58 @@ const AddEOI = ({ purchaseRequests }) => {
   const [deleteId, setDeleteId] = useState(null);
   const [modalType, setModalType] = useState(null);
   const userPermissions = auth?.user?.permissions || [];
-  const [selectedRequests, setSelectedRequests] = useState([])
+  const [selectedRequests, setSelectedRequests] = useState([]);
+
+  // Smart Package Bundler (Bin Packing BFD) State
+  const [eoiCreationMode, setEoiCreationMode] = useState('bundler');
+  const [bfdCapacity, setBfdCapacity] = useState(2000000);
+  const [bfdPreset, setBfdPreset] = useState('2000000');
+  const [bfdOnlySelected, setBfdOnlySelected] = useState(false);
+  const [bfdLoading, setBfdLoading] = useState(false);
+  const [bfdResult, setBfdResult] = useState(null);
+  const [bfdError, setBfdError] = useState(null);
+  const [isBfdOpen, setIsBfdOpen] = useState(true);
+
+  const handlePresetChange = (presetValue) => {
+    setBfdPreset(presetValue);
+    if (presetValue !== 'custom') {
+      setBfdCapacity(Number(presetValue));
+    }
+  };
+
+  const runBinPacking = async () => {
+    setBfdLoading(true);
+    setBfdError(null);
+    try {
+      const payload = {
+        capacity: Number(bfdCapacity),
+      };
+      if (bfdOnlySelected && selectedRequests.length > 0) {
+        payload.request_ids = selectedRequests;
+      }
+      const response = await axios.post('/eois/auto-bundle', payload);
+      if (response.data && response.data.success) {
+        setBfdResult(response.data);
+      } else {
+        setBfdError(response.data?.message || 'Failed to pack requisitions.');
+      }
+    } catch (err) {
+      console.error(err);
+      setBfdError(err.response?.data?.message || 'An error occurred while bundling requests.');
+    } finally {
+      setBfdLoading(false);
+    }
+  };
+
+  const applyPackage = (pkg) => {
+    setSelectedRequests(pkg.request_ids);
+  };
+
+  const isPackageSelected = (pkg) => {
+    if (!pkg.request_ids || pkg.request_ids.length === 0) return false;
+    return pkg.request_ids.length === selectedRequests.length &&
+      pkg.request_ids.every(id => selectedRequests.includes(id));
+  };
 
   const handleChange = (e, request) => {
     const { checked } = e.target;
@@ -290,7 +342,309 @@ const AddEOI = ({ purchaseRequests }) => {
         {flash?.error && (
           <Alert type='error' message={flash.error} />
         )}
-        {!!hasPermission('create_eoi') &&
+
+        {/* Packaging Method Option Switcher */}
+        <div className="my-4 flex items-center justify-between flex-wrap gap-3 p-3 bg-gray-50 rounded-xl border border-gray-200">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold text-gray-700">Packaging Method:</span>
+            <div className="inline-flex rounded-lg bg-gray-200/80 p-0.5 text-xs font-medium">
+              <button
+                type="button"
+                onClick={() => setEoiCreationMode('bundler')}
+                className={`rounded-md px-3 py-1.5 transition cursor-pointer ${
+                  eoiCreationMode === 'bundler'
+                    ? 'bg-white font-bold text-indigo-700 shadow-2xs'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Auto-Bundle with BFD
+              </button>
+              <button
+                type="button"
+                onClick={() => setEoiCreationMode('manual')}
+                className={`rounded-md px-3 py-1.5 transition cursor-pointer ${
+                  eoiCreationMode === 'manual'
+                    ? 'bg-white font-bold text-gray-900 shadow-2xs'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Manual Selection
+              </button>
+            </div>
+          </div>
+          <span className="text-xs text-gray-500">
+            {eoiCreationMode === 'bundler'
+              ? 'BFD algorithm automatically groups requisitions within statutory limits.'
+              : 'Manually select requisitions from the table below.'}
+          </span>
+        </div>
+
+        {/* Smart Package Bundler (BFD) Panel */}
+        {eoiCreationMode === 'bundler' && (
+          <div className="my-4 rounded-xl border border-indigo-100 bg-gradient-to-r from-slate-50 to-indigo-50/40 p-5 shadow-xs transition-all">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-indigo-100/60 pb-3">
+              <div className="flex items-center gap-2.5">
+                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-600 text-white shadow-xs">
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                  </svg>
+                </span>
+                <div>
+                  <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
+                    Smart Requisition Bundler
+                    <span className="rounded-md bg-indigo-100 px-2 py-0.5 text-[11px] font-semibold text-indigo-800">
+                      Best-Fit Decreasing (BFD)
+                    </span>
+                  </h3>
+                  <p className="text-xs text-gray-500">
+                    Mathematically bundles approved requisitions into minimal tender envelopes within statutory ceilings.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {bfdResult && (
+                  <button
+                    type="button"
+                    onClick={() => { setBfdResult(null); setBfdError(null); }}
+                    className="text-xs font-medium text-gray-500 hover:text-gray-700 px-2 py-1 rounded hover:bg-white cursor-pointer"
+                  >
+                    Clear Bundles
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setIsBfdOpen(!isBfdOpen)}
+                  className="rounded-md border border-gray-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-600 hover:bg-gray-50 cursor-pointer"
+                >
+                  {isBfdOpen ? 'Collapse ▲' : 'Expand ▼'}
+                </button>
+              </div>
+            </div>
+
+            {isBfdOpen && (
+              <div className="mt-4 space-y-4">
+                {/* Controls Bar */}
+                <div className="flex flex-wrap items-center justify-between gap-4 rounded-lg bg-white p-3.5 border border-gray-200/80 shadow-2xs">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <span className="text-xs font-semibold text-gray-700">Tender Threshold:</span>
+                    <div className="inline-flex rounded-lg bg-gray-100 p-0.5 text-xs font-medium">
+                      <button
+                        type="button"
+                        onClick={() => handlePresetChange('2000000')}
+                        className={`rounded-md px-2.5 py-1 transition cursor-pointer ${bfdPreset === '2000000' ? 'bg-white font-semibold text-indigo-700 shadow-2xs' : 'text-gray-600 hover:text-gray-900'}`}
+                      >
+                        20L (Quotation)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handlePresetChange('500000')}
+                        className={`rounded-md px-2.5 py-1 transition cursor-pointer ${bfdPreset === '500000' ? 'bg-white font-semibold text-indigo-700 shadow-2xs' : 'text-gray-600 hover:text-gray-900'}`}
+                      >
+                        5L (Direct)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handlePresetChange('5000000')}
+                        className={`rounded-md px-2.5 py-1 transition cursor-pointer ${bfdPreset === '5000000' ? 'bg-white font-semibold text-indigo-700 shadow-2xs' : 'text-gray-600 hover:text-gray-900'}`}
+                      >
+                        50L (Open Tender)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handlePresetChange('custom')}
+                        className={`rounded-md px-2.5 py-1 transition cursor-pointer ${bfdPreset === 'custom' ? 'bg-white font-semibold text-indigo-700 shadow-2xs' : 'text-gray-600 hover:text-gray-900'}`}
+                      >
+                        Custom
+                      </button>
+                    </div>
+
+                    {bfdPreset === 'custom' && (
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs text-gray-500 font-mono">NPR</span>
+                        <input
+                          type="number"
+                          min="10000"
+                          step="10000"
+                          value={bfdCapacity}
+                          onChange={(e) => setBfdCapacity(e.target.value)}
+                          className="w-36 rounded-md border border-gray-300 px-2 py-1 text-xs font-mono focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                          placeholder="e.g. 1500000"
+                        />
+                      </div>
+                    )}
+
+                    {selectedRequests.length > 0 && (
+                      <label className="flex items-center gap-1.5 text-xs text-gray-600 cursor-pointer select-none ml-2 border-l border-gray-200 pl-3">
+                        <input
+                          type="checkbox"
+                          checked={bfdOnlySelected}
+                          onChange={(e) => setBfdOnlySelected(e.target.checked)}
+                          className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 text-xs"
+                        />
+                        <span>Only bundle selected ({selectedRequests.length})</span>
+                      </label>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      disabled={bfdLoading || !bfdCapacity || bfdCapacity <= 0}
+                      onClick={runBinPacking}
+                      className="rounded-lg bg-indigo-600 px-4 py-2 text-xs font-semibold text-white shadow-xs hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1 disabled:opacity-50 cursor-pointer"
+                    >
+                      {bfdLoading ? 'Optimizing Packages...' : 'Auto-Bundle with BFD'}
+                    </button>
+                  </div>
+                </div>
+
+                {bfdError && (
+                  <div className="rounded-lg bg-rose-50 border border-rose-200 p-3 text-xs text-rose-700">
+                    {bfdError}
+                  </div>
+                )}
+
+                {/* BFD Results Section */}
+                {bfdResult && (
+                  <div className="space-y-3">
+                    {/* Summary Metric Ribbon */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      <div className="rounded-lg bg-white p-3 border border-gray-100 shadow-2xs">
+                        <span className="text-[11px] font-medium text-gray-500">Tender Packages</span>
+                        <div className="text-lg font-bold text-gray-900 mt-0.5 flex items-baseline gap-1.5">
+                          <span>{bfdResult.summary.bins_count}</span>
+                          <span className="text-[11px] font-normal text-emerald-600">
+                            (Min: {bfdResult.summary.theoretical_min_bins})
+                          </span>
+                        </div>
+                      </div>
+                      <div className="rounded-lg bg-white p-3 border border-gray-100 shadow-2xs">
+                        <span className="text-[11px] font-medium text-gray-500">Total Value Packed</span>
+                        <div className="text-lg font-bold text-gray-900 mt-0.5 font-mono">
+                          NPR {Number(bfdResult.summary.total_value).toLocaleString()}
+                        </div>
+                      </div>
+                      <div className="rounded-lg bg-white p-3 border border-gray-100 shadow-2xs">
+                        <span className="text-[11px] font-medium text-gray-500">Threshold Envelope</span>
+                        <div className="text-lg font-bold text-indigo-700 mt-0.5 font-mono">
+                          NPR {Number(bfdResult.summary.bin_capacity).toLocaleString()}
+                        </div>
+                      </div>
+                      <div className="rounded-lg bg-white p-3 border border-gray-100 shadow-2xs">
+                        <span className="text-[11px] font-medium text-gray-500">Average Utilization</span>
+                        <div className="text-lg font-bold text-emerald-600 mt-0.5">
+                          {bfdResult.summary.packing_efficiency}%
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Packages Card Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+                      {bfdResult.packages.map((pkg) => {
+                        const isSelected = isPackageSelected(pkg);
+                        return (
+                          <div
+                            key={pkg.package_id}
+                            className={`flex flex-col justify-between rounded-xl border p-4 bg-white transition shadow-2xs ${
+                              isSelected
+                                ? 'border-indigo-600 ring-2 ring-indigo-500/20 shadow-md'
+                                : 'border-gray-200 hover:border-indigo-300'
+                            }`}
+                          >
+                            <div>
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="font-bold text-sm text-gray-900 flex items-center gap-1.5">
+                                  <span>{pkg.package_name}</span>
+                                </span>
+                                <span
+                                  className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
+                                    pkg.is_oversized
+                                      ? 'bg-purple-100 text-purple-800'
+                                      : pkg.utilization_percent >= 80
+                                      ? 'bg-emerald-100 text-emerald-800'
+                                      : pkg.utilization_percent >= 50
+                                      ? 'bg-blue-100 text-blue-800'
+                                      : 'bg-amber-100 text-amber-800'
+                                  }`}
+                                >
+                                  {pkg.is_oversized ? 'Oversized Tender' : `${pkg.utilization_percent}% Fill`}
+                                </span>
+                              </div>
+
+                              <div className="mb-2">
+                                <div className="flex justify-between text-xs mb-1 font-mono">
+                                  <span className="font-semibold text-gray-900">
+                                    NPR {Number(pkg.total_amount).toLocaleString()}
+                                  </span>
+                                  <span className="text-gray-400">
+                                    / NPR {Number(pkg.capacity).toLocaleString()}
+                                  </span>
+                                </div>
+                                <div className="h-2 w-full overflow-hidden rounded-full bg-gray-100">
+                                  <div
+                                    className={`h-full rounded-full transition-all duration-500 ${
+                                      pkg.is_oversized
+                                        ? 'bg-purple-500'
+                                        : pkg.utilization_percent >= 80
+                                        ? 'bg-emerald-500'
+                                        : 'bg-indigo-500'
+                                    }`}
+                                    style={{ width: `${Math.min(100, pkg.utilization_percent)}%` }}
+                                  />
+                                </div>
+                              </div>
+
+                              <div className="my-2.5 border-t border-gray-100 pt-2 text-xs">
+                                <div className="text-[11px] font-semibold text-gray-500 mb-1.5 flex justify-between">
+                                  <span>Assigned Requisitions ({pkg.requests_count})</span>
+                                  <span>Remaining: NPR {Number(pkg.remaining_capacity).toLocaleString()}</span>
+                                </div>
+                                <div className="space-y-1 max-h-28 overflow-y-auto pr-1">
+                                  {pkg.requests.map((req) => (
+                                    <div
+                                      key={req.id}
+                                      className="flex items-center justify-between text-[11px] bg-gray-50 rounded px-2 py-1"
+                                    >
+                                      <span className="font-medium text-gray-800 truncate mr-2">
+                                        Req #{req.id} • {req.requested_by}
+                                      </span>
+                                      <span className="font-mono text-gray-600 shrink-0">
+                                        NPR {Number(req.total).toLocaleString()}
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="pt-3 border-t border-gray-100 mt-2">
+                              <button
+                                type="button"
+                                onClick={() => applyPackage(pkg)}
+                                className={`w-full py-1.5 px-3 rounded-lg text-xs font-semibold transition cursor-pointer flex items-center justify-center ${
+                                  isSelected
+                                    ? 'bg-emerald-600 text-white shadow-xs hover:bg-emerald-700'
+                                    : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-600 hover:text-white'
+                                }`}
+                              >
+                                {isSelected
+                                  ? 'Package Selected'
+                                  : `Select Package (${pkg.requests_count} items)`
+                                }
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
           <div className="my-3">
             {selectedRequests.length < 1 ?
               <Link
@@ -308,7 +662,6 @@ const AddEOI = ({ purchaseRequests }) => {
               </Link>
             }
           </div>
-        }
 
         <div className="my-4">
           <DataTable
